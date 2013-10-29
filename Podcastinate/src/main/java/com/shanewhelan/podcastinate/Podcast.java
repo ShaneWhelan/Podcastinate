@@ -6,7 +6,6 @@ import java.util.ArrayList;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class Podcast {
-
       /*
       item
 	  title
@@ -25,17 +24,18 @@ public class Podcast {
 	  enclosure
      */
 
-
-    String name;
+    String title;
     String description;
+    String imageDirectory;
+    String link;
     ArrayList<Episode> episodeList = new ArrayList<Episode>();
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getDescription() {
@@ -44,6 +44,22 @@ public class Podcast {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getImageDirectory() {
+        return imageDirectory;
+    }
+
+    public void setImageDirectory(String imageDirectory) {
+        this.imageDirectory = imageDirectory;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 
     public ArrayList<Episode> getEpisodeList() {
