@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Podcastinate</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="playButtonText"><![CDATA[>]]></string>
+    <string name="feedToSubscribeTo">feedToSubscribeTo</string>
+    <string name="playButton">playButton</string>
+    <string name="testButton">testButton</string>
+    <string name="subscribeButton">Subscribe</string>
+    <string name="displayRSSResults">displayRSSResults</string>
+    <string name="title_activity_subscribe">Subscribe_Activity</string>
+    <string name="addFeed">addFeed</string>
+    <string name="addFeedContent">+</string>
+</resources>
