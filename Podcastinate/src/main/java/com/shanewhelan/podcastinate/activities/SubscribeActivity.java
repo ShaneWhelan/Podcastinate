@@ -17,16 +17,20 @@ import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.*;
 import com.shanewhelan.podcastinate.database.DatabaseHelper;
-import com.shanewhelan.podcastinate.database.PodcastContract.*;
+import com.shanewhelan.podcastinate.database.PodcastContract;
+
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
+@SuppressWarnings("ALL")
 public class SubscribeActivity extends Activity {
     private TextView subscribeUrl;
     @Override
@@ -35,6 +39,7 @@ public class SubscribeActivity extends Activity {
         setContentView(R.layout.subscribe_activity);
 
         subscribeUrl = (TextView) findViewById(R.string.feedToSubscribeTo);
+        // Test Line
         subscribeUrl.setText("http://nerdist.libsyn.com/rss");
 
         final Button button = (Button) findViewById(R.string.testButton);
@@ -63,21 +68,19 @@ public class SubscribeActivity extends Activity {
         } else if(networkInfo == null) {
             // Alert the user that network connection methods are off
             Log.i("sw9", "WI-FI or Mobile Data turned off");
-            Context context = getApplicationContext();
             int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(context, "WI-FI or Mobile Data turned off", duration);
-            toast.show();
+            Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
+                    duration).show();
             return false;
         } else if(networkInfo.isConnected() == false) {
             // Alert the user that network is not available.
             Log.i("sw9", "Connected but no internet access");
-            Context context = getApplicationContext();
             int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(context, "Connected but no internet access", duration);
-            toast.show();
+            Toast.makeText(getApplicationContext(), "Connected but no internet access",
+                    duration).show();
+
             return false;
         }
-
         return false;
     }
 
@@ -88,8 +91,25 @@ public class SubscribeActivity extends Activity {
 
     public void savePodcastToDb(Podcast podcast){
         DatabaseHelper dbHelper = new DatabaseHelper(this);
-        dbHelper.insertPodcast(podcast.getTitle(), podcast.getDescription(),
+        int podcastID = (int) dbHelper.insertPodcast(podcast.getTitle(), podcast.getDescription(),
                 podcast.getImageDirectory(), podcast.getLink());
+
+        Log.d("sw9", "Podcast ID: " + podcastID);
+        int duration = Toast.LENGTH_LONG;
+        if(podcastID != -1) {
+            ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
+            for (Episode episode : listOfEpisodes) {
+                dbHelper.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
+                        episode.getDescription(), episode.getPubDate(), episode.getGuid(),
+                        episode.getDuration(), episode.getEpisodeImage(), episode.getEnclosure());
+            }
+            // Send out a toast displaying success
+            // May be able to get this toast to the user faster
+            Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
+        } else {
+            Log.d("sw9", "HIT: " + getApplicationContext().toString());
+            Toast.makeText(getApplicationContext(), "Already subscribed to podcast", duration).show();
+        }
     }
 
     public class DownloadRSSFeed extends AsyncTask<String, Void, Podcast> {
@@ -106,13 +126,12 @@ public class SubscribeActivity extends Activity {
 
         @Override
         protected void onPostExecute(Podcast podcast){
-            // Send out a toast of completion
-            Context context = getApplicationContext();
-            CharSequence text = "Subscribed to " + podcast.getTitle();
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-            savePodcastToDb(podcast);
+            if(podcast != null) {
+               savePodcastToDb(podcast);
+            } else {
+                int duration = Toast.LENGTH_LONG;
+                Toast.makeText(getApplicationContext(), "Podcast URL invalid", duration).show();
+            }
             // Implement the observer design pattern here to move to feeds page.
         }
 
@@ -135,8 +154,16 @@ public class SubscribeActivity extends Activity {
                 }else{
                     throw new HTTPConnectionException(response);
                 }
-                ParseRSS parseRSS = new ParseRSS(inputStream);
-                return parseRSS.getPodcast();
+                ParseRSS parseRSS = new ParseRSS();
+                XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
+                if(xmlPullParser != null) {
+                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser);
+                    if(podcast != null) {
+                        return podcast;
+                    }else{
+                        // ALERT THAT NOT RSS
+                    }
+                }
             } catch(HTTPConnectionException httpException) {
                 Log.d("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
                         " caused by URL:" + url);
@@ -148,10 +175,6 @@ public class SubscribeActivity extends Activity {
                 }
             }
             return null;
-        }
-
-        public InputStream getInStream() {
-            return inputStream;
         }
 
         class HTTPConnectionException extends IOException {

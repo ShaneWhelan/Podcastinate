@@ -2,6 +2,7 @@ package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -19,7 +20,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         databaseHelper = new DatabaseHelper(this);
-
+        databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 2, 3);
         final Button button = (Button) findViewById(R.string.addFeed);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {

@@ -16,40 +16,29 @@ import java.util.ArrayList;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class ParseRSS {
-    Podcast podcast = new Podcast();
+    private Podcast podcast = new Podcast();
 
-    public ParseRSS(InputStream inputStream){
-        if(inputStream != null){
-            //String feed = convertStreamToString(inputStream);
-            //longLogCat(feed);
-            //Log.d("sw9", "Feed Length: " + feed.length());
-            inputStreamToPullParser(inputStream);
-        }else{
-            Log.d("sw9", "Instream is null");
-        }
-    }
-
-    private void inputStreamToPullParser(InputStream inputStream) {
+    public XmlPullParser inputStreamToPullParser(InputStream inputStream) {
         try {
             XmlPullParser xmlPullParser = Xml.newPullParser();
             xmlPullParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             xmlPullParser.setInput(inputStream, null);
             xmlPullParser.nextTag();
-            parseRSSFeed(xmlPullParser);
+            return xmlPullParser;
         }catch(XmlPullParserException ex){
             Log.d("sw9", ex.toString());
         }catch (IOException ex){
             Log.d("sw9", ex.toString() + ex.getMessage());
             ex.printStackTrace();
         }
+        return null;
     }
 
-    private void parseRSSFeed(XmlPullParser xmlPullParser){
+    public Podcast parseRSSFeed(XmlPullParser xmlPullParser){
         ArrayList<Episode> episodeList = new ArrayList<Episode>();
         try {
             boolean hasParentNodeChannel = false;
             boolean hasParentNodeItem = false;
-            boolean isNewEpisode = true;
             Episode episode = null;
 
             // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
@@ -61,7 +50,6 @@ public class ParseRSS {
                     if(nodeName.equals("channel")) {
                         hasParentNodeChannel = true;
                     }
-
                     if(hasParentNodeChannel) {
                         // Title has multiple occurrences so we must remember its parent.
                         if(nodeName.equals("title")) {
@@ -78,10 +66,6 @@ public class ParseRSS {
                     if(nodeName.equals("item")){
                         hasParentNodeChannel = false;
                         hasParentNodeItem = true;
-                        isNewEpisode = true;
-                    }
-
-                    if(isNewEpisode) {
                         episode = new Episode();
                     }
 
@@ -103,25 +87,24 @@ public class ParseRSS {
                         }else if(nodeName.equals("enclosure")) {
                             saveEnclosure(xmlPullParser, episode);
                         }
-
                     }
                 }else if(xmlPullParser.getEventType() == XmlPullParser.END_TAG){
                     if(nodeName.equals("item")) {
                         hasParentNodeItem = false;
-                        // Possible bug here
-                        isNewEpisode = false;
                         episodeList.add(episode);
                     }
                 }
             }
             podcast.setEpisodeList(episodeList);
-            Log.d("sw9", " " + podcast.getEpisodeList().size());
+            Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
+            return podcast;
         } catch (XmlPullParserException e) {
             e.printStackTrace();
             Log.d("sw9", e.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     public void savePodcastTitle(XmlPullParser xmlPullParser) throws IOException, XmlPullParserException {
@@ -206,7 +189,7 @@ public class ParseRSS {
     }
 
     public static void longLogCat(String str) {
-        // Possible recusion here?
+        // Possible recursion here?
         if(str.length() > 4000) {
             Log.d("sw9", str.substring(0, 4000));
             longLogCat(str.substring(4000));
