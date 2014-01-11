@@ -1,8 +1,6 @@
 package com.shanewhelan.podcastinate.database;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -22,10 +20,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_PODCAST =
             "CREATE TABLE " + PodcastEntry.TABLE_NAME + " (" +
                     PodcastEntry.COLUMN_NAME_PODCAST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    PodcastEntry.COLUMN_NAME_TITLE + TEXT_TYPE + " UNIQUE" + COMMA_SEP + " " +
+                    PodcastEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP + " " +
                     PodcastEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP + " " +
                     PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP + " " +
-                    PodcastEntry.COLUMN_NAME_link + TEXT_TYPE + " UNIQUE" +
+                    PodcastEntry.COLUMN_NAME_LINK + TEXT_TYPE + " UNIQUE" +
                     " );";
     private static final String SQL_CREATE_EPISODE =
             "CREATE TABLE " + EpisodeEntry.TABLE_NAME + " (" +
@@ -78,78 +76,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DELETE_EPISODE_TABLE);
         db.execSQL(SQL_DELETE_CATEGORY_TABLE);
         onCreate(db);
-    }
-
-    public long insertPodcast(String title, String description, String imageDirectory, String link) {
-        // Create ContentValues Key-Value pair
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(PodcastEntry.COLUMN_NAME_TITLE, title);
-        contentValues.put(PodcastEntry.COLUMN_NAME_DESCRIPTION, description);
-        contentValues.put(PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY, imageDirectory);
-        contentValues.put(PodcastEntry.COLUMN_NAME_link, link);
-
-        SQLiteDatabase database = getWritableDatabase();
-        return database.insert(PodcastEntry.TABLE_NAME, PodcastEntry.COLUMN_NAME_TITLE,
-                contentValues);
-    }
-
-    public long insertEpisode(int podcastId, String episodeTitle, String link,
-                              String description, String date, String guid, String duration,
-                              String imageDirectory, String enclosure) {
-        // Create ContentValues Key-Value pair
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(EpisodeEntry.COLUMN_NAME_PODCAST_ID, podcastId);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_TITLE, episodeTitle);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_EPISODE_LINK, link);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_DESCRIPTION, description);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_PUB_DATE, date);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_GUID, guid);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_DURATION, duration);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY, imageDirectory);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_ENCLOSURE, enclosure);
-        SQLiteDatabase database = getWritableDatabase();
-        return database.insert(EpisodeEntry.TABLE_NAME, EpisodeEntry.COLUMN_NAME_TITLE,
-                contentValues);
-    }
-
-    public int getPodcastID(String podcastTitle) {
-        SQLiteDatabase database = getWritableDatabase();
-        int podcastId = 0;
-        String[] columns = {PodcastEntry.COLUMN_NAME_PODCAST_ID,
-                PodcastEntry.COLUMN_NAME_TITLE };
-        String sortOrder = PodcastEntry.COLUMN_NAME_TITLE + " DESC";
-        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null,
-                sortOrder);
-        if(cursor != null) {
-            cursor.moveToFirst();
-            while(cursor.moveToNext()){
-                if(cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_TITLE)).equals(podcastTitle) ) {
-                    podcastId = cursor.getInt(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_PODCAST_ID));
-                }
-            }
-        }
-        cursor.close();
-        return podcastId;
-    }
-
-    public Cursor getAllPodcastNames() {
-        SQLiteDatabase database = getWritableDatabase();
-        String[] columns = {
-                PodcastEntry.COLUMN_NAME_TITLE
-        };
-        String sortOrder = PodcastEntry.COLUMN_NAME_TITLE + " DESC";
-        return database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null,
-                sortOrder);
-    }
-
-    public Cursor getAllEpisodeNames(int podcastID) {
-        SQLiteDatabase database = getWritableDatabase();
-        String[] columns = {
-                EpisodeEntry.COLUMN_NAME_TITLE
-        };
-        String sortOrder = PodcastEntry.COLUMN_NAME_TITLE + " DESC";
-        return database.query(EpisodeEntry.TABLE_NAME, columns,
-                EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = " + podcastID, null, null, null,
-                sortOrder);
     }
 }

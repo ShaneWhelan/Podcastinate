@@ -2,10 +2,8 @@ package com.shanewhelan.podcastinate;
 
 import android.util.Log;
 import android.util.Xml;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +32,7 @@ public class ParseRSS {
         return null;
     }
 
-    public Podcast parseRSSFeed(XmlPullParser xmlPullParser){
+    public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String[] listOfLinks) throws DuplicatePodcastException {
         ArrayList<Episode> episodeList = new ArrayList<Episode>();
         try {
             boolean hasParentNodeChannel = false;
@@ -60,6 +58,9 @@ public class ParseRSS {
                             podcast.setImageDirectory("testDir");
                         }else if(nodeName.equals("link")) {
                             savePodcastLink(xmlPullParser);
+                            if(!checkLinkUnique(listOfLinks, podcast.getLink())) {
+                                throw new DuplicatePodcastException("Podcast Already in Database");
+                            }
                         }
                     }
 
@@ -69,7 +70,7 @@ public class ParseRSS {
                         episode = new Episode();
                     }
 
-                    if(hasParentNodeItem) {
+                    if(hasParentNodeItem) { // Needs some work to get the right metadata
                         if(nodeName.equals("title")) {
                             saveTitle(xmlPullParser, episode);
                         }else if(nodeName.equals("link")) {
@@ -80,7 +81,7 @@ public class ParseRSS {
                             savePubDate(xmlPullParser, episode);
                         }else if(nodeName.equals("guid")){
                             saveGuid(xmlPullParser, episode);
-                        }else if(nodeName.equals("duration")) {
+                        }else if(nodeName.equals("itunes:duration")) {
                             saveDuration(xmlPullParser, episode);
                         }else if(nodeName.equals("episodeImage")) {
                             saveEpisodeImage(xmlPullParser, episode);
@@ -99,10 +100,9 @@ public class ParseRSS {
             Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
             return podcast;
         } catch (XmlPullParserException e) {
-            e.printStackTrace();
-            Log.d("sw9", e.toString());
+            Log.e("sw9", e.getMessage());
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("sw9", e.getMessage());
         }
         return null;
     }
@@ -118,6 +118,16 @@ public class ParseRSS {
     public void savePodcastImageDirectory(XmlPullParser xmlPullParser) throws IOException,
             XmlPullParserException {
         podcast.setImageDirectory(xmlPullParser.nextText());
+    }
+
+    public boolean checkLinkUnique(String[] listOfLinks, String link) {
+        boolean linkUnique = false;
+        for(int i = 0; i < listOfLinks.length; i++) {
+            if(link.equals(listOfLinks[i])) {
+                linkUnique = true;
+            }
+        }
+        return linkUnique;
     }
 
     public void savePodcastLink(XmlPullParser xmlPullParser) throws IOException,

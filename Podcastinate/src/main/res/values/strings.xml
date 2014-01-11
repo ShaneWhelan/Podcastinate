@@ -13,4 +13,7 @@
     <string name="title_activity_subscribe">Subscribe_Activity</string>
     <string name="addFeed">addFeed</string>
     <string name="addFeedContent">+</string>
+    <string name="add_feed_icon">Add Feed</string>
+    <string name="subAdapter">subAdapter</string>
+    <string name="subTextView">subTextView</string>
 </resources>

@@ -3,7 +3,6 @@ package com.shanewhelan.podcastinate.activities;
 import android.app.Activity;
 import com.shanewhelan.podcastinate.R;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -16,8 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.*;
-import com.shanewhelan.podcastinate.database.DatabaseHelper;
-import com.shanewhelan.podcastinate.database.PodcastContract;
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -30,7 +28,6 @@ import java.util.ArrayList;
 /**
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
-@SuppressWarnings("ALL")
 public class SubscribeActivity extends Activity {
     private TextView subscribeUrl;
     @Override
@@ -72,7 +69,7 @@ public class SubscribeActivity extends Activity {
             Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
                     duration).show();
             return false;
-        } else if(networkInfo.isConnected() == false) {
+        } else if(!networkInfo.isConnected()) {
             // Alert the user that network is not available.
             Log.i("sw9", "Connected but no internet access");
             int duration = Toast.LENGTH_LONG;
@@ -90,52 +87,80 @@ public class SubscribeActivity extends Activity {
     }
 
     public void savePodcastToDb(Podcast podcast){
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        int podcastID = (int) dbHelper.insertPodcast(podcast.getTitle(), podcast.getDescription(),
+        PodcastDataSource dataSource = new PodcastDataSource(this);
+        dataSource.openDb();
+        int podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
                 podcast.getImageDirectory(), podcast.getLink());
 
         Log.d("sw9", "Podcast ID: " + podcastID);
-        int duration = Toast.LENGTH_LONG;
+
+        // If podcast inserted correctly now insert episodes too
         if(podcastID != -1) {
             ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
             for (Episode episode : listOfEpisodes) {
-                dbHelper.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
+                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
                         episode.getDescription(), episode.getPubDate(), episode.getGuid(),
                         episode.getDuration(), episode.getEpisodeImage(), episode.getEnclosure());
             }
-            // Send out a toast displaying success
-            // May be able to get this toast to the user faster
-            Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
         } else {
-            Log.d("sw9", "HIT: " + getApplicationContext().toString());
+            int duration = Toast.LENGTH_LONG;
             Toast.makeText(getApplicationContext(), "Already subscribed to podcast", duration).show();
         }
+        dataSource.closeDb();
     }
 
-    public class DownloadRSSFeed extends AsyncTask<String, Void, Podcast> {
+    public String[] getPodcastLinks(){
+        PodcastDataSource dataSource = new PodcastDataSource(this);
+        dataSource.openDb();
+        String[] listOfLinks = dataSource.getAllPodcastLinks();
+        dataSource.closeDb();
+        return listOfLinks;
+    }
+
+
+    public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
         private InputStream inputStream = null;
 
         @Override
-        protected Podcast doInBackground(String... urls) {
+        protected String doInBackground(String... urls) {
             try {
-                return downloadRSSFeed(urls[0]);
+                int result = downloadRSSFeed(urls[0]);
+                if(result == 1) {
+                    return "subscribed";
+                }else if(result == -1) {
+                    return "URL Invalid";
+                }else if(result == 0) {
+                    return "Not Valid Podcast Feed";
+                }
+            } catch (DuplicatePodcastException e) {
+                e.printStackTrace();
+                return "Already Subscribed to Link";
+            } catch(HTTPConnectionException httpException) {
+                Log.e("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
+                        " caused by URL");
+                return "Connection Error " + httpException.getResponseCode();
             } catch (IOException e) {
-                return null;
+                Log.e("sw9", "Fail on Download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
+                return "Exception: " + e.getClass();
             }
+            return "Error";
         }
 
         @Override
-        protected void onPostExecute(Podcast podcast){
-            if(podcast != null) {
-               savePodcastToDb(podcast);
-            } else {
-                int duration = Toast.LENGTH_LONG;
-                Toast.makeText(getApplicationContext(), "Podcast URL invalid", duration).show();
+        protected void onPostExecute(String subscribed){
+            int duration = Toast.LENGTH_LONG;
+            if(subscribed.equals("subscribed")) {
+                // Send out a toast displaying success
+                // May be able to get this toast to the user faster
+                Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
+            }else{
+                Toast.makeText(getApplicationContext(), subscribed , duration).show();
             }
             // Implement the observer design pattern here to move to feeds page.
+
         }
 
-        private Podcast downloadRSSFeed(String url) throws IOException {
+        private int downloadRSSFeed(String url) throws DuplicatePodcastException, IOException {
             int response;
             try {
                 URL feedURL = new URL(url);
@@ -154,27 +179,32 @@ public class SubscribeActivity extends Activity {
                 }else{
                     throw new HTTPConnectionException(response);
                 }
+
                 ParseRSS parseRSS = new ParseRSS();
                 XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
                 if(xmlPullParser != null) {
-                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser);
+                    String[] listOfLinks = getPodcastLinks();
+                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, listOfLinks);
+
                     if(podcast != null) {
-                        return podcast;
+                        savePodcastToDb(podcast);
+                        return 1;
                     }else{
-                        // ALERT THAT NOT RSS
+                        // Won't be false unless parser threw exception
+                        return 0;
                     }
                 }
-            } catch(HTTPConnectionException httpException) {
-                Log.d("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
-                        " caused by URL:" + url);
-            } catch (IOException e) {
-                Log.d("sw9", "Fail on Download RSS Feed, ERROR DUMP: " + e.getLocalizedMessage());
+
             } finally {
                 if (inputStream != null) {
-                    inputStream.close();
+                    try {
+                        inputStream.close();
+                    }catch (IOException e){
+                        Log.e("sw9", e.getMessage());
+                    }
                 }
             }
-            return null;
+            return -1;
         }
 
         class HTTPConnectionException extends IOException {
@@ -190,6 +220,5 @@ public class SubscribeActivity extends Activity {
             }
         }
     }
-
 }
 

@@ -16,7 +16,7 @@ public final class PodcastContract {
         public static final String COLUMN_NAME_TITLE = "title";
         public static final String COLUMN_NAME_DESCRIPTION = "description";
         public static final String COLUMN_NAME_IMAGE_DIRECTORY = "image_directory";
-        public static final String COLUMN_NAME_link = "link";
+        public static final String COLUMN_NAME_LINK = "link";
     }
 
     public static abstract class EpisodeEntry implements BaseColumns{
