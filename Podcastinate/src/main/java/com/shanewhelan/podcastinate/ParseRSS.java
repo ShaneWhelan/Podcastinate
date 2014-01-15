@@ -59,6 +59,7 @@ public class ParseRSS {
                         }else if(nodeName.equals("link")) {
                             savePodcastLink(xmlPullParser);
                             if(!checkLinkUnique(listOfLinks, podcast.getLink())) {
+                                // TODO: Fix Bug
                                 throw new DuplicatePodcastException("Podcast Already in Database");
                             }
                         }
@@ -121,10 +122,10 @@ public class ParseRSS {
     }
 
     public boolean checkLinkUnique(String[] listOfLinks, String link) {
-        boolean linkUnique = false;
+        boolean linkUnique = true;
         for(int i = 0; i < listOfLinks.length; i++) {
             if(link.equals(listOfLinks[i])) {
-                linkUnique = true;
+                linkUnique = false;
             }
         }
         return linkUnique;
@@ -165,49 +166,5 @@ public class ParseRSS {
 
     public void saveEnclosure(XmlPullParser xmlPullParser, Episode episode){
         episode.setEnclosure(xmlPullParser.getAttributeValue(null, "url"));
-    }
-
-    public String convertStreamToString(InputStream inputStream) {
-        /*
-        // Google's way that performs better but requires int length parameter
-        // 80 MS
-        try {
-            Reader reader = null;
-            reader = new InputStreamReader(inStream, "UTF-8");
-            char[] buffer = new char[length];
-            reader.read(buffer);
-            return new String(buffer);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
-        */
-        BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder total = new StringBuilder();
-        String line;
-        try {
-            while ((line = r.readLine()) != null) {
-                total.append(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        line = total.toString();
-        return line;
-    }
-
-    public static void longLogCat(String str) {
-        // Possible recursion here?
-        if(str.length() > 4000) {
-            Log.d("sw9", str.substring(0, 4000));
-            longLogCat(str.substring(4000));
-        } else
-            Log.d("sw9", str);
-    }
-
-    public Podcast getPodcast() {
-        return podcast;
     }
 }

@@ -3,6 +3,7 @@ package com.shanewhelan.podcastinate.activities;
 import android.app.Activity;
 import com.shanewhelan.podcastinate.R;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -66,16 +67,19 @@ public class SubscribeActivity extends Activity {
             // Alert the user that network connection methods are off
             Log.i("sw9", "WI-FI or Mobile Data turned off");
             int duration = Toast.LENGTH_LONG;
-            Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
+            if(getApplicationContext() != null) {
+                Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
                     duration).show();
+            }
             return false;
         } else if(!networkInfo.isConnected()) {
             // Alert the user that network is not available.
             Log.i("sw9", "Connected but no internet access");
             int duration = Toast.LENGTH_LONG;
-            Toast.makeText(getApplicationContext(), "Connected but no internet access",
+            if(getApplicationContext() != null) {
+                Toast.makeText(getApplicationContext(), "Connected but no internet access",
                     duration).show();
-
+            }
             return false;
         }
         return false;
@@ -83,7 +87,9 @@ public class SubscribeActivity extends Activity {
 
     public void subscribeToFeed() {
         DownloadRSSFeed downFeed = new DownloadRSSFeed();
-        downFeed.execute(subscribeUrl.getText().toString());
+        if(subscribeUrl.getText() != null) {
+            downFeed.execute(subscribeUrl.getText().toString());
+        }
     }
 
     public void savePodcastToDb(Podcast podcast){
@@ -104,9 +110,12 @@ public class SubscribeActivity extends Activity {
             }
         } else {
             int duration = Toast.LENGTH_LONG;
-            Toast.makeText(getApplicationContext(), "Already subscribed to podcast", duration).show();
+            if(getApplicationContext() != null) {
+                Toast.makeText(getApplicationContext(), "Already subscribed to podcast.", duration).show();
+            }
         }
         dataSource.closeDb();
+
     }
 
     public String[] getPodcastLinks(){
@@ -117,6 +126,11 @@ public class SubscribeActivity extends Activity {
         return listOfLinks;
     }
 
+    public void successfulSubscription() {
+        Intent intent = new Intent(this, MainActivity.class);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
 
     public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
         private InputStream inputStream = null;
@@ -134,13 +148,13 @@ public class SubscribeActivity extends Activity {
                 }
             } catch (DuplicatePodcastException e) {
                 e.printStackTrace();
-                return "Already Subscribed to Link";
+                return "Already subscribed to podcast";
             } catch(HTTPConnectionException httpException) {
                 Log.e("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
                         " caused by URL");
                 return "Connection Error " + httpException.getResponseCode();
             } catch (IOException e) {
-                Log.e("sw9", "Fail on Download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
+                Log.e("sw9", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
                 return "Exception: " + e.getClass();
             }
             return "Error";
@@ -152,9 +166,14 @@ public class SubscribeActivity extends Activity {
             if(subscribed.equals("subscribed")) {
                 // Send out a toast displaying success
                 // May be able to get this toast to the user faster
-                Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
+                if(getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
+                }
+                successfulSubscription();
             }else{
-                Toast.makeText(getApplicationContext(), subscribed , duration).show();
+                if(getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), subscribed , duration).show();
+                }
             }
             // Implement the observer design pattern here to move to feeds page.
 

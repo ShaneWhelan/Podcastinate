@@ -3,17 +3,12 @@ package com.shanewhelan.podcastinate.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
 import com.shanewhelan.podcastinate.database.PodcastContract.*;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
- *
- * Things left to implement:
- * Check if already exists
- * CRUD
- *
- */
+*/
+
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TEXT_TYPE = " TEXT";
     private static final String COMMA_SEP = ",";

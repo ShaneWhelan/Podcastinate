@@ -16,4 +16,6 @@
     <string name="add_feed_icon">Add Feed</string>
     <string name="subAdapter">subAdapter</string>
     <string name="subTextView">subTextView</string>
+    <string name="wipe_db">Wipe DB</string>
+    <string name="download_icon">DownloadIcon</string>
 </resources>
