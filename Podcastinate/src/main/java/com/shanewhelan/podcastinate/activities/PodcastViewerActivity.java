@@ -6,18 +6,16 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.View.*;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.EpisodeAdapter;
 import com.shanewhelan.podcastinate.R;
-import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+
+import static android.widget.CursorAdapter.*;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
@@ -32,29 +30,15 @@ public class PodcastViewerActivity extends Activity {
         String podcast = intent.getStringExtra("userChoice");
 
         PodcastDataSource dataSource = new PodcastDataSource(this);
+
         dataSource.openDb();
-        /*
+
         int podcastID = dataSource.getPodcastID(podcast);
-
-        Cursor listOfEpisodes = dataSource.getAllEpisodeNames(podcastID);
-
-
-        String[] fromColumns = new String[]{EpisodeEntry.COLUMN_NAME_TITLE};
-        int[] toViews = new int[]{R.id.episodeName};
-        SimpleCursorAdapter simpleCursorAdapter = new SimpleCursorAdapter(this,
-                R.layout.episode_list_item, listOfEpisodes, fromColumns, toViews, 0);
-
-        ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
-        listView.setAdapter(simpleCursorAdapter);
-        */
-        int podcastID = dataSource.getPodcastID(podcast);
-
         Cursor episodesCursor = dataSource.getAllEpisodeNames(podcastID);
-
-        EpisodeAdapter cursorAdapter = new EpisodeAdapter(this, episodesCursor, 2);
+        EpisodeAdapter cursorAdapter = new EpisodeAdapter(this, episodesCursor,
+                FLAG_REGISTER_CONTENT_OBSERVER);
 
         ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
-        //cursorAdapter.bindView(listView, this, episodesCursor);
         listView.setAdapter(cursorAdapter);
         dataSource.closeDb();
 
@@ -69,16 +53,5 @@ public class PodcastViewerActivity extends Activity {
             }
         };
         listView.setOnItemClickListener(itemCLickHandler);
-/*
-        ImageButton imageButton = (ImageButton) findViewById(R.id.download_icon);
-        OnClickListener onClickListener = new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ImageButton currentButton = (ImageButton) findViewById(R.id.download_icon);
-                Log.d("sw9", currentButton.getContentDescription().toString());
-            }
-        };
-        imageButton.setOnClickListener(onClickListener);
-        */
     }
 }
