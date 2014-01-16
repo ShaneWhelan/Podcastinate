@@ -18,10 +18,10 @@ android {
 
     defaultConfig {
         minSdkVersion 11
-        targetSdkVersion 18
+        targetSdkVersion 19
     }
 }
 
 dependencies {
-	compile 'com.android.support:appcompat-v7:+'
+    compile 'com.android.support:appcompat-v7:+'
 }

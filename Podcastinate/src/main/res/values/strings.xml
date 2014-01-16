@@ -2,20 +2,14 @@
 <resources>
 
     <string name="app_name">Podcastinate</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="playButtonText"><![CDATA[>]]></string>
     <string name="feedToSubscribeTo">feedToSubscribeTo</string>
-    <string name="playButton">playButton</string>
-    <string name="testButton">testButton</string>
     <string name="subscribeButton">Subscribe</string>
     <string name="displayRSSResults">displayRSSResults</string>
-    <string name="title_activity_subscribe">Subscribe_Activity</string>
     <string name="addFeed">addFeed</string>
-    <string name="addFeedContent">+</string>
-    <string name="add_feed_icon">Add Feed</string>
-    <string name="subAdapter">subAdapter</string>
-    <string name="subTextView">subTextView</string>
     <string name="wipe_db">Wipe DB</string>
     <string name="download_icon">DownloadIcon</string>
+    <string name="title_activity_download">DownloadActivity</string>
+
 </resources>

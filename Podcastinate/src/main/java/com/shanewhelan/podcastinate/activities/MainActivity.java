@@ -30,7 +30,7 @@ TODO: Refresh on subscription
 TODO: Add Refresh button
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail
-TODO: Add
+TODO: Render ic_download properly
 
 
  */
@@ -117,8 +117,8 @@ public class MainActivity extends Activity {
     }
 
     public void wipeDb(){
-        DatabaseHelper dbhelper = new DatabaseHelper(this);
-        dbhelper.onUpgrade(dbhelper.getWritableDatabase(), 1, 2);
+        DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 1, 2);
     }
 
     public void viewEpisode(String podcastChosen){

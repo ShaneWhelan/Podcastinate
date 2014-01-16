@@ -1,7 +1,6 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
-import com.shanewhelan.podcastinate.R;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;

@@ -4,10 +4,8 @@ import android.util.Log;
 import android.util.Xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /**
@@ -58,7 +56,7 @@ public class ParseRSS {
                             podcast.setImageDirectory("testDir");
                         }else if(nodeName.equals("link")) {
                             savePodcastLink(xmlPullParser);
-                            if(!checkLinkUnique(listOfLinks, podcast.getLink())) {
+                            if(!isLinkUnique(listOfLinks, podcast.getLink())) {
                                 // TODO: Fix Bug
                                 throw new DuplicatePodcastException("Podcast Already in Database");
                             }
@@ -121,10 +119,10 @@ public class ParseRSS {
         podcast.setImageDirectory(xmlPullParser.nextText());
     }
 
-    public boolean checkLinkUnique(String[] listOfLinks, String link) {
+    public boolean isLinkUnique(String[] listOfLinks, String link) {
         boolean linkUnique = true;
-        for(int i = 0; i < listOfLinks.length; i++) {
-            if(link.equals(listOfLinks[i])) {
+        for (String currentLink : listOfLinks) {
+            if (link.equals(currentLink)) {
                 linkUnique = false;
             }
         }
