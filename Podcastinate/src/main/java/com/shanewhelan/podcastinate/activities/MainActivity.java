@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /*
-TODO: Refresh on subscription
 TODO: Add Refresh button
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail
@@ -43,6 +42,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
         super.onCreate(savedInstanceState);
+        this.setTitle("Podcasts");
         setContentView(R.layout.activity_main);
 
         try {
@@ -56,7 +56,8 @@ public class MainActivity extends Activity {
         allPodcastNames = dataSource.getAllPodcastNames();
         String[] fromColumns = new String[]{PodcastEntry.COLUMN_NAME_TITLE};
         int[] toViews = new int[]{R.id.podcastName};
-        simpleCursorAdapter = new SimpleCursorAdapter(this, R.layout.podcast_list_item, allPodcastNames, fromColumns, toViews, 0);
+        simpleCursorAdapter = new SimpleCursorAdapter(this, R.layout.podcast_list_item,
+                allPodcastNames, fromColumns, toViews, 0);
 
         ListView listView = (ListView) findViewById(R.id.listOfPodcasts);
         listView.setAdapter(simpleCursorAdapter);
@@ -71,7 +72,6 @@ public class MainActivity extends Activity {
                 }
             }
         };
-
         listView.setOnItemClickListener(itemCLickHandler);
     }
 

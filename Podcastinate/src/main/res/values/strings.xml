@@ -8,5 +8,8 @@
     <string name="ic_download">DownloadIcon</string>
     <string name="title_activity_download">DownloadActivity</string>
     <string name="action_add_feed">Add Feed</string>
+    <string name="title_subscribe">Subscribe</string>
+    <string name="title_podcast_viewer">Podcast Viewer</string>
+    <string name="title_podcasts">Podcasts</string>
 
 </resources>

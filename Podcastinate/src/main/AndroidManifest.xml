@@ -15,7 +15,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.shanewhelan.podcastinate.activities.MainActivity"
-            android:label="Podcasts">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -24,7 +24,7 @@
         </activity>
         <activity
             android:name="com.shanewhelan.podcastinate.activities.SubscribeActivity"
-            android:label="Subscribe">
+            android:label="@string/title_subscribe">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -33,7 +33,7 @@
         </activity>
         <activity
             android:name="com.shanewhelan.podcastinate.activities.PodcastViewerActivity"
-            android:label="PodcastViewer">
+            android:label="@string/title_podcast_viewer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
