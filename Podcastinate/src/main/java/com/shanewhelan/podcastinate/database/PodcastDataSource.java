@@ -6,7 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import com.shanewhelan.podcastinate.database.PodcastContract.*;
+
+import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
+import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
 import java.util.Arrays;
 
@@ -30,7 +32,7 @@ public class PodcastDataSource {
         databaseHelper.close();
     }
 
-    public long insertPodcast(String title, String description, String imageDirectory, String link){
+    public long insertPodcast(String title, String description, String imageDirectory, String link) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(PodcastEntry.COLUMN_NAME_TITLE, title);
@@ -42,7 +44,7 @@ public class PodcastDataSource {
         try {
             result = database.insertOrThrow(PodcastEntry.TABLE_NAME, PodcastEntry.COLUMN_NAME_TITLE,
                     contentValues);
-        }catch (SQLiteConstraintException e){
+        } catch (SQLiteConstraintException e) {
             Log.e("sw9", Arrays.toString(e.getStackTrace()));
         }
         return result;
@@ -72,7 +74,7 @@ public class PodcastDataSource {
         String[] columns = {PodcastEntry.COLUMN_NAME_PODCAST_ID};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
                 PodcastEntry.COLUMN_NAME_TITLE + " = \"" + podcastTitle + "\"", null, null, null, null);
-        if(cursor != null) {
+        if (cursor != null) {
             cursor.moveToFirst();
             podcastId = cursor.getInt(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_PODCAST_ID));
             cursor.close();
@@ -91,9 +93,9 @@ public class PodcastDataSource {
 
         String[] listOfPodcasts = new String[cursor.getCount()];
 
-        if(cursor != null) {
+        if (cursor != null) {
             int i = 0;
-            while(cursor.moveToNext()){
+            while (cursor.moveToNext()) {
                 listOfPodcasts[i] = cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_LINK));
                 i++;
             }

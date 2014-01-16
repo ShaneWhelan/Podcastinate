@@ -3,11 +3,14 @@ package com.shanewhelan.podcastinate.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import com.shanewhelan.podcastinate.database.PodcastContract.*;
+
+import com.shanewhelan.podcastinate.database.PodcastContract.CategoryEntry;
+import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
+import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
-*/
+ */
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TEXT_TYPE = " TEXT";

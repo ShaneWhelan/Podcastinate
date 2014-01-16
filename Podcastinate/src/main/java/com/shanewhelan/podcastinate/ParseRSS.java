@@ -2,8 +2,10 @@ package com.shanewhelan.podcastinate;
 
 import android.util.Log;
 import android.util.Xml;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -21,9 +23,9 @@ public class ParseRSS {
             xmlPullParser.setInput(inputStream, null);
             xmlPullParser.nextTag();
             return xmlPullParser;
-        }catch(XmlPullParserException ex){
+        } catch (XmlPullParserException ex) {
             Log.d("sw9", ex.toString());
-        }catch (IOException ex){
+        } catch (IOException ex) {
             Log.d("sw9", ex.toString() + ex.getMessage());
             ex.printStackTrace();
         }
@@ -43,53 +45,53 @@ public class ParseRSS {
                 String nodeName = xmlPullParser.getName();
                 if (xmlPullParser.getEventType() == XmlPullParser.START_TAG) {
                     // Remember parent node channel for saving podcast name
-                    if(nodeName.equals("channel")) {
+                    if (nodeName.equals("channel")) {
                         hasParentNodeChannel = true;
                     }
-                    if(hasParentNodeChannel) {
+                    if (hasParentNodeChannel) {
                         // Title has multiple occurrences so we must remember its parent.
-                        if(nodeName.equals("title")) {
+                        if (nodeName.equals("title")) {
                             savePodcastTitle(xmlPullParser);
-                        }else if(nodeName.equals("description")) {
+                        } else if (nodeName.equals("description")) {
                             savePodcastDescription(xmlPullParser);
-                        }else if(nodeName.equals("image")) {
+                        } else if (nodeName.equals("image")) {
                             podcast.setImageDirectory("testDir");
-                        }else if(nodeName.equals("link")) {
+                        } else if (nodeName.equals("link")) {
                             savePodcastLink(xmlPullParser);
-                            if(!isLinkUnique(listOfLinks, podcast.getLink())) {
+                            if (!isLinkUnique(listOfLinks, podcast.getLink())) {
                                 // TODO: Fix Bug
                                 throw new DuplicatePodcastException("Podcast Already in Database");
                             }
                         }
                     }
 
-                    if(nodeName.equals("item")){
+                    if (nodeName.equals("item")) {
                         hasParentNodeChannel = false;
                         hasParentNodeItem = true;
                         episode = new Episode();
                     }
 
-                    if(hasParentNodeItem) { // Needs some work to get the right metadata
-                        if(nodeName.equals("title")) {
+                    if (hasParentNodeItem) { // Needs some work to get the right metadata
+                        if (nodeName.equals("title")) {
                             saveTitle(xmlPullParser, episode);
-                        }else if(nodeName.equals("link")) {
+                        } else if (nodeName.equals("link")) {
                             saveLink(xmlPullParser, episode);
-                        }else if(nodeName.equals("description")) {
+                        } else if (nodeName.equals("description")) {
                             saveDescription(xmlPullParser, episode);
-                        }else if(nodeName.equals("pubDate")) {
+                        } else if (nodeName.equals("pubDate")) {
                             savePubDate(xmlPullParser, episode);
-                        }else if(nodeName.equals("guid")){
+                        } else if (nodeName.equals("guid")) {
                             saveGuid(xmlPullParser, episode);
-                        }else if(nodeName.equals("itunes:duration")) {
+                        } else if (nodeName.equals("itunes:duration")) {
                             saveDuration(xmlPullParser, episode);
-                        }else if(nodeName.equals("episodeImage")) {
+                        } else if (nodeName.equals("episodeImage")) {
                             saveEpisodeImage(xmlPullParser, episode);
-                        }else if(nodeName.equals("enclosure")) {
+                        } else if (nodeName.equals("enclosure")) {
                             saveEnclosure(xmlPullParser, episode);
                         }
                     }
-                }else if(xmlPullParser.getEventType() == XmlPullParser.END_TAG){
-                    if(nodeName.equals("item")) {
+                } else if (xmlPullParser.getEventType() == XmlPullParser.END_TAG) {
+                    if (nodeName.equals("item")) {
                         hasParentNodeItem = false;
                         episodeList.add(episode);
                     }
@@ -162,7 +164,7 @@ public class ParseRSS {
         episode.setEpisodeImage(xmlPullParser.nextText());
     }
 
-    public void saveEnclosure(XmlPullParser xmlPullParser, Episode episode){
+    public void saveEnclosure(XmlPullParser xmlPullParser, Episode episode) {
         episode.setEnclosure(xmlPullParser.getAttributeValue(null, "url"));
     }
 }

@@ -7,7 +7,7 @@ import android.provider.BaseColumns;
  */
 public final class PodcastContract {
 
-    public PodcastContract(){
+    public PodcastContract() {
     }
 
     public static abstract class PodcastEntry implements BaseColumns {
@@ -19,7 +19,7 @@ public final class PodcastContract {
         public static final String COLUMN_NAME_LINK = "link";
     }
 
-    public static abstract class EpisodeEntry implements BaseColumns{
+    public static abstract class EpisodeEntry implements BaseColumns {
         public static final String TABLE_NAME = "episode";
         public static final String COLUMN_NAME_EPISODE_ID = "episode_id";
         public static final String COLUMN_NAME_LISTENED = "listened";
@@ -28,14 +28,14 @@ public final class PodcastContract {
         public static final String COLUMN_NAME_TITLE = "title";
         public static final String COLUMN_NAME_EPISODE_LINK = "episode_link";
         public static final String COLUMN_NAME_DESCRIPTION = "description";
-        public static final String COLUMN_NAME_PUB_DATE= "pub_date";
+        public static final String COLUMN_NAME_PUB_DATE = "pub_date";
         public static final String COLUMN_NAME_GUID = "guid";
         public static final String COLUMN_NAME_DURATION = "duration";
         public static final String COLUMN_NAME_IMAGE_DIRECTORY = "image_directory";
         public static final String COLUMN_NAME_ENCLOSURE = "enclosure";
     }
 
-    public static abstract class CategoryEntry implements BaseColumns{
+    public static abstract class CategoryEntry implements BaseColumns {
         public static final String TABLE_NAME = "category";
         public static final String COLUMN_NAME_CAT_ID = "cat_id";
         public static final String COLUMN_NAME_NAME = "name";

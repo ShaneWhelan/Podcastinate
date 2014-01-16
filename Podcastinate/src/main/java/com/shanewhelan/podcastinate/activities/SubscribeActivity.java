@@ -14,7 +14,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.shanewhelan.podcastinate.*;
+import com.shanewhelan.podcastinate.DuplicatePodcastException;
+import com.shanewhelan.podcastinate.Episode;
+import com.shanewhelan.podcastinate.ParseRSS;
+import com.shanewhelan.podcastinate.Podcast;
+import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -30,19 +34,20 @@ import java.util.ArrayList;
  */
 public class SubscribeActivity extends Activity {
     private TextView subscribeUrl;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.subscribe_activity);
 
-        subscribeUrl = (TextView) findViewById(R.string.feedToSubscribeTo);
+        subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
         // Test Line
         subscribeUrl.setText("http://nerdist.libsyn.com/rss");
 
-        final Button button = (Button) findViewById(R.string.testButton);
+        final Button button = (Button) findViewById(R.id.button_subscribe);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                if(testNetwork()){
+                if (testNetwork()) {
                     subscribeToFeed();
                 }
             }
@@ -62,22 +67,22 @@ public class SubscribeActivity extends Activity {
         NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             return true;
-        } else if(networkInfo == null) {
+        } else if (networkInfo == null) {
             // Alert the user that network connection methods are off
             Log.i("sw9", "WI-FI or Mobile Data turned off");
             int duration = Toast.LENGTH_LONG;
-            if(getApplicationContext() != null) {
+            if (getApplicationContext() != null) {
                 Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
-                    duration).show();
+                        duration).show();
             }
             return false;
-        } else if(!networkInfo.isConnected()) {
+        } else if (!networkInfo.isConnected()) {
             // Alert the user that network is not available.
             Log.i("sw9", "Connected but no internet access");
             int duration = Toast.LENGTH_LONG;
-            if(getApplicationContext() != null) {
+            if (getApplicationContext() != null) {
                 Toast.makeText(getApplicationContext(), "Connected but no internet access",
-                    duration).show();
+                        duration).show();
             }
             return false;
         }
@@ -86,12 +91,12 @@ public class SubscribeActivity extends Activity {
 
     public void subscribeToFeed() {
         DownloadRSSFeed downFeed = new DownloadRSSFeed();
-        if(subscribeUrl.getText() != null) {
+        if (subscribeUrl.getText() != null) {
             downFeed.execute(subscribeUrl.getText().toString());
         }
     }
 
-    public void savePodcastToDb(Podcast podcast){
+    public void savePodcastToDb(Podcast podcast) {
         PodcastDataSource dataSource = new PodcastDataSource(this);
         dataSource.openDb();
         int podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
@@ -100,7 +105,7 @@ public class SubscribeActivity extends Activity {
         Log.d("sw9", "Podcast ID: " + podcastID);
 
         // If podcast inserted correctly now insert episodes too
-        if(podcastID != -1) {
+        if (podcastID != -1) {
             ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
             for (Episode episode : listOfEpisodes) {
                 dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
@@ -109,7 +114,7 @@ public class SubscribeActivity extends Activity {
             }
         } else {
             int duration = Toast.LENGTH_LONG;
-            if(getApplicationContext() != null) {
+            if (getApplicationContext() != null) {
                 Toast.makeText(getApplicationContext(), "Already subscribed to podcast.", duration).show();
             }
         }
@@ -117,7 +122,7 @@ public class SubscribeActivity extends Activity {
 
     }
 
-    public String[] getPodcastLinks(){
+    public String[] getPodcastLinks() {
         PodcastDataSource dataSource = new PodcastDataSource(this);
         dataSource.openDb();
         String[] listOfLinks = dataSource.getAllPodcastLinks();
@@ -138,17 +143,17 @@ public class SubscribeActivity extends Activity {
         protected String doInBackground(String... urls) {
             try {
                 int result = downloadRSSFeed(urls[0]);
-                if(result == 1) {
+                if (result == 1) {
                     return "subscribed";
-                }else if(result == -1) {
+                } else if (result == -1) {
                     return "URL Invalid";
-                }else if(result == 0) {
+                } else if (result == 0) {
                     return "Not Valid Podcast Feed";
                 }
             } catch (DuplicatePodcastException e) {
                 e.printStackTrace();
                 return "Already subscribed to podcast";
-            } catch(HTTPConnectionException httpException) {
+            } catch (HTTPConnectionException httpException) {
                 Log.e("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
                         " caused by URL");
                 return "Connection Error " + httpException.getResponseCode();
@@ -160,18 +165,18 @@ public class SubscribeActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(String subscribed){
+        protected void onPostExecute(String subscribed) {
             int duration = Toast.LENGTH_LONG;
-            if(subscribed.equals("subscribed")) {
+            if (subscribed.equals("subscribed")) {
                 // Send out a toast displaying success
                 // May be able to get this toast to the user faster
-                if(getApplicationContext() != null) {
+                if (getApplicationContext() != null) {
                     Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
                 }
                 successfulSubscription();
-            }else{
-                if(getApplicationContext() != null) {
-                    Toast.makeText(getApplicationContext(), subscribed , duration).show();
+            } else {
+                if (getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), subscribed, duration).show();
                 }
             }
             // Implement the observer design pattern here to move to feeds page.
@@ -192,22 +197,22 @@ public class SubscribeActivity extends Activity {
                 httpCon.connect();
                 response = httpCon.getResponseCode();
 
-                if(response == 200) {
+                if (response == 200) {
                     inputStream = httpCon.getInputStream();
-                }else{
+                } else {
                     throw new HTTPConnectionException(response);
                 }
 
                 ParseRSS parseRSS = new ParseRSS();
                 XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
-                if(xmlPullParser != null) {
+                if (xmlPullParser != null) {
                     String[] listOfLinks = getPodcastLinks();
                     Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, listOfLinks);
 
-                    if(podcast != null) {
+                    if (podcast != null) {
                         savePodcastToDb(podcast);
                         return 1;
-                    }else{
+                    } else {
                         // Won't be false unless parser threw exception
                         return 0;
                     }
@@ -217,7 +222,7 @@ public class SubscribeActivity extends Activity {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         Log.e("sw9", e.getMessage());
                     }
                 }

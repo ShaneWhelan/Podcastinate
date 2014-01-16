@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.DatabaseHelper;
-import com.shanewhelan.podcastinate.database.PodcastContract.*;
+import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import java.io.File;
@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+
 /*
 TODO: Refresh on subscription
 TODO: Add Refresh button
@@ -40,7 +41,7 @@ public class MainActivity extends Activity {
     private Cursor allPodcastNames;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) throws NullPointerException{
+    protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -65,7 +66,7 @@ public class MainActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView textView = ((TextView) view.findViewById(R.id.podcastName));
-                if(textView.getText() != null) {
+                if (textView.getText() != null) {
                     viewEpisode(textView.getText().toString());
                 }
             }
@@ -101,8 +102,8 @@ public class MainActivity extends Activity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if(requestCode == 1) {
-            if(resultCode == RESULT_OK) {
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
                 updateListOfPodcasts();
             }
         }
@@ -116,12 +117,12 @@ public class MainActivity extends Activity {
         dataSource.closeDb();
     }
 
-    public void wipeDb(){
+    public void wipeDb() {
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 1, 2);
     }
 
-    public void viewEpisode(String podcastChosen){
+    public void viewEpisode(String podcastChosen) {
         Intent intent = new Intent(this, PodcastViewerActivity.class);
         intent.putExtra("userChoice", podcastChosen);
         startActivity(intent);

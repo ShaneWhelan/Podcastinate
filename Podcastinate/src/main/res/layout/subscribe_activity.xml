@@ -10,23 +10,18 @@
               tools:context=".SubscribeActivity">
 
     <EditText
-        android:id="@string/feedToSubscribeTo"
+        android:id="@+id/edit_text_feed_url"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:inputType="textUri" />
+        android:inputType="textUri"/>
 
     <Button
-        android:id="@string/testButton"
+        android:id="@+id/button_subscribe"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/subscribeButton"
+        android:text="@string/button_subscribe"
         android:layout_gravity="bottom"
         android:fontFamily="monospace"
-        android:freezesText="false" />
-
-    <TextView
-        android:id="@string/displayRSSResults"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:freezesText="false"/>
 
 </LinearLayout>

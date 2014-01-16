@@ -11,7 +11,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import com.shanewhelan.podcastinate.R;
-import com.shanewhelan.podcastinate.database.PodcastContract.*;
+import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 /**
