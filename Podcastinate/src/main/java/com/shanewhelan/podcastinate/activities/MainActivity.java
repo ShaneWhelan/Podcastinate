@@ -31,6 +31,7 @@ TODO: Add Refresh button
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail
 TODO: Render ic_download properly
+TODO: Use date columns in sql database, fix columns episode link
 
 
  */

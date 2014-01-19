@@ -3,7 +3,6 @@ package com.shanewhelan.podcastinate;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.*;
@@ -21,11 +20,16 @@ import com.shanewhelan.podcastinate.database.PodcastContract.*;
 public class EpisodeAdapter extends CursorAdapter implements OnClickListener {
     private final LayoutInflater layoutInflater;
     public Context context;
+    private String podcastTitle;
 
     public EpisodeAdapter(Context context, Cursor cursor, int flags) {
         super(context, cursor, flags);
         layoutInflater = LayoutInflater.from(context);
         this.context = context;
+    }
+
+    public void setEpisodeName(String episodeName) {
+        this.podcastTitle = episodeName;
     }
 
     @Override
@@ -47,7 +51,8 @@ public class EpisodeAdapter extends CursorAdapter implements OnClickListener {
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(context, DownloadActivity.class);
-        intent.putExtra("episode_name", v.getContentDescription());
+        intent.putExtra("episode_title", v.getContentDescription());
+        intent.putExtra("podcast_title", podcastTitle);
         context.startActivity(intent);
     }
 }

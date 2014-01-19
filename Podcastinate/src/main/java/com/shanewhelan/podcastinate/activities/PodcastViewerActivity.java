@@ -27,17 +27,17 @@ public class PodcastViewerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.episode_list);
         Intent intent = getIntent();
-        String podcast = intent.getStringExtra("userChoice");
+        String podcastName = intent.getStringExtra("userChoice");
 
         PodcastDataSource dataSource = new PodcastDataSource(this);
 
         dataSource.openDb();
 
-        int podcastID = dataSource.getPodcastID(podcast);
+        int podcastID = dataSource.getPodcastID(podcastName);
         Cursor episodesCursor = dataSource.getAllEpisodeNames(podcastID);
         EpisodeAdapter cursorAdapter = new EpisodeAdapter(this, episodesCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
-
+        cursorAdapter.setEpisodeName(podcastName);
         ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
         listView.setAdapter(cursorAdapter);
         dataSource.closeDb();

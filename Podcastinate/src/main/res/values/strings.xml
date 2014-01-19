@@ -6,7 +6,7 @@
     <string name="button_subscribe">Subscribe</string>
     <string name="action_wipe_db">Wipe DB</string>
     <string name="ic_download">DownloadIcon</string>
-    <string name="title_activity_download">DownloadActivity</string>
+    <string name="title_activity_download">Downloads</string>
     <string name="action_add_feed">Add Feed</string>
     <string name="title_subscribe">Subscribe</string>
     <string name="title_podcast_viewer">Podcast Viewer</string>

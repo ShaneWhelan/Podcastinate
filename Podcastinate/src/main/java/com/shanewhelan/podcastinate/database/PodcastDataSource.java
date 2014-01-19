@@ -110,4 +110,20 @@ public class PodcastDataSource {
                 " WHERE " + EpisodeEntry.COLUMN_NAME_PODCAST_ID
                 + " = " + podcastID, null);
     }
+
+    public String getEpisodeEnclosure(String podcastTitle, String episodeTitle){
+        String enclosure = "";
+        int podcastId = getPodcastID(podcastTitle);
+        String[] columns = {EpisodeEntry.COLUMN_NAME_ENCLOSURE};
+        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
+                EpisodeEntry.COLUMN_NAME_TITLE + " = \"" + episodeTitle + "\" AND " +
+                EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = " + podcastId,
+                null, null, null, null);
+        if(cursor != null){
+            cursor.moveToFirst();
+            enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
+            cursor.close();
+        }
+        return enclosure;
+    }
 }
