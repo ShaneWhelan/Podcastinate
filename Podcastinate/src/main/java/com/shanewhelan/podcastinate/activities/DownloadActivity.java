@@ -1,27 +1,37 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+import com.shanewhelan.podcastinate.services.DownloadService;
 
 public class DownloadActivity extends Activity {
+    public static final String PODCAST_TITLE = "podcast_title";
+    public static final String EPISODE_TITLE = "episode_title";
+    public static final String ENCLOSURE = "enclosure";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download);
-        String podcastTitle = this.getIntent().getStringExtra("podcast_title");
-        String episodeTitle = this.getIntent().getStringExtra("episode_title");
-        addToDownloadQueue(podcastTitle, episodeTitle);
+        addToDownloadQueue();
     }
 
-    private void addToDownloadQueue(String podcastTitle, String episodeTitle) {
+    private void addToDownloadQueue() {
+        String podcastTitle = this.getIntent().getStringExtra(PODCAST_TITLE);
+        String episodeTitle = this.getIntent().getStringExtra(EPISODE_TITLE);
+
         PodcastDataSource dataSource = new  PodcastDataSource(this);
         dataSource.openDb();
-        Log.d("sw9", dataSource.getEpisodeEnclosure(podcastTitle, episodeTitle));
+        String enclosure = dataSource.getEpisodeEnclosure(podcastTitle, episodeTitle);
+        Intent intent = new Intent(this, DownloadService.class);
+        intent.putExtra(PODCAST_TITLE, podcastTitle);
+        intent.putExtra(EPISODE_TITLE, episodeTitle);
+        intent.putExtra(ENCLOSURE, enclosure);
+        this.startService(intent);
         dataSource.closeDb();
     }
 

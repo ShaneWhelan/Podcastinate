@@ -51,8 +51,8 @@ public class EpisodeAdapter extends CursorAdapter implements OnClickListener {
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(context, DownloadActivity.class);
-        intent.putExtra("episode_title", v.getContentDescription());
-        intent.putExtra("podcast_title", podcastTitle);
+        intent.putExtra(DownloadActivity.EPISODE_TITLE, v.getContentDescription());
+        intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
         context.startActivity(intent);
     }
 }
