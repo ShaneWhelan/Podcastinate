@@ -111,11 +111,10 @@ public class DownloadService extends IntentService {
                 long start = System.nanoTime();
 
                 // Initialise Notification and Builder
-                // TODO: Change Icon in notification
                 notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder = new Builder(this);
                 builder.setContentTitle(episodeTitle).setContentText("Download in progress")
-                        .setSmallIcon(R.drawable.ic_download);
+                        .setSmallIcon(R.drawable.ic_action_download);
 
                 // Use count to make sure we only update the progress bar 50 times in total
                 double count = 0;
