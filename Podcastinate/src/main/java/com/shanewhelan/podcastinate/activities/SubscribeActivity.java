@@ -20,6 +20,7 @@ import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -228,19 +229,6 @@ public class SubscribeActivity extends Activity {
                 }
             }
             return -1;
-        }
-
-        class HTTPConnectionException extends IOException {
-            private int responseCode;
-
-            public HTTPConnectionException(int responseCode) {
-                super();
-                this.responseCode = responseCode;
-            }
-
-            public int getResponseCode() {
-                return responseCode;
-            }
         }
     }
 }
