@@ -14,29 +14,30 @@ import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TEXT_TYPE = " TEXT";
-    private static final String COMMA_SEP = ",";
+    private static final String COMMA_SEP = ", ";
     private static final String SQL_CREATE_PODCAST =
             "CREATE TABLE " + PodcastEntry.TABLE_NAME + " (" +
                     PodcastEntry.COLUMN_NAME_PODCAST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    PodcastEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP + " " +
-                    PodcastEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP + " " +
-                    PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP + " " +
+                    PodcastEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.COLUMN_NAME_LINK + TEXT_TYPE + " UNIQUE" +
                     " );";
     private static final String SQL_CREATE_EPISODE =
             "CREATE TABLE " + EpisodeEntry.TABLE_NAME + " (" +
                     EpisodeEntry.COLUMN_NAME_EPISODE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    EpisodeEntry.COLUMN_NAME_PODCAST_ID + " INTEGER" + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_LISTENED + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_CURRENT_TIME + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_EPISODE_LINK + TEXT_TYPE + " UNIQUE" + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_PUB_DATE + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_GUID + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_DURATION + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP + " " +
-                    EpisodeEntry.COLUMN_NAME_ENCLOSURE + TEXT_TYPE + COMMA_SEP + " " +
+                    EpisodeEntry.COLUMN_NAME_PODCAST_ID + " INTEGER" + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_DIRECTORY + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_LISTENED + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_CURRENT_TIME + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_EPISODE_LINK + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_PUB_DATE + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_GUID + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_DURATION + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_ENCLOSURE + TEXT_TYPE + COMMA_SEP +
                     "FOREIGN KEY(" + EpisodeEntry.COLUMN_NAME_PODCAST_ID + ") REFERENCES " +
                     PodcastEntry.TABLE_NAME + "(" + PodcastEntry.COLUMN_NAME_PODCAST_ID + ") " +
                     " );";
