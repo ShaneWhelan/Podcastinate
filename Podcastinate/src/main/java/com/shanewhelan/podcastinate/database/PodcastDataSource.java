@@ -68,6 +68,13 @@ public class PodcastDataSource {
                 contentValues);
     }
 
+    public long updateEpisodeDirectory(String enclosure, String directory) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(EpisodeEntry.COLUMN_NAME_DIRECTORY, directory);
+        return database.update(EpisodeEntry.TABLE_NAME, contentValues,
+                EpisodeEntry.COLUMN_NAME_ENCLOSURE + " = \"" + enclosure + "\"", null);
+    }
+
 
     public int getPodcastID(String podcastTitle) {
         int podcastId = 0;
@@ -106,7 +113,13 @@ public class PodcastDataSource {
 
     public Cursor getAllEpisodeNames(int podcastID) {
         return database.rawQuery("SELECT " + EpisodeEntry.COLUMN_NAME_EPISODE_ID +
-                " as _id, " + EpisodeEntry.COLUMN_NAME_TITLE + " FROM " + EpisodeEntry.TABLE_NAME +
+                " as _id, " + EpisodeEntry.COLUMN_NAME_TITLE + ", " +
+                EpisodeEntry.COLUMN_NAME_DIRECTORY + ", " +
+                EpisodeEntry.COLUMN_NAME_LISTENED + ", " +
+                EpisodeEntry.COLUMN_NAME_CURRENT_TIME + ", " +
+                EpisodeEntry.COLUMN_NAME_DURATION + ", " +
+                EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + ", " +
+                EpisodeEntry.COLUMN_NAME_ENCLOSURE + " FROM " + EpisodeEntry.TABLE_NAME +
                 " WHERE " + EpisodeEntry.COLUMN_NAME_PODCAST_ID
                 + " = " + podcastID, null);
     }
