@@ -22,5 +22,13 @@
         android:layout_height="65dp"
         android:background="@drawable/download_icon_selector"
         android:contentDescription="@string/ic_download" />
+    <ImageButton
+        android:id="@+id/play_icon"
+        android:layout_width="0dp"
+        android:layout_weight="0.2"
+        android:layout_height="65dp"
+        android:background="@drawable/play_icon_selector"
+        android:visibility="gone"
+        android:contentDescription="@string/ic_play" />
 
 </LinearLayout>

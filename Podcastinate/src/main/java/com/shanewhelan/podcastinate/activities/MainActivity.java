@@ -53,6 +53,7 @@ public class MainActivity extends Activity {
         }
 
         dataSource = new PodcastDataSource(this);
+
         dataSource.openDb();
         allPodcastNames = dataSource.getAllPodcastNames();
         String[] fromColumns = new String[]{PodcastEntry.COLUMN_NAME_TITLE};

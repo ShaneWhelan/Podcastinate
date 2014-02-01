@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.activities.DownloadActivity;
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
 import org.apache.http.HttpResponse;
@@ -46,7 +47,7 @@ public class DownloadService extends IntentService {
         String episodeTitle = intent.getStringExtra(DownloadActivity.EPISODE_TITLE);
         String enclosure = intent.getStringExtra(DownloadActivity.ENCLOSURE);
 
-        String filePath = null;
+        String directory = null;
         try {
             // Download podcast file
             HttpGet httpGet = new HttpGet(new URI(enclosure));
@@ -151,10 +152,15 @@ public class DownloadService extends IntentService {
                 fileOutput.close();
 
                 if(downloadedSize == contentLength) {
-                    filePath = podcastFile.getAbsolutePath();
+                    directory = podcastFile.getAbsolutePath();
                 }
+
+                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                pds.openDb();
+                pds.updateEpisodeDirectory(enclosure, directory);
+                pds.closeDb();
                 // Update DB that file is downloaded with the path
-                Log.d("sw9", "filepath:" + " " + filePath);
+                Log.d("sw9", "filepath:" + " " + directory);
             }
         } catch (MalformedURLException e) {
             Log.e("sw9", "Malformed URL " + e.getMessage());

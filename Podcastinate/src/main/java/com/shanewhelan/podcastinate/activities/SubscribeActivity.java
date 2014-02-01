@@ -49,6 +49,8 @@ public class SubscribeActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (testNetwork()) {
+                    button.setClickable(false);
+                    button.setVisibility(View.INVISIBLE);
                     subscribeToFeed();
                 }
             }
@@ -167,6 +169,10 @@ public class SubscribeActivity extends Activity {
 
         @Override
         protected void onPostExecute(String subscribed) {
+            Button button = (Button) findViewById(R.id.button_subscribe);
+            button.setClickable(true);
+            button.setVisibility(View.VISIBLE);
+
             int duration = Toast.LENGTH_LONG;
             if (subscribed.equals("subscribed")) {
                 // Send out a toast displaying success
