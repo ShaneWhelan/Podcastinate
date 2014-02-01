@@ -22,6 +22,7 @@ public final class PodcastContract {
     public static abstract class EpisodeEntry implements BaseColumns {
         public static final String TABLE_NAME = "episode";
         public static final String COLUMN_NAME_EPISODE_ID = "episode_id";
+        public static final String COLUMN_NAME_DIRECTORY = "directory";
         public static final String COLUMN_NAME_LISTENED = "listened";
         public static final String COLUMN_NAME_CURRENT_TIME = "current_time";
         public static final String COLUMN_NAME_PODCAST_ID = "podcast_id";
