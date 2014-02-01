@@ -39,8 +39,16 @@ public class EpisodeAdapter extends CursorAdapter implements OnClickListener {
         episodeNameView.setText(episodeName);
 
         ImageButton downloadButton = (ImageButton) view.findViewById(R.id.download_icon);
+        ImageButton playButton = (ImageButton) view.findViewById(R.id.play_icon);
         downloadButton.setContentDescription(episodeName);
         downloadButton.setOnClickListener(this);
+        if(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)) != null) {
+            downloadButton.setVisibility(View.GONE);
+            playButton.setVisibility(View.VISIBLE);
+        }else{
+            playButton.setVisibility(View.GONE);
+            downloadButton.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
