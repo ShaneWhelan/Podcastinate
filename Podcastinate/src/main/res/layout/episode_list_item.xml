@@ -30,5 +30,13 @@
         android:background="@drawable/play_icon_selector"
         android:visibility="gone"
         android:contentDescription="@string/ic_play" />
+    <ImageButton
+        android:id="@+id/pause_icon"
+        android:layout_width="0dp"
+        android:layout_weight="0.2"
+        android:layout_height="65dp"
+        android:background="@drawable/pause_icon_selector"
+        android:visibility="gone"
+        android:contentDescription="@string/ic_pause" />
 
 </LinearLayout>

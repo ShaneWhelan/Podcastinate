@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.shanewhelan.podcastinate.EpisodeAdapter;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 import static android.widget.CursorAdapter.*;
 
@@ -21,6 +22,7 @@ import static android.widget.CursorAdapter.*;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class PodcastViewerActivity extends Activity {
+    private static EpisodeAdapter cursorAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,7 +37,7 @@ public class PodcastViewerActivity extends Activity {
 
         int podcastID = dataSource.getPodcastID(podcastName);
         Cursor episodesCursor = dataSource.getAllEpisodeNames(podcastID);
-        EpisodeAdapter cursorAdapter = new EpisodeAdapter(this, episodesCursor,
+        cursorAdapter = new EpisodeAdapter(this, episodesCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
         cursorAdapter.setEpisodeName(podcastName);
         ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
@@ -53,5 +55,25 @@ public class PodcastViewerActivity extends Activity {
             }
         };
         listView.setOnItemClickListener(itemCLickHandler);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(cursorAdapter.getAudioService() != null) {
+            unbindService(cursorAdapter.getServiceConnection());
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(cursorAdapter.getAudioService() != null) {
+            if(cursorAdapter.getAudioService().getPlayer().isPlaying()) {
+                Intent intent = new Intent(this, AudioPlayerService.class);
+                intent.setAction(AudioPlayerService.ACTION_PLAY);
+                bindService(intent, cursorAdapter.getServiceConnection(), BIND_ABOVE_CLIENT);
+            }
+        }
     }
 }

@@ -12,5 +12,7 @@
     <string name="title_podcast_viewer">Podcast Viewer</string>
     <string name="title_podcasts">Podcasts</string>
     <string name="ic_play">PlayButton</string>
+    <string name="ic_pause">PauseButton</string>
+    <string name="mainPlayButton">Main Play Button</string>
 
 </resources>

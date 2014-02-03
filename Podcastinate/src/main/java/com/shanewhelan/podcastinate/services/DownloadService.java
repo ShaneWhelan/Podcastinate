@@ -80,7 +80,7 @@ public class DownloadService extends IntentService {
             if (episodeTitle != null) {
                 fileNameTemp = episodeTitle.replace(" ", "-");
                 fileNameTemp = fileNameTemp.replaceAll("[$&+,:;=?!@#|]", ""); // Check this regex
-            }else {
+            } else {
                 Random rand = new Random();
                 fileNameTemp = "R" + rand.nextInt(10000000);
             }
@@ -90,7 +90,7 @@ public class DownloadService extends IntentService {
             if (podcastTitle != null) {
                 filename = String.valueOf(podcastTitle.charAt(0)) +
                         String.valueOf(podcastTitle.charAt(podcastTitle.length()-1)) + "-" + fileNameTemp + ".mp3";
-            }else {
+            } else {
                 filename = "RP" + "-" + fileNameTemp + ".mp3";
             }
 
