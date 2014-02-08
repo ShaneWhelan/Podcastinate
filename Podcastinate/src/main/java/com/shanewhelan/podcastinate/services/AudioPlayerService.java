@@ -8,6 +8,8 @@ import android.os.IBinder;
 
 import android.os.PowerManager;
 
+import com.shanewhelan.podcastinate.Utilities;
+
 import java.io.IOException;
 
 /**
@@ -38,6 +40,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 player = new MediaPlayer();
                 player.reset();
                 player.setDataSource(intent.getStringExtra(DIRECTORY));
+                player.setLooping(false);
                 player.setOnPreparedListener(this);
                 player.setOnErrorListener(this);
                 // Keeps CPU from sleeping
@@ -54,6 +57,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public void onPrepared(MediaPlayer player) {
         player.start();
+        Intent intent = new Intent();
+        intent.setAction(Utilities.ACTION_PLAY);
+        sendBroadcast(intent);
     }
 
     @Override
@@ -71,15 +77,20 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void pauseMedia() {
         player.pause();
+        Intent intent = new Intent();
+        intent.setAction(Utilities.ACTION_PAUSE);
+        sendBroadcast(intent);
     }
 
     public void resumeMedia() {
-        player.stop();
+        player.start();
+        Intent intent = new Intent();
+        intent.setAction(Utilities.ACTION_PLAY);
+        sendBroadcast(intent);
     }
 
 
     public MediaPlayer getPlayer() {
         return player;
     }
-
 }

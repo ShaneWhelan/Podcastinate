@@ -23,16 +23,24 @@
     <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_weight="6">
+    android:layout_weight="6"
+    android:gravity="center">
 
     <ImageButton
         android:id="@+id/mainPlayButton"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_gravity="center_horizontal"
+
         android:background="@drawable/play_icon_selector"
-        android:contentDescription="@string/mainPlayButton"
-        />
+        android:contentDescription="@string/mainPlayButton"/>
+
+    <ImageButton
+        android:id="@+id/mainPauseButton"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/pause_icon_selector"
+        android:visibility="gone"
+        android:contentDescription="@string/ic_pause" />
 
     </LinearLayout>
 
