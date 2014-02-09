@@ -7,7 +7,6 @@ import android.os.Binder;
 import android.os.IBinder;
 
 import android.os.PowerManager;
-import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;

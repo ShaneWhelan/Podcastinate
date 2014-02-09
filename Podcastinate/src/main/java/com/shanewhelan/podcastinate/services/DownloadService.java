@@ -106,7 +106,7 @@ public class DownloadService extends IntentService {
 
                 // Stats for downloading
                 long contentLength = httpResponse.getEntity().getContentLength();
-                double contentLengInt = (int) contentLength;
+                double contentLengthInt = (int) contentLength;
                 double downloadedSize = 0;
                 byte[] buffer = new byte[32768];
                 int bufferLength;
@@ -125,7 +125,7 @@ public class DownloadService extends IntentService {
                     fileOutput.write(buffer, 0, bufferLength);
                     downloadedSize += bufferLength;
                     // Download progress as a percentage
-                    dlProgress = ((downloadedSize /contentLengInt)*100);
+                    dlProgress = ((downloadedSize /contentLengthInt)*100);
 
                     if(dlProgress > count) {
                         // Number we add on here is how frequently we want the progress bar to update
@@ -162,7 +162,7 @@ public class DownloadService extends IntentService {
                 pds.updateEpisodeDirectory(enclosure, directory);
                 pds.closeDb();
                 // Update DB that file is downloaded with the path
-                Log.d("sw9", "filepath:" + " " + directory);
+                Log.d("sw9", "file path:" + " " + directory);
             }
         } catch (MalformedURLException e) {
             Log.e("sw9", "Malformed URL " + e.getMessage());
