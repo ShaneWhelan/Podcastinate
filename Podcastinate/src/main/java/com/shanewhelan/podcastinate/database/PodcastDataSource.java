@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
@@ -132,11 +133,52 @@ public class PodcastDataSource {
                 EpisodeEntry.COLUMN_NAME_TITLE + " = \"" + episodeTitle + "\" AND " +
                 EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = " + podcastId,
                 null, null, null, null);
-        if(cursor != null){
+        if(cursor != null) {
             cursor.moveToFirst();
             enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
             cursor.close();
         }
         return enclosure;
+    }
+
+    // TODO: Look into refactoring with podcastTitle as a parameter
+    public Episode getEpisodeMetaData(String directory) {
+        String[] columns = {EpisodeEntry.COLUMN_NAME_LISTENED,
+                EpisodeEntry.COLUMN_NAME_CURRENT_TIME, EpisodeEntry.COLUMN_NAME_PODCAST_ID,
+                EpisodeEntry.COLUMN_NAME_TITLE, EpisodeEntry.COLUMN_NAME_DESCRIPTION,
+                EpisodeEntry.COLUMN_NAME_PUB_DATE, EpisodeEntry.COLUMN_NAME_DURATION,
+                EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY};
+
+        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
+                EpisodeEntry.COLUMN_NAME_DIRECTORY + " = \"" + directory + "\"",
+                null, null, null, null);
+        if(cursor != null) {
+            cursor.moveToFirst();
+            Episode episode = new Episode();
+            int listened = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_LISTENED));
+
+            if(listened == 1) {
+                episode.setListened(true);
+            } else {
+                episode.setListened(false);
+            }
+            episode.setCurrentTime(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_CURRENT_TIME)));
+            episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_PODCAST_ID)));
+            episode.setTitle(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_TITLE)));
+            episode.setDescription(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_DESCRIPTION)));
+            episode.setPubDate(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_PUB_DATE)));
+            episode.setDuration(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_DURATION)));
+            episode.setEpisodeImage(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY)));
+            cursor.close();
+            return episode;
+        }
+        return null;
     }
 }

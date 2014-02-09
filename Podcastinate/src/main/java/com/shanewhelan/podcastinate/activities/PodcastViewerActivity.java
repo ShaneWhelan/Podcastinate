@@ -26,7 +26,7 @@ import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.database.PodcastContract;
+import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
@@ -42,6 +42,8 @@ public class PodcastViewerActivity extends Activity {
     private int podcastID;
     private ImageButton playButton;
     private ImageButton pauseButton;
+    private AudioPlayerService audioService;
+    private ServiceConnection serviceConnection;
 
     BroadcastReceiver playReceiver = new BroadcastReceiver() {
         @Override
@@ -80,8 +82,9 @@ public class PodcastViewerActivity extends Activity {
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter = new EpisodeAdapter(this, episodeCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
-        episodeAdapter.setEpisodeName(podcastName);
+        episodeAdapter.setPodcastTitle(podcastName);
         ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(episodeAdapter);
         dataSource.closeDb();
 
@@ -91,7 +94,6 @@ public class PodcastViewerActivity extends Activity {
         OnItemClickListener itemCLickHandler = new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("sw9", "Download button " + position);
                 TextView textView = (TextView) view.findViewById(R.id.episodeName);
                 if (textView.getText() != null) {
                     Log.d("sw9", textView.getText().toString());
@@ -104,17 +106,20 @@ public class PodcastViewerActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
-                if(episodeAdapter.audioService == null) {
+                // TODO: Verify code
+                if(audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
                     //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
                     intent.setAction(AudioPlayerService.ACTION_PLAY);
                     // Investigate Correct flag and compatibility
-                    getApplicationContext().startService(intent);
-                    getApplicationContext().bindService(intent, episodeAdapter.serviceConnection, Context.BIND_ABOVE_CLIENT);
+                    if(getApplicationContext() != null) {
+                        getApplicationContext().startService(intent);
+                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+                    }
                 } else {
-                    episodeAdapter.audioService.resumeMedia();
+                    audioService.resumeMedia();
 
                     // Check this isn't called twice
                     updateListOfPodcasts();
@@ -127,7 +132,7 @@ public class PodcastViewerActivity extends Activity {
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
-                episodeAdapter.audioService.pauseMedia();
+                audioService.pauseMedia();
                 updateListOfPodcasts();
             }
         });
@@ -137,7 +142,7 @@ public class PodcastViewerActivity extends Activity {
     public void onPause() {
         super.onPause();
         if(episodeAdapter.getAudioService() != null) {
-            unbindService(episodeAdapter.getServiceConnection());
+            unbindService(serviceConnection);
         }
         unregisterReceiver(pauseReceiver);
         unregisterReceiver(playReceiver);
@@ -147,15 +152,33 @@ public class PodcastViewerActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        // TODO: Check here for restarting service
+
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
+                audioService = b.getService();
+                togglePauseButton();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                audioService = null;
+            }
+        };
+
         Intent intent = new Intent(this, AudioPlayerService.class);
         intent.setAction(AudioPlayerService.ACTION_PLAY);
-        boolean isSuccessfulBind = bindService(intent, episodeAdapter.getServiceConnection(), 0);
+        bindService(intent, serviceConnection, 0);
 
         registerReceiver(playReceiver, new IntentFilter(Utilities.ACTION_PLAY));
         registerReceiver(pauseReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+    }
 
-        if(episodeAdapter.getAudioService() != null) {
-            if(episodeAdapter.audioService.getPlayer().isPlaying()) {
+    public void togglePauseButton() {
+        if(audioService != null) {
+            if(audioService.getPlayer().isPlaying()) {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.VISIBLE);
             }
@@ -182,19 +205,8 @@ public class PodcastViewerActivity extends Activity {
         private final LayoutInflater layoutInflater;
         public Context context;
         private String podcastTitle;
-        private AudioPlayerService audioService;
-        private ServiceConnection serviceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
-                audioService = b.getService();
-            }
 
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                audioService = null;
-            }
-        };
+
 
         public EpisodeAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -202,40 +214,40 @@ public class PodcastViewerActivity extends Activity {
             this.context = context;
         }
 
-        public void setEpisodeName(String episodeName) {
-            this.podcastTitle = episodeName;
+        public void setPodcastTitle(String podcastTitle) {
+            this.podcastTitle = podcastTitle;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            String episodeName = cursor.getString(cursor.getColumnIndex(PodcastContract.EpisodeEntry.COLUMN_NAME_TITLE));
+            String episodeTitle = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_TITLE));
             TextView episodeNameView = (TextView) view.findViewById(R.id.episodeName);
-            episodeNameView.setText(episodeName);
+            episodeNameView.setText(episodeTitle);
 
             ImageButton downloadButton = (ImageButton) view.findViewById(R.id.download_icon);
             ImageButton playButton = (ImageButton) view.findViewById(R.id.play_icon);
             ImageButton pauseButton = (ImageButton) view.findViewById(R.id.pause_icon);
 
-            downloadButton.setContentDescription(episodeName);
+            downloadButton.setContentDescription(episodeTitle);
             // Set up listeners or nothing will work
             downloadButton.setOnClickListener(this);
             playButton.setOnClickListener(this);
             pauseButton.setOnClickListener(this);
 
-            String directory = cursor.getString(cursor.getColumnIndex(PodcastContract.EpisodeEntry.COLUMN_NAME_DIRECTORY));
+            String directory = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY));
 
-            if(directory != null) { // Check if the file is downloaded
+            if(directory != null && episodeTitle != null) { // Check if the file is downloaded
                 if(audioService == null) { // Check if audio service is initialised
                     downloadButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
                     playButton.setContentDescription(directory);
-                }else if(audioService.getPlayer().isPlaying()) {
+                }else if(audioService.getPlayer().isPlaying() && episodeTitle.equals(audioService.getEpisode().getTitle())) {
                     downloadButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
                     pauseButton.setContentDescription(directory);
-                }else if(!audioService.getPlayer().isPlaying()) {
+                }else {
                     downloadButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
@@ -245,7 +257,7 @@ public class PodcastViewerActivity extends Activity {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.GONE);
                 downloadButton.setVisibility(View.VISIBLE);
-            } // Other else clause if playing
+            }
         }
 
         @Override
@@ -260,6 +272,7 @@ public class PodcastViewerActivity extends Activity {
 
             if(viewId == R.id.download_icon) {
                 // Download the podcast
+                // TODO: Send more info to downloader service
                 Intent intent = new Intent(context, DownloadActivity.class);
                 intent.putExtra(DownloadActivity.EPISODE_TITLE, v.getContentDescription());
                 intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
@@ -267,6 +280,7 @@ public class PodcastViewerActivity extends Activity {
             } else if(viewId == R.id.play_icon) {
                 if(audioService == null) {
                     // Play podcast in a background service
+                    // TODO: Send more info to play service
                     Intent intent = new Intent(context, AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
                     intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
@@ -275,10 +289,16 @@ public class PodcastViewerActivity extends Activity {
                     context.startService(intent);
                     context.bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                 } else {
-                    audioService.resumeMedia();
-
-                    // Check this isn't called twice
-                    updateListOfPodcasts();
+                    if(v.getContentDescription() != null) {
+                        String directory = v.getContentDescription().toString();
+                        if(audioService.getDirectory().equals(directory)) {
+                            audioService.resumeMedia();
+                            // TODO: Check this isn't called twice by the broadcast receiver
+                            updateListOfPodcasts();
+                        }else{
+                            audioService.playNewEpisode(directory);
+                        }
+                    }
                 }
             } else if(viewId == R.id.pause_icon) {
                 // Pause podcast in background service
@@ -289,10 +309,6 @@ public class PodcastViewerActivity extends Activity {
 
         public AudioPlayerService getAudioService() {
             return audioService;
-        }
-
-        public ServiceConnection getServiceConnection() {
-            return serviceConnection;
         }
 
     }

@@ -36,6 +36,8 @@ public class DownloadService extends IntentService {
     private Builder builder;
     private double dlProgress;
 
+
+
     public DownloadService() {
         super("Download service");
     }

@@ -28,7 +28,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     EpisodeEntry.COLUMN_NAME_EPISODE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     EpisodeEntry.COLUMN_NAME_PODCAST_ID + " INTEGER" + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_LISTENED + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_LISTENED + "INTEGER" + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_CURRENT_TIME + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_EPISODE_LINK + TEXT_TYPE + " UNIQUE" + COMMA_SEP +

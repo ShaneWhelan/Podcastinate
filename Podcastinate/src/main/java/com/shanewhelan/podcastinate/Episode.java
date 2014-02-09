@@ -4,7 +4,9 @@ package com.shanewhelan.podcastinate;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class Episode {
-
+    private boolean listened;
+    private String currentTime;
+    private int podcastID;
     private String title;
     private String link;
     private String description;
@@ -76,5 +78,29 @@ public class Episode {
 
     public void setEnclosure(String enclosure) {
         this.enclosure = enclosure;
+    }
+
+    public boolean isListened() {
+        return listened;
+    }
+
+    public void setListened(boolean listened) {
+        this.listened = listened;
+    }
+
+    public String getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setCurrentTime(String currentTime) {
+        this.currentTime = currentTime;
+    }
+
+    public int getPodcastID() {
+        return podcastID;
+    }
+
+    public void setPodcastID(int podcastID) {
+        this.podcastID = podcastID;
     }
 }
