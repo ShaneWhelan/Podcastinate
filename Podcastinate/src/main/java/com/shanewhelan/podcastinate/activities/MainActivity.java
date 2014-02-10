@@ -30,11 +30,11 @@ import java.nio.channels.FileChannel;
 TODO: Add Refresh button
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail
-TODO: Render ic_download properly
-TODO: Use date columns in sql database, fix columns episode link
-
-
+TODO: Use date format in sql database, fix columns episode link
+TODO: GET file extension from feed
+TODO: Streaming: Must keep WIFI from sleeping
  */
+
 public class MainActivity extends Activity {
     private PodcastDataSource dataSource;
     private SimpleCursorAdapter simpleCursorAdapter;

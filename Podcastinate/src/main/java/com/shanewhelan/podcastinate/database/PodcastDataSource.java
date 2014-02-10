@@ -76,6 +76,25 @@ public class PodcastDataSource {
                 EpisodeEntry.COLUMN_NAME_ENCLOSURE + " = \"" + enclosure + "\"", null);
     }
 
+    public long updateCurrentTime(int episodeID, int currentTime) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(EpisodeEntry.COLUMN_NAME_CURRENT_TIME, currentTime);
+        return database.update(EpisodeEntry.TABLE_NAME, contentValues,
+                EpisodeEntry.COLUMN_NAME_EPISODE_ID + " = \"" + episodeID + "\"", null);
+    }
+
+    public int getCurrentTime(int episodeID) {
+        int currentTime = 0;
+        String[] columns = {EpisodeEntry.COLUMN_NAME_CURRENT_TIME};
+        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
+                EpisodeEntry.COLUMN_NAME_EPISODE_ID + " = \"" + episodeID + "\"", null, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            currentTime = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_CURRENT_TIME));
+            cursor.close();
+        }
+        return currentTime;
+    }
 
     public int getPodcastID(String podcastTitle) {
         int podcastId = 0;
@@ -143,7 +162,7 @@ public class PodcastDataSource {
 
     // TODO: Look into refactoring with podcastTitle as a parameter
     public Episode getEpisodeMetaData(String directory) {
-        String[] columns = {EpisodeEntry.COLUMN_NAME_LISTENED,
+        String[] columns = {EpisodeEntry.COLUMN_NAME_EPISODE_ID, EpisodeEntry.COLUMN_NAME_LISTENED,
                 EpisodeEntry.COLUMN_NAME_CURRENT_TIME, EpisodeEntry.COLUMN_NAME_PODCAST_ID,
                 EpisodeEntry.COLUMN_NAME_TITLE, EpisodeEntry.COLUMN_NAME_DESCRIPTION,
                 EpisodeEntry.COLUMN_NAME_PUB_DATE, EpisodeEntry.COLUMN_NAME_DURATION,
@@ -162,7 +181,7 @@ public class PodcastDataSource {
             } else {
                 episode.setListened(false);
             }
-            episode.setCurrentTime(cursor.getString(cursor.getColumnIndex(
+            episode.setCurrentTime(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.COLUMN_NAME_CURRENT_TIME)));
             episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.COLUMN_NAME_PODCAST_ID)));
@@ -176,9 +195,13 @@ public class PodcastDataSource {
                     EpisodeEntry.COLUMN_NAME_DURATION)));
             episode.setEpisodeImage(cursor.getString(cursor.getColumnIndex(
                     EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY)));
+            episode.setEpisodeID(cursor.getInt(cursor.getColumnIndex(
+                    EpisodeEntry.COLUMN_NAME_EPISODE_ID)));
             cursor.close();
             return episode;
         }
         return null;
     }
+
+
 }

@@ -14,5 +14,8 @@
     <string name="ic_play">PlayButton</string>
     <string name="ic_pause">PauseButton</string>
     <string name="mainPlayButton">Main Play Button</string>
+    <string name="action_discard">Discard</string>
+    <string name="title_activity_player">PlayerActivity</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

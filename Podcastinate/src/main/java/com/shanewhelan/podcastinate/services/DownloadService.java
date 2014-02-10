@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
@@ -148,6 +149,10 @@ public class DownloadService extends IntentService {
 
                 builder.setContentText("Download Complete").setProgress(0, 0, false);
                 notifyManager.notify(0, builder.build());
+
+                Intent iComplete = new Intent();
+                iComplete.setAction(Utilities.ACTION_DOWNLOADED);
+                sendBroadcast(iComplete);
 
                 // Tidy up and close streams
                 inputStream.close();

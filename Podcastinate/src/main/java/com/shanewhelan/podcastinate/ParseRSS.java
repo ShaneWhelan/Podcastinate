@@ -59,7 +59,6 @@ public class ParseRSS {
                         } else if (nodeName.equals("link")) {
                             savePodcastLink(xmlPullParser);
                             if (!isLinkUnique(listOfLinks, podcast.getLink())) {
-                                // TODO: Fix Bug
                                 throw new DuplicatePodcastException("Podcast Already in Database");
                             }
                         }

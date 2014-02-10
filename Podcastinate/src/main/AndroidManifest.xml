@@ -49,13 +49,18 @@
         <service
             android:name="com.shanewhelan.podcastinate.services.DownloadService"
             android:enabled="true"
-            android:exported="false">
+            android:exported="false" >
         </service>
         <service
             android:name="com.shanewhelan.podcastinate.services.AudioPlayerService"
             android:enabled="true"
-            android:exported="false">
+            android:exported="false" >
         </service>
+
+        <activity
+            android:name="com.shanewhelan.podcastinate.activities.PlayerActivity"
+            android:label="@string/title_activity_player" >
+        </activity>
     </application>
 
 </manifest>

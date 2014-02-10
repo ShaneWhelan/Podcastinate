@@ -9,18 +9,26 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteCursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView.*;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -29,6 +37,10 @@ import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Set;
 
 import static android.widget.CursorAdapter.*;
 
@@ -44,49 +56,43 @@ public class PodcastViewerActivity extends Activity {
     private ImageButton pauseButton;
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
+    private ListView listView;
 
-    BroadcastReceiver playReceiver = new BroadcastReceiver() {
+    BroadcastReceiver audioReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(Utilities.ACTION_PLAY.equals(intent.getAction())) {
+            if (Utilities.ACTION_PLAY.equals(intent.getAction())) {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.VISIBLE);
                 updateListOfPodcasts();
-            }
-        }
-    };
-
-    BroadcastReceiver pauseReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(Utilities.ACTION_PAUSE.equals(intent.getAction())) {
+            } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
                 playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
+                updateListOfPodcasts();
+            } else if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
+                updateListOfPodcasts();
+            } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
+                // Verify this is the right thing to do
                 updateListOfPodcasts();
             }
         }
     };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.episode_list);
+        setContentView(R.layout.activity_podcast_viewer);
+
         Intent intent = getIntent();
         String podcastName = intent.getStringExtra("userChoice");
+        // Set title of current activity to Podcast Name
+        setTitle(podcastName);
 
-        dataSource = new PodcastDataSource(this);
+        listView = (ListView) findViewById(R.id.listOfEpisodes);
 
-        dataSource.openDb();
-
-        podcastID = dataSource.getPodcastID(podcastName);
-        episodeCursor = dataSource.getAllEpisodeNames(podcastID);
-        episodeAdapter = new EpisodeAdapter(this, episodeCursor,
-                FLAG_REGISTER_CONTENT_OBSERVER);
-        episodeAdapter.setPodcastTitle(podcastName);
-        ListView listView = (ListView) findViewById(R.id.listOfEpisodes);
-        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        listView.setAdapter(episodeAdapter);
-        dataSource.closeDb();
+        initialiseAdapter(podcastName);
+        initialiseMultiSelect();
 
         playButton = (ImageButton) findViewById(R.id.mainPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
@@ -107,20 +113,19 @@ public class PodcastViewerActivity extends Activity {
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 // TODO: Verify code
-                if(audioService == null) {
+                if (audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
                     //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
                     intent.setAction(AudioPlayerService.ACTION_PLAY);
                     // Investigate Correct flag and compatibility
-                    if(getApplicationContext() != null) {
+                    if (getApplicationContext() != null) {
                         getApplicationContext().startService(intent);
                         getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                     }
                 } else {
                     audioService.resumeMedia();
-
                     // Check this isn't called twice
                     updateListOfPodcasts();
                 }
@@ -138,33 +143,134 @@ public class PodcastViewerActivity extends Activity {
         });
     }
 
+    public void initialiseAdapter(String podcastName) {
+        dataSource = new PodcastDataSource(this);
+        dataSource.openDb();
+        // Get Podcast ID so we can get all episode names from DB
+        podcastID = dataSource.getPodcastID(podcastName);
+        episodeCursor = dataSource.getAllEpisodeNames(podcastID);
+        episodeAdapter = new EpisodeAdapter(this, episodeCursor,
+                FLAG_REGISTER_CONTENT_OBSERVER);
+        episodeAdapter.setPodcastTitle(podcastName);
+        listView.setAdapter(episodeAdapter);
+        dataSource.closeDb();
+    }
+
+    public void initialiseMultiSelect() {
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(new MultiChoiceModeListener() {
+
+            private int nr = 0;
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                  long id, boolean checked) {
+                // Here you can do something when items are selected/de-selected,
+                // such as update the title in the CAB
+                if (checked) {
+                    nr++;
+                    episodeAdapter.setNewSelection(position, true);
+                } else {
+                    nr--;
+                    episodeAdapter.removeSelection(position);
+                }
+                mode.setTitle(nr + " Selected");
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                // Respond to clicks on the actions in the CAB
+                switch (item.getItemId()) {
+                    case R.id.delete_selection_action:
+                        deleteSelectedItems();
+                        updateListOfPodcasts();
+                        nr = 0;
+                        episodeAdapter.clearSelection();
+                        mode.finish(); // Action picked, so close the CAB
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // Inflate the menu for the CAB
+                MenuInflater inflater = mode.getMenuInflater();
+                if (inflater != null) {
+                    inflater.inflate(R.menu.multi_select, menu);
+                }
+                return true;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // Here you can make any necessary updates to the activity when
+                // the CAB is removed. By default, selected items are deselected/unchecked.
+                episodeAdapter.clearSelection();
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                // Here you can perform updates to the CAB due to
+                // an invalidate() request
+                return false;
+            }
+        });
+    }
+
+
+    private void deleteSelectedItems() {
+        SQLiteCursor cursor;
+        SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
+        if(booleanArray != null) {
+            // Open connection to DB
+            PodcastDataSource pds = new PodcastDataSource(this);
+            pds.openDb();
+            // Loop through the SparseBooleanArray and delete directory form db and file from disk
+            for(int i = 0; i < booleanArray.size(); i++) {
+                if(booleanArray.valueAt(i)) {
+                    cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
+                    if (cursor != null) {
+                        String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
+                        //noinspection ConstantConditions
+                        if(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)) != null) {
+                            File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)));
+                            boolean isFileDeleted = fileToDelete.delete();
+                            if(isFileDeleted) {
+                                pds.updateEpisodeDirectory(enclosure, null);
+                            }
+                        }
+                    }
+                }
+            }
+            pds.closeDb();
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
-        if(episodeAdapter.getAudioService() != null) {
-            unbindService(serviceConnection);
-        }
-        unregisterReceiver(pauseReceiver);
-        unregisterReceiver(playReceiver);
+        unbindService(serviceConnection);
+        unregisterReceiver(audioReceiver);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO: Check here for restarting service
 
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
                 audioService = b.getService();
-                togglePauseButton();
+                syncControlPanel();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
+                syncControlPanel();
             }
         };
 
@@ -172,16 +278,26 @@ public class PodcastViewerActivity extends Activity {
         intent.setAction(AudioPlayerService.ACTION_PLAY);
         bindService(intent, serviceConnection, 0);
 
-        registerReceiver(playReceiver, new IntentFilter(Utilities.ACTION_PLAY));
-        registerReceiver(pauseReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
+        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
+
+        syncControlPanel();
     }
 
-    public void togglePauseButton() {
-        if(audioService != null) {
-            if(audioService.getPlayer().isPlaying()) {
-                playButton.setVisibility(View.GONE);
-                pauseButton.setVisibility(View.VISIBLE);
+    public void syncControlPanel() {
+        LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
+
+        if (audioService != null) {
+            if(audioService.getPlayer() != null) {
+                controlPanel.setVisibility(View.VISIBLE);
+                if (audioService.getPlayer().isPlaying()) {
+                    playButton.setVisibility(View.GONE);
+                    pauseButton.setVisibility(View.VISIBLE);
+                }
             }
+        } else {
+            controlPanel.setVisibility(View.GONE);
         }
     }
 
@@ -194,19 +310,11 @@ public class PodcastViewerActivity extends Activity {
     }
 
 
-
-
-
-
-
-
-
     public class EpisodeAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
         public Context context;
         private String podcastTitle;
-
-
+        private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
 
         public EpisodeAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -236,24 +344,24 @@ public class PodcastViewerActivity extends Activity {
 
             String directory = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY));
 
-            if(directory != null && episodeTitle != null) { // Check if the file is downloaded
-                if(audioService == null) { // Check if audio service is initialised
+            if (directory != null && episodeTitle != null) { // Check if the file is downloaded
+                if (audioService == null) { // Check if audio service is initialised
                     downloadButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
                     playButton.setContentDescription(directory);
-                }else if(audioService.getPlayer().isPlaying() && episodeTitle.equals(audioService.getEpisode().getTitle())) {
+                } else if (audioService.getPlayer().isPlaying() && episodeTitle.equals(audioService.getEpisode().getTitle())) {
                     downloadButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
                     pauseButton.setContentDescription(directory);
-                }else {
+                } else {
                     downloadButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
                     playButton.setContentDescription(directory);
                 }
-            }else{
+            } else {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.GONE);
                 downloadButton.setVisibility(View.VISIBLE);
@@ -265,22 +373,61 @@ public class PodcastViewerActivity extends Activity {
             return layoutInflater.inflate(R.layout.episode_list_item, parent, false);
         }
 
+        public void setNewSelection(int position, boolean value) {
+            mSelection.put(position, value);
+            notifyDataSetChanged();
+        }
+
+        public boolean isPositionChecked(int position) {
+            Boolean result = mSelection.get(position);
+            return result == null ? false : result;
+        }
+
+        public Set<Integer> getCurrentCheckedPosition() {
+            return mSelection.keySet();
+        }
+
+        public void removeSelection(int position) {
+            mSelection.remove(position);
+            notifyDataSetChanged();
+        }
+
+        public void clearSelection() {
+            mSelection = new HashMap<Integer, Boolean>();
+            notifyDataSetChanged();
+        }
+
+        public HashMap<Integer, Boolean> getmSelection() {
+            return mSelection;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = super.getView(position, convertView, parent);//let the adapter handle setting up the row views
+            if (v != null) {
+                v.setBackgroundColor(getResources().getColor(android.R.color.background_light)); //default color
+                if (mSelection.get(position) != null) {
+                    v.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));// this is a selected position so make it red
+                }
+            }
+            return v;
+        }
+
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         @Override
         public void onClick(View v) {
             int viewId = v.getId();
 
-            if(viewId == R.id.download_icon) {
+            if (viewId == R.id.download_icon) {
                 // Download the podcast
                 // TODO: Send more info to downloader service
                 Intent intent = new Intent(context, DownloadActivity.class);
                 intent.putExtra(DownloadActivity.EPISODE_TITLE, v.getContentDescription());
                 intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
                 context.startActivity(intent);
-            } else if(viewId == R.id.play_icon) {
-                if(audioService == null) {
+            } else if (viewId == R.id.play_icon) {
+                if (audioService == null) {
                     // Play podcast in a background service
-                    // TODO: Send more info to play service
                     Intent intent = new Intent(context, AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
                     intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
@@ -289,27 +436,22 @@ public class PodcastViewerActivity extends Activity {
                     context.startService(intent);
                     context.bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                 } else {
-                    if(v.getContentDescription() != null) {
+                    if (v.getContentDescription() != null) {
                         String directory = v.getContentDescription().toString();
-                        if(audioService.getDirectory().equals(directory)) {
+                        if (audioService.getDirectory().equals(directory)) {
                             audioService.resumeMedia();
                             // TODO: Check this isn't called twice by the broadcast receiver
                             updateListOfPodcasts();
-                        }else{
-                            audioService.playNewEpisode(directory);
+                        } else {
+                            audioService.playNewEpisode(directory, true);
                         }
                     }
                 }
-            } else if(viewId == R.id.pause_icon) {
+            } else if (viewId == R.id.pause_icon) {
                 // Pause podcast in background service
                 audioService.pauseMedia();
                 updateListOfPodcasts();
             }
         }
-
-        public AudioPlayerService getAudioService() {
-            return audioService;
-        }
-
     }
 }
