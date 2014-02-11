@@ -8,7 +8,12 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
@@ -148,7 +153,17 @@ public class ParseRSS {
     }
 
     public void savePubDate(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
-        episode.setPubDate(xmlPullParser.nextText());
+        try {
+            DateFormat pubDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+            Date podcastDate = pubDateFormat.parse(xmlPullParser.nextText());
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(podcastDate);
+            SimpleDateFormat sqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            String formattedDate = sqlDateFormat.format(cal.getTime());
+            episode.setPubDate(formattedDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     public void saveGuid(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
