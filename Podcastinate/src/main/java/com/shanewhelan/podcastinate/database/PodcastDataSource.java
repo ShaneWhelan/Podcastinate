@@ -203,5 +203,19 @@ public class PodcastDataSource {
         return null;
     }
 
+    public String getMostRecentEpisode(String podcastTitle) {
+        int podcastID = getPodcastID(podcastTitle);
+        String[] columns = {EpisodeEntry.COLUMN_NAME_EPISODE_LINK};
+
+        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
+                EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = \"" + podcastID + "\"",
+                null, null, null, "date(" + EpisodeEntry.COLUMN_NAME_PUB_DATE + ") DESC", "1");
+        if(cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_EPISODE_LINK));
+        }
+        return null;
+    }
+
 
 }
