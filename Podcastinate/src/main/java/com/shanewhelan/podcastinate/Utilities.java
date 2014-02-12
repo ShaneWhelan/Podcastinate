@@ -14,6 +14,9 @@ public class Utilities {
     public static final String ACTION_PAUSE = "com.shanewhelan.podcastinate.PAUSE";
     public static final String ACTION_DOWNLOADED = "com.shanewhelan.podcastinate.DOWNLOADED";
     public static final String ACTION_FINISHED = "com.shanewhelan.podcastinate.FINISHED";
+    public static final int SUCCESS = 1;
+    public static final int FAILURE_TO_PARSE = 0;
+    public static final int INVALID_URL = -1;
 
     public static boolean testNetwork(Context context) {
         if(context.getApplicationContext() != null) {
