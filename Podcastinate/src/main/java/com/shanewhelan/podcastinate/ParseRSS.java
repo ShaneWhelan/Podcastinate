@@ -2,7 +2,6 @@ package com.shanewhelan.podcastinate;
 
 import android.util.Log;
 import android.util.Xml;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -61,7 +60,7 @@ public class ParseRSS {
                             savePodcastDescription(xmlPullParser);
                         } else if (nodeName.equals("image")) {
                             podcast.setImageDirectory("testDir");
-                        } else if (nodeName.equals("link")) {
+                        } else if (nodeName.equals("atom:link")) {
                             savePodcastLink(xmlPullParser);
                             if (!isLinkUnique(listOfLinks, podcast.getLink())) {
                                 throw new DuplicatePodcastException("Podcast Already in Database");
@@ -137,7 +136,7 @@ public class ParseRSS {
 
     public void savePodcastLink(XmlPullParser xmlPullParser) throws IOException,
             XmlPullParserException {
-        podcast.setLink(xmlPullParser.nextText());
+        podcast.setLink(xmlPullParser.getAttributeValue(null, "href"));
     }
 
     public void saveTitle(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
@@ -180,5 +179,63 @@ public class ParseRSS {
 
     public void saveEnclosure(XmlPullParser xmlPullParser, Episode episode) {
         episode.setEnclosure(xmlPullParser.getAttributeValue(null, "url"));
+    }
+
+    public Podcast checkForNewEntries(XmlPullParser xmlPullParser, String mostRecentEpisodeEnclosure, String podcastTitle) {
+        ArrayList<Episode> episodeList = new ArrayList<Episode>();
+        try {
+            boolean hasParentNodeItem = false;
+            Episode episode = null;
+            podcast.setTitle(podcastTitle);
+            // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
+            xmlPullParser.require(XmlPullParser.START_TAG, null, "rss");
+            while (xmlPullParser.next() != XmlPullParser.END_DOCUMENT) {
+                String nodeName = xmlPullParser.getName();
+                if (xmlPullParser.getEventType() == XmlPullParser.START_TAG) {
+
+                    if (nodeName.equals("item")) {
+                        hasParentNodeItem = true;
+                        episode = new Episode();
+                    }
+
+                    if (hasParentNodeItem) { // Needs some work to get the right metadata
+                        if (nodeName.equals("title")) {
+                            saveTitle(xmlPullParser, episode);
+                        } else if (nodeName.equals("link")) {
+                            saveLink(xmlPullParser, episode);
+                        } else if (nodeName.equals("description")) {
+                            saveDescription(xmlPullParser, episode);
+                        } else if (nodeName.equals("pubDate")) {
+                            savePubDate(xmlPullParser, episode);
+                        } else if (nodeName.equals("guid")) {
+                            saveGuid(xmlPullParser, episode);
+                        } else if (nodeName.equals("itunes:duration")) {
+                            saveDuration(xmlPullParser, episode);
+                        } else if (nodeName.equals("episodeImage")) {
+                            saveEpisodeImage(xmlPullParser, episode);
+                        } else if (nodeName.equals("enclosure")) {
+                            if(!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
+                                saveEnclosure(xmlPullParser, episode);
+                            }else{
+                                break;
+                            }
+                        }
+                    }
+                } else if (xmlPullParser.getEventType() == XmlPullParser.END_TAG) {
+                    if (nodeName.equals("item")) {
+                        hasParentNodeItem = false;
+                        episodeList.add(episode);
+                    }
+                }
+            }
+            podcast.setEpisodeList(episodeList);
+            Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
+            return podcast;
+        } catch (XmlPullParserException e) {
+            Log.e("sw9", e.getMessage());
+        } catch (IOException e) {
+            Log.e("sw9", e.getMessage());
+        }
+        return null;
     }
 }

@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.DuplicatePodcastException;
-import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.Utilities;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
@@ -41,7 +39,7 @@ public class SubscribeActivity extends Activity {
 
         subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
         // Test Line
-        subscribeUrl.setText("http://nerdist.libsyn.com/rss");
+        subscribeUrl.setText("http://www.tested.com/podcast-xml/this-is-only-a-test/");
 
         final Button button = (Button) findViewById(R.id.button_subscribe);
         button.setOnClickListener(new View.OnClickListener() {
@@ -69,30 +67,7 @@ public class SubscribeActivity extends Activity {
         }
     }
 
-    public void savePodcastToDb(Podcast podcast) {
-        PodcastDataSource dataSource = new PodcastDataSource(this);
-        dataSource.openDb();
-        int podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
-                podcast.getImageDirectory(), podcast.getLink());
 
-        Log.d("sw9", "Podcast ID: " + podcastID);
-
-        // If podcast inserted correctly now insert episodes too
-        if (podcastID != -1) {
-            ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
-            for (Episode episode : listOfEpisodes) {
-                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
-                        episode.getDescription(), episode.getPubDate(), episode.getGuid(),
-                        episode.getDuration(), episode.getEpisodeImage(), episode.getEnclosure());
-            }
-        } else {
-            int duration = Toast.LENGTH_LONG;
-            if (getApplicationContext() != null) {
-                Toast.makeText(getApplicationContext(), "Already subscribed to podcast.", duration).show();
-            }
-        }
-        dataSource.closeDb();
-    }
 
     public String[] getPodcastLinks() {
         PodcastDataSource dataSource = new PodcastDataSource(this);
@@ -183,7 +158,7 @@ public class SubscribeActivity extends Activity {
                     Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, listOfLinks);
 
                     if (podcast != null) {
-                        savePodcastToDb(podcast);
+                        Utilities.savePodcastToDb(getApplicationContext(), podcast, true);
                         return Utilities.SUCCESS;
                     } else {
                         // Won't be false unless parser threw exception, causing podcast to be null

@@ -6,6 +6,10 @@ import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
+
+import java.util.ArrayList;
+
 /**
  * Created by Shane on 04/02/14. Podcastinate.
  */
@@ -14,9 +18,10 @@ public class Utilities {
     public static final String ACTION_PAUSE = "com.shanewhelan.podcastinate.PAUSE";
     public static final String ACTION_DOWNLOADED = "com.shanewhelan.podcastinate.DOWNLOADED";
     public static final String ACTION_FINISHED = "com.shanewhelan.podcastinate.FINISHED";
-    public static final int SUCCESS = 1;
-    public static final int FAILURE_TO_PARSE = 0;
     public static final int INVALID_URL = -1;
+    public static final int FAILURE_TO_PARSE = 0;
+    public static final int SUCCESS = 1;
+    public static final int NO_NEW_EPISODES = 2;
 
     public static boolean testNetwork(Context context) {
         if(context.getApplicationContext() != null) {
@@ -44,5 +49,34 @@ public class Utilities {
             }
         }
         return false;
+    }
+
+    public static void savePodcastToDb(Context context, Podcast podcast, boolean isNewFeed) {
+        PodcastDataSource dataSource = new PodcastDataSource(context.getApplicationContext());
+        dataSource.openDb();
+        int podcastID;
+
+        if(isNewFeed){
+            podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
+                podcast.getImageDirectory(), podcast.getLink());
+        } else {
+            podcastID = dataSource.getPodcastID(podcast.getTitle());
+        }
+
+        // If podcast inserted correctly now insert episodes too
+        if (podcastID != -1) {
+            ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
+            for (Episode episode : listOfEpisodes) {
+                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
+                        episode.getDescription(), episode.getPubDate(), episode.getGuid(),
+                        episode.getDuration(), episode.getEpisodeImage(), episode.getEnclosure());
+            }
+        } else {
+            int duration = Toast.LENGTH_LONG;
+            if (context.getApplicationContext() != null) {
+                Toast.makeText(context.getApplicationContext(), "Already subscribed to podcast.", duration).show();
+            }
+        }
+        dataSource.closeDb();
     }
 }

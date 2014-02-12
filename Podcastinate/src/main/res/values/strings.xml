@@ -17,5 +17,6 @@
     <string name="action_discard">Discard</string>
     <string name="title_activity_player">PlayerActivity</string>
     <string name="hello_world">Hello world!</string>
+    <string name="refresh_feed">Refresh Feed</string>
 
 </resources>

@@ -7,6 +7,12 @@
         android:showAsAction="ifRoom"/>
 
     <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/refresh_icon_selector"
+        android:title="@string/refresh_feed"
+        android:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/action_wipe_db"
         android:title="@string/action_wipe_db"
         android:orderInCategory="100"

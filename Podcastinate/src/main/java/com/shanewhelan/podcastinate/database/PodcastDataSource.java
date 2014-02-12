@@ -8,10 +8,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
+import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by Shane on 11/01/14. Podcastinate.
@@ -109,7 +111,9 @@ public class PodcastDataSource {
         return podcastId;
     }
 
-    public Cursor getAllPodcastNames() {
+
+    // TODO: Maybe refactor this to not return cursor
+    public Cursor getAllPodcastTitles() {
         return database.rawQuery("SELECT " + PodcastEntry.COLUMN_NAME_PODCAST_ID
                 + " as _id, title FROM " + PodcastEntry.TABLE_NAME, null);
     }
@@ -125,6 +129,22 @@ public class PodcastDataSource {
             while (cursor.moveToNext()) {
                 listOfPodcasts[i] = cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_LINK));
                 i++;
+            }
+            cursor.close();
+        }
+        return listOfPodcasts;
+    }
+
+    public HashMap<String, String> getAllPodcastTitlesLinks() {
+        String[] columns = {PodcastEntry.COLUMN_NAME_LINK, PodcastEntry.COLUMN_NAME_TITLE};
+        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null, null);
+
+        HashMap<String, String> listOfPodcasts = new HashMap<String, String>(cursor.getCount());
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                listOfPodcasts.put(
+                        cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_TITLE)),
+                        cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_LINK)));
             }
             cursor.close();
         }
@@ -203,19 +223,17 @@ public class PodcastDataSource {
         return null;
     }
 
-    public String getMostRecentEpisode(String podcastTitle) {
+    public String getMostRecentEpisodeEnclosure(String podcastTitle) {
         int podcastID = getPodcastID(podcastTitle);
-        String[] columns = {EpisodeEntry.COLUMN_NAME_EPISODE_LINK};
+        String[] columns = {EpisodeEntry.COLUMN_NAME_ENCLOSURE};
 
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = \"" + podcastID + "\"",
                 null, null, null, "date(" + EpisodeEntry.COLUMN_NAME_PUB_DATE + ") DESC", "1");
         if(cursor != null) {
             cursor.moveToFirst();
-            return cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_EPISODE_LINK));
+            return cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
         }
         return null;
     }
-
-
 }
