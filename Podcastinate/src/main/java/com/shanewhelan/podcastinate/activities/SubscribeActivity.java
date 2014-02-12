@@ -1,10 +1,7 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +16,7 @@ import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
@@ -48,7 +46,7 @@ public class SubscribeActivity extends Activity {
         final Button button = (Button) findViewById(R.id.button_subscribe);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                if (testNetwork()) {
+                if (Utilities.testNetwork(getApplicationContext())) {
                     button.setClickable(false);
                     button.setVisibility(View.INVISIBLE);
                     subscribeToFeed();
@@ -62,34 +60,6 @@ public class SubscribeActivity extends Activity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.subscribe, menu);
         return true;
-    }
-
-    public boolean testNetwork() {
-        ConnectivityManager conMan = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            return true;
-        } else if (networkInfo == null) {
-            // Alert the user that network connection methods are off
-            Log.i("sw9", "WI-FI or Mobile Data turned off");
-            int duration = Toast.LENGTH_LONG;
-            if (getApplicationContext() != null) {
-                Toast.makeText(getApplicationContext(), "WI-FI or Mobile Data turned off",
-                        duration).show();
-            }
-            return false;
-        } else if (!networkInfo.isConnected()) {
-            // Alert the user that network is not available.
-            Log.i("sw9", "Connected but no internet access");
-            int duration = Toast.LENGTH_LONG;
-            if (getApplicationContext() != null) {
-                Toast.makeText(getApplicationContext(), "Connected but no internet access",
-                        duration).show();
-            }
-            return false;
-        }
-        return false;
     }
 
     public void subscribeToFeed() {
@@ -122,7 +92,6 @@ public class SubscribeActivity extends Activity {
             }
         }
         dataSource.closeDb();
-
     }
 
     public String[] getPodcastLinks() {
