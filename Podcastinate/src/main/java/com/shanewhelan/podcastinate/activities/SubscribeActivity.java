@@ -15,8 +15,8 @@ import com.shanewhelan.podcastinate.DuplicatePodcastException;
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
-import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
@@ -109,25 +109,21 @@ public class SubscribeActivity extends Activity {
     }
 
     public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
-        private InputStream inputStream = null;
-
         @Override
         protected String doInBackground(String... urls) {
             try {
                 int result = downloadRSSFeed(urls[0]);
-                if (result == 1) {
+                if (result == Utilities.SUCCESS) {
                     return "subscribed";
-                } else if (result == -1) {
+                } else if (result == Utilities.INVALID_URL) {
                     return "URL Invalid";
-                } else if (result == 0) {
+                } else if (result == Utilities.FAILURE_TO_PARSE) {
                     return "Not Valid Podcast Feed";
                 }
             } catch (DuplicatePodcastException e) {
                 e.printStackTrace();
                 return "Already subscribed to podcast";
             } catch (HTTPConnectionException httpException) {
-                Log.e("sw9", "HTTP Response Error Number: " + httpException.getResponseCode() +
-                        " caused by URL");
                 return "Connection Error " + httpException.getResponseCode();
             } catch (IOException e) {
                 Log.e("sw9", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
@@ -160,6 +156,7 @@ public class SubscribeActivity extends Activity {
         }
 
         private int downloadRSSFeed(String url) throws DuplicatePodcastException, IOException {
+            InputStream inputStream = null;
             int response;
             try {
                 URL feedURL = new URL(url);
@@ -187,10 +184,10 @@ public class SubscribeActivity extends Activity {
 
                     if (podcast != null) {
                         savePodcastToDb(podcast);
-                        return 1;
+                        return Utilities.SUCCESS;
                     } else {
-                        // Won't be false unless parser threw exception
-                        return 0;
+                        // Won't be false unless parser threw exception, causing podcast to be null
+                        return Utilities.FAILURE_TO_PARSE;
                     }
                 }
 
@@ -203,7 +200,7 @@ public class SubscribeActivity extends Activity {
                     }
                 }
             }
-            return -1;
+            return Utilities.INVALID_URL;
         }
     }
 }
