@@ -21,6 +21,7 @@ public class Utilities {
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected()) {
+                // We have a network connection
                 return true;
             } else if (networkInfo == null) {
                 // Alert the user that network connection methods are off
