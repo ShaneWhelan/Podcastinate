@@ -32,7 +32,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     private String directory;
     private Episode episode;
 
-    BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
+    private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (ACTION_DISCONNECT.equals(intent.getAction())) {
@@ -42,11 +42,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             }
         }
     };
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        mp.release();
-    }
 
     @Override
     public void onAudioFocusChange(int focusChange) {
@@ -132,6 +127,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         intent.setAction(Utilities.ACTION_PLAY);
         sendBroadcast(intent);
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+    }
+
+    @SuppressWarnings("UnusedAssignment")
+    @Override
+    public void onCompletion(MediaPlayer player) {
+        player.release();
+        player = null;
     }
 
     @Override
