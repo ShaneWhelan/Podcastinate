@@ -172,7 +172,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    // TODO: Test Network Before call
     public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(HashMap<String, String>... urlList) {
