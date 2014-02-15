@@ -82,7 +82,7 @@ public class DownloadService extends IntentService {
             String fileNameTemp;
             if (episodeTitle != null) {
                 fileNameTemp = episodeTitle.replace(" ", "-");
-                fileNameTemp = fileNameTemp.replaceAll("[$&+,:;=?!@#|]", ""); // Check this regex
+                fileNameTemp = fileNameTemp.replaceAll("[^A-Za-z0-9-]", "");
             } else {
                 Random rand = new Random();
                 fileNameTemp = "R" + rand.nextInt(10000000);
@@ -172,7 +172,7 @@ public class DownloadService extends IntentService {
         } catch (MalformedURLException e) {
             Log.e("sw9", "Malformed URL " + e.getMessage());
         } catch (IOException e) {
-            Log.e("sw9", "IO EXCEPTION " + e.getCause().toString());
+            Log.e("sw9", "IO EXCEPTION " + e.getMessage());
         } catch (URISyntaxException e) {
             Log.e("sw9", "URI SYNTAX " + e.getMessage());
         }
