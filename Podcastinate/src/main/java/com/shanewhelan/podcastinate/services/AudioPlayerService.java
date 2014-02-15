@@ -1,8 +1,10 @@
 package com.shanewhelan.podcastinate.services;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -23,11 +25,23 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     private IBinder iBinder = new AudioPlayerBinder();
-    private MediaPlayer player;
+    private static MediaPlayer player;
     public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
     public static final String DIRECTORY = "directory";
+    public static final String ACTION_DISCONNECT = "1";
     private String directory;
     private Episode episode;
+
+    BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ACTION_DISCONNECT.equals(intent.getAction())) {
+                if(player != null) {
+                    pauseMedia();
+                }
+            }
+        }
+    };
 
     @Override
     public void onCompletion(MediaPlayer mp) {
@@ -41,8 +55,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // resume playback
                 if (player == null) {
                     initialiseMediaPlayer();
-                } else if (!player.isPlaying()) {
-                    //player.start();
                 }
                 player.setVolume(1.0f, 1.0f);
                 break;
@@ -107,6 +119,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         if(ACTION_PLAY.equals(intent.getAction())) {
             directory = intent.getStringExtra(DIRECTORY);
             playNewEpisode(directory, false);
+        } else if(ACTION_DISCONNECT.equals(intent.getAction())) {
+            pauseMedia();
         }
         return START_STICKY;
     }
@@ -117,6 +131,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PLAY);
         sendBroadcast(intent);
+        registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
     }
 
     @Override
@@ -140,6 +155,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PAUSE);
         sendBroadcast(intent);
+        unregisterReceiver(disconnectJackR);
     }
 
     public void resumeMedia() {
@@ -149,6 +165,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PLAY);
         sendBroadcast(intent);
+        registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
     }
 
     public MediaPlayer getPlayer() {
