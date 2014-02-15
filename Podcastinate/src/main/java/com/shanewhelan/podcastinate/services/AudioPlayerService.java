@@ -146,6 +146,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public void onDestroy() {
         if (player != null) {
             player.release();
+            player = null;
         }
         episode = null;
     }
