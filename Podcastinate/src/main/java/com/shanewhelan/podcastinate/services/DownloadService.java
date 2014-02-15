@@ -87,13 +87,17 @@ public class DownloadService extends IntentService {
                 fileNameTemp = "R" + rand.nextInt(10000000);
             }
 
-
             String filename;
             if (podcastTitle != null) {
                 filename = String.valueOf(podcastTitle.charAt(0)) +
-                        String.valueOf(podcastTitle.charAt(podcastTitle.length()-1)) + "-" + fileNameTemp + ".mp3";
+                        String.valueOf(podcastTitle.charAt(podcastTitle.length()-1)) + "-" + fileNameTemp;
             } else {
-                filename = "RP" + "-" + fileNameTemp + ".mp3";
+                filename = "RP" + "-" + fileNameTemp;
+            }
+
+            // Get podcast file extension
+            if(enclosure != null) {
+                filename = filename + enclosure.substring(enclosure.lastIndexOf("."));
             }
 
             Log.d("sw9", filename);
