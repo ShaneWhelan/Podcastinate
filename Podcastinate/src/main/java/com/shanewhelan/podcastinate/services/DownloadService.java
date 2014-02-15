@@ -81,8 +81,7 @@ public class DownloadService extends IntentService {
             // on the performance cost of this.
             String fileNameTemp;
             if (episodeTitle != null) {
-                fileNameTemp = episodeTitle.replace(" ", "-");
-                fileNameTemp = fileNameTemp.replaceAll("[^A-Za-z0-9-]", "");
+                fileNameTemp = episodeTitle.replaceAll("[^A-Za-z0-9-]", "-");
             } else {
                 Random rand = new Random();
                 fileNameTemp = "R" + rand.nextInt(10000000);
@@ -166,8 +165,6 @@ public class DownloadService extends IntentService {
                 pds.openDb();
                 pds.updateEpisodeDirectory(enclosure, directory);
                 pds.closeDb();
-                // Update DB that file is downloaded with the path
-                Log.d("sw9", "file path:" + " " + directory);
             }
         } catch (MalformedURLException e) {
             Log.e("sw9", "Malformed URL " + e.getMessage());
