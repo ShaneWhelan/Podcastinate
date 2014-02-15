@@ -214,9 +214,10 @@ public class ParseRSS {
                         } else if (nodeName.equals("episodeImage")) {
                             saveEpisodeImage(xmlPullParser, episode);
                         } else if (nodeName.equals("enclosure")) {
+                            // Check if already exists in database and quit if it does.
                             if(!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
                                 saveEnclosure(xmlPullParser, episode);
-                            }else{
+                            } else {
                                 break;
                             }
                         }
@@ -229,7 +230,6 @@ public class ParseRSS {
                 }
             }
             podcast.setEpisodeList(episodeList);
-            Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
             return podcast;
         } catch (XmlPullParserException e) {
             Log.e("sw9", e.getMessage());
