@@ -44,9 +44,8 @@ import java.util.Set;
 /*=
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
-TODO: GET file extension from feed
 TODO: Streaming: Must keep WIFI from sleeping
-TODO: Pause on headphones remove
+TODO: Write current time to DB on pause - investigate
  */
 
 public class MainActivity extends Activity {
