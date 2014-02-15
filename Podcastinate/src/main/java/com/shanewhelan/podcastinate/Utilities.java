@@ -1,12 +1,16 @@
 package com.shanewhelan.podcastinate;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 import java.util.ArrayList;
 
@@ -22,6 +26,10 @@ public class Utilities {
     public static final int FAILURE_TO_PARSE = 0;
     public static final int SUCCESS = 1;
     public static final int NO_NEW_EPISODES = 2;
+
+    public Utilities() {
+
+    }
 
     public static boolean testNetwork(Context context) {
         if(context.getApplicationContext() != null) {
@@ -78,5 +86,22 @@ public class Utilities {
             }
         }
         dataSource.closeDb();
+    }
+
+    public static class DisconnectHeadphonesReceiver extends BroadcastReceiver {
+        public DisconnectHeadphonesReceiver() {
+            super();
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() != null) {
+                if (intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
+                    Intent pauseIntent = new Intent(context, AudioPlayerService.class);
+                    pauseIntent.setAction(AudioPlayerService.ACTION_DISCONNECT);
+                    context.startService(pauseIntent);
+                }
+            }
+        }
     }
 }
