@@ -30,14 +30,13 @@ import java.net.URL;
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
 public class SubscribeActivity extends Activity {
-    private TextView subscribeUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.subscribe_activity);
 
-        subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
+        final TextView subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
         // Test Line
         subscribeUrl.setText("http://www.tested.com/podcast-xml/this-is-only-a-test/");
 
@@ -47,7 +46,7 @@ public class SubscribeActivity extends Activity {
                 if (Utilities.testNetwork(getApplicationContext())) {
                     button.setClickable(false);
                     button.setVisibility(View.INVISIBLE);
-                    subscribeToFeed();
+                    subscribeToFeed(subscribeUrl);
                 }
             }
         });
@@ -60,7 +59,7 @@ public class SubscribeActivity extends Activity {
         return true;
     }
 
-    public void subscribeToFeed() {
+    public void subscribeToFeed(TextView subscribeUrl) {
         DownloadRSSFeed downFeed = new DownloadRSSFeed();
         if (subscribeUrl.getText() != null) {
             downFeed.execute(subscribeUrl.getText().toString());
