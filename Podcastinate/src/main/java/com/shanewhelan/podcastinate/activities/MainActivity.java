@@ -11,10 +11,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -43,13 +41,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/*
-TODO: Add Refresh button
+/*=
 TODO: Add picture beside podcast name
-TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail
-TODO: Use date format in sql database, fix columns episode link
+TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: GET file extension from feed
 TODO: Streaming: Must keep WIFI from sleeping
+TODO: Pause on headphones remove
  */
 
 public class MainActivity extends Activity {
@@ -113,17 +110,20 @@ public class MainActivity extends Activity {
 
                 return true;
             case R.id.action_refresh:
-                PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-                dataSource.openDb();
-                HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();
-                dataSource.closeDb();
-                RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
-                if(podcastInfo != null){
-                    //noinspection unchecked
-                    refreshFeed.execute(podcastInfo);
+                if(Utilities.testNetwork(this)) {
+                    PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
+                    dataSource.openDb();
+                    HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();
+                    dataSource.closeDb();
+                    RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
+                    if(podcastInfo != null){
+                        //noinspection unchecked
+                        refreshFeed.execute(podcastInfo);
+                    }
+                    return true;
+                }else{
+                    return false;
                 }
-
-                return true;
             case R.id.action_wipe_db:
                 wipeDb();
                 return true;
@@ -172,58 +172,54 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, String> {
+    // TODO: Test Network Before call
+    public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
         @Override
-        protected String doInBackground(HashMap<String, String>... urlList) {
+        protected HashMap<String, String> doInBackground(HashMap<String, String>... urlList) {
+            HashMap<String, String> resultMap = new HashMap<String, String>(urlList[0].size());
             try {
                 Set entrySet = urlList[0].entrySet();
-                int[] results = new int[entrySet.size()];
-                int i = 0;
+                int result;
                 for (Object anEntrySet : entrySet) {
                     Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                    results[i] = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
-                    i++;
+                    result = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
+                    resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
                 }
-                return Integer.toString(results.length);
-/*
-                if (result == Utilities.SUCCESS) {
-                    return "refreshed";
-                } else if (result == Utilities.INVALID_URL) {
-                    return "URL Invalid";
-                } else if (result == Utilities.FAILURE_TO_PARSE) {
-                    return "Not Valid Podcast Feed";
-                } else if (result == Utilities.NO_NEW_EPISODES) {
-                    return "NoEpisodes";
-                }
-                */
+                return resultMap;
             } catch (HTTPConnectionException httpException) {
-                return "Connection Error " + httpException.getResponseCode();
+                resultMap.put("error", "Connection Error " + httpException.getResponseCode());
+                return resultMap;
             } catch (IOException e) {
-                Log.e("sw9", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
-                return "Exception: " + e.getClass();
+                resultMap.put("error", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
+                return resultMap;
             }
-         //   return "Error";
         }
 
         @Override
-        protected void onPostExecute(String subscribed) {
-
-            int duration = Toast.LENGTH_LONG;
-            if (subscribed.equals("refreshed")) {
-                // Send out a toast displaying success
-                // May be able to get this toast to the user faster
-                if (getApplicationContext() != null) {
-                    Toast.makeText(getApplicationContext(), "Refreshed", duration).show();
-                }
-                //successfulSubscription();
-            } else if (subscribed.equals("NoEpisodes")) {
-                // Do Something
-            } else {
-                if (getApplicationContext() != null) {
-                    Toast.makeText(getApplicationContext(), subscribed, duration).show();
+        protected void onPostExecute(HashMap<String, String> resultMap) {
+            Set entrySet = resultMap.entrySet();
+            int numNewEpisodes = 0;
+            String error = null;
+            for (Object anEntrySet : entrySet) {
+                Map.Entry mapEntry = (Map.Entry) anEntrySet;
+                if(mapEntry.getValue() == String.valueOf(Utilities.SUCCESS)) {
+                    numNewEpisodes++;
+                } else if(mapEntry.getKey().toString().equals("error")){
+                    error = mapEntry.getValue().toString();
                 }
             }
-            // Implement the observer design pattern here to move to feeds page.
+
+            if (getApplicationContext() != null) {
+                if(numNewEpisodes > 1) {
+                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episodes." , Toast.LENGTH_LONG).show();
+                } else if(numNewEpisodes == 1) {
+                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episode." , Toast.LENGTH_LONG).show();
+                } else if(numNewEpisodes == 0) {
+                    Toast.makeText(getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
+                } else if(error != null ) {
+                    Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                }
+            }
         }
 
         private int refreshRSSFeed(String url, String podcastTitle) throws IOException {
