@@ -160,7 +160,7 @@ public class PodcastDataSource {
                 EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + ", " +
                 EpisodeEntry.COLUMN_NAME_ENCLOSURE + " FROM " + EpisodeEntry.TABLE_NAME +
                 " WHERE " + EpisodeEntry.COLUMN_NAME_PODCAST_ID
-                + " = " + podcastID, null);
+                + " = " + podcastID + " ORDER BY " + EpisodeEntry.COLUMN_NAME_PUB_DATE + " DESC", null);
     }
 
     public String getEpisodeEnclosure(String podcastTitle, String episodeTitle){
