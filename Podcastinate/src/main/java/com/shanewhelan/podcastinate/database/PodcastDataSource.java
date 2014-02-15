@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
-import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
@@ -223,13 +222,14 @@ public class PodcastDataSource {
         return null;
     }
 
+    // Used for comparing to the latest episode on refresh
     public String getMostRecentEpisodeEnclosure(String podcastTitle) {
         int podcastID = getPodcastID(podcastTitle);
         String[] columns = {EpisodeEntry.COLUMN_NAME_ENCLOSURE};
 
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = \"" + podcastID + "\"",
-                null, null, null, "date(" + EpisodeEntry.COLUMN_NAME_PUB_DATE + ") DESC", "1");
+                null, null, null, EpisodeEntry.COLUMN_NAME_PUB_DATE + " DESC", "1");
         if(cursor != null) {
             cursor.moveToFirst();
             return cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
