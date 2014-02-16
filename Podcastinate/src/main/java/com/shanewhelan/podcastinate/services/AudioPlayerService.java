@@ -115,7 +115,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             directory = intent.getStringExtra(DIRECTORY);
             playNewEpisode(directory, false);
         } else if(ACTION_DISCONNECT.equals(intent.getAction())) {
-            pauseMedia();
+            if(player != null) {
+                if(player.isPlaying()) {
+                    pauseMedia();
+                }
+            } else {
+                stopSelf();
+            }
         }
         return START_STICKY;
     }
@@ -149,6 +155,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             player = null;
         }
         episode = null;
+        iBinder = null;
+        directory = null;
+        super.onDestroy();
     }
 
     public void pauseMedia() {
