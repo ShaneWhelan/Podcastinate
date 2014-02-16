@@ -34,5 +34,4 @@ public class DownloadActivity extends Activity {
         this.startService(intent);
         dataSource.closeDb();
     }
-
 }
