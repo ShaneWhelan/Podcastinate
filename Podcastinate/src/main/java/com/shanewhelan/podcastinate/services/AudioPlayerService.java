@@ -21,6 +21,9 @@ import java.io.IOException;
 /**
  * Created by Shane on 03/02/14. Podcastinate.
  */
+
+// TODO: Should have subtitle controller already set
+// TODO: E/AudioSink﹕ received unknown event type: 1 inside CallbackWrapper !
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -167,6 +170,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PAUSE);
         sendBroadcast(intent);
+        // TODO: FIX BUG HERE
         unregisterReceiver(disconnectJackR);
     }
 

@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView.*;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -54,6 +55,7 @@ public class PodcastViewerActivity extends Activity {
     private int podcastID;
     private ImageButton playButton;
     private ImageButton pauseButton;
+    private Button startPlayer;
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
     private ListView listView;
@@ -93,6 +95,17 @@ public class PodcastViewerActivity extends Activity {
         initialiseAdapter(podcastName);
         initialiseMultiSelect();
         initialiseButtons();
+
+        OnItemClickListener itemCLickHandler = new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView textView = (TextView) view.findViewById(R.id.episodeName);
+                if (textView.getText() != null) {
+                    Log.d("sw9", textView.getText().toString());
+                }
+            }
+        };
+        listView.setOnItemClickListener(itemCLickHandler);
     }
 
     public void initialiseAdapter(String podcastName) {
@@ -173,17 +186,7 @@ public class PodcastViewerActivity extends Activity {
     private void initialiseButtons() {
         playButton = (ImageButton) findViewById(R.id.mainPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
-
-        OnItemClickListener itemCLickHandler = new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView textView = (TextView) view.findViewById(R.id.episodeName);
-                if (textView.getText() != null) {
-                    Log.d("sw9", textView.getText().toString());
-                }
-            }
-        };
-        listView.setOnItemClickListener(itemCLickHandler);
+        startPlayer = (Button) findViewById(R.id.startPlayer);
 
         playButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -216,6 +219,14 @@ public class PodcastViewerActivity extends Activity {
                 // Pause podcast in background service
                 audioService.pauseMedia();
                 updateListOfPodcasts();
+            }
+        });
+
+        startPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent playerIntent = new Intent(getApplicationContext(), PlayerActivity.class);
+                startActivity(playerIntent);
             }
         });
     }
