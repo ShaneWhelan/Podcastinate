@@ -12,7 +12,6 @@ public class DownloadActivity extends Activity {
     public static final String PODCAST_TITLE = "podcast_title";
     public static final String EPISODE_TITLE = "episode_title";
     public static final String ENCLOSURE = "enclosure";
-    public static final String DIRECTORY = "directory";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
