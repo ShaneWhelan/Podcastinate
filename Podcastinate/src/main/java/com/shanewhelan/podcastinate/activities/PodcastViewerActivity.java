@@ -78,7 +78,6 @@ public class PodcastViewerActivity extends Activity {
         }
     };
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,54 +92,7 @@ public class PodcastViewerActivity extends Activity {
 
         initialiseAdapter(podcastName);
         initialiseMultiSelect();
-
-        playButton = (ImageButton) findViewById(R.id.mainPlayButton);
-        pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
-
-        OnItemClickListener itemCLickHandler = new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView textView = (TextView) view.findViewById(R.id.episodeName);
-                if (textView.getText() != null) {
-                    Log.d("sw9", textView.getText().toString());
-                }
-            }
-        };
-        listView.setOnItemClickListener(itemCLickHandler);
-
-        playButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Check if audio service has been initialised and is playing
-                // TODO: Verify code
-                if (audioService == null) {
-                    // Play podcast in a background service
-                    Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
-                    intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                    //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
-                    intent.setAction(AudioPlayerService.ACTION_PLAY);
-                    // Investigate Correct flag and compatibility
-                    if (getApplicationContext() != null) {
-                        getApplicationContext().startService(intent);
-                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
-                    }
-                } else {
-                    audioService.resumeMedia();
-                    // Check this isn't called twice
-                    updateListOfPodcasts();
-                }
-            }
-        });
-
-        pauseButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Check if audio service has been initialised and is playing
-                // Pause podcast in background service
-                audioService.pauseMedia();
-                updateListOfPodcasts();
-            }
-        });
+        initialiseButtons();
     }
 
     public void initialiseAdapter(String podcastName) {
@@ -218,6 +170,55 @@ public class PodcastViewerActivity extends Activity {
         });
     }
 
+    private void initialiseButtons() {
+        playButton = (ImageButton) findViewById(R.id.mainPlayButton);
+        pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
+
+        OnItemClickListener itemCLickHandler = new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView textView = (TextView) view.findViewById(R.id.episodeName);
+                if (textView.getText() != null) {
+                    Log.d("sw9", textView.getText().toString());
+                }
+            }
+        };
+        listView.setOnItemClickListener(itemCLickHandler);
+
+        playButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check if audio service has been initialised and is playing
+                // TODO: Verify code
+                if (audioService == null) {
+                    // Play podcast in a background service
+                    Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
+                    intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                    //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
+                    intent.setAction(AudioPlayerService.ACTION_PLAY);
+                    // Investigate Correct flag and compatibility
+                    if (getApplicationContext() != null) {
+                        getApplicationContext().startService(intent);
+                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+                    }
+                } else {
+                    audioService.resumeMedia();
+                    // Check this isn't called twice
+                    updateListOfPodcasts();
+                }
+            }
+        });
+
+        pauseButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check if audio service has been initialised and is playing
+                // Pause podcast in background service
+                audioService.pauseMedia();
+                updateListOfPodcasts();
+            }
+        });
+    }
 
     private void deleteSelectedItems() {
         SQLiteCursor cursor;
@@ -308,7 +309,6 @@ public class PodcastViewerActivity extends Activity {
         episodeAdapter.notifyDataSetChanged();
         dataSource.closeDb();
     }
-
 
     public class EpisodeAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
@@ -438,12 +438,14 @@ public class PodcastViewerActivity extends Activity {
                 } else {
                     if (v.getContentDescription() != null) {
                         String directory = v.getContentDescription().toString();
-                        if (audioService.getDirectory().equals(directory)) {
-                            audioService.resumeMedia();
-                            // TODO: Check this isn't called twice by the broadcast receiver
-                            updateListOfPodcasts();
-                        } else {
-                            audioService.playNewEpisode(directory, true);
+                        if(audioService.getPlayer() != null) {
+                            if (audioService.getDirectory().equals(directory)) {
+                                audioService.resumeMedia();
+                                // TODO: Check this isn't called twice by the broadcast receiver
+                                updateListOfPodcasts();
+                            } else {
+                                audioService.playNewEpisode(directory, true);
+                            }
                         }
                     }
                 }
