@@ -18,5 +18,8 @@
     <string name="title_activity_player">PlayerActivity</string>
     <string name="hello_world">Hello world!</string>
     <string name="refresh_feed">Refresh Feed</string>
+    <string name="baseElapsedTime">00:00</string>
+    <string name="rewindButton">rewindButton</string>
+    <string name="fastForward">fastForward</string>
 
 </resources>

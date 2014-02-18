@@ -10,12 +10,15 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
@@ -26,6 +29,10 @@ public class PlayerActivity extends Activity {
     private ServiceConnection serviceConnection;
     private ImageButton playButton;
     private ImageButton pauseButton;
+    private TextView elapsedText;
+    private TextView remainingText;
+    private SeekBar seekBar;
+    private Handler timerHandler = new Handler();
 
     BroadcastReceiver audioReceiver = new BroadcastReceiver() {
         @Override
@@ -33,11 +40,57 @@ public class PlayerActivity extends Activity {
             if (Utilities.ACTION_PLAY.equals(intent.getAction())) {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.VISIBLE);
+                updatePlayerTimers();
             } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
                 playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
+                timerHandler.removeCallbacks(updateTimers);
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
                 // Verify this is the right thing to do
+                timerHandler.removeCallbacks(updateTimers);
+                // TODO: Send podcast name so we can go back to list of episodes
+                Intent episodesIntent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(episodesIntent);
+            }
+        }
+    };
+
+    private Runnable updateTimers = new Runnable() {
+        @Override
+        public void run() {
+            if(audioService != null) {
+                if(audioService.getPlayer() != null) {
+                    if(audioService.getPlayer().isPlaying()) {
+                        int currentPos = audioService.getPlayer().getCurrentPosition();
+                        int duration = audioService.getPlayer().getDuration();
+
+                        int hours = currentPos / 1000 / 60 / 60;
+                        int minutes = (currentPos / 1000 / 60) % 60;
+                        int seconds = currentPos / 1000 % 60;
+
+                        int remHours = (duration - currentPos) / 1000 / 60 / 60;
+                        int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
+                        int remSeconds = (duration - currentPos) / 1000 % 60;
+
+                        if(hours > 0 && hours < 10) {
+                            elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
+                        } else if(hours > 10) {
+                            elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                        } else {
+                            elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
+                        }
+
+                        if(remHours > 0 && remHours < 10) {
+                            remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
+                        } else if(hours > 10) {
+                            remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
+                        } else {
+                            remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
+                        }
+                        // Call this thread again
+                        timerHandler.postDelayed(this, 1000);
+                    }
+                }
             }
         }
     };
@@ -53,6 +106,9 @@ public class PlayerActivity extends Activity {
     private void initialiseButtons() {
         playButton = (ImageButton) findViewById(R.id.mainPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
+        seekBar = (SeekBar) findViewById(R.id.seekBarPlayer);
+        elapsedText = (TextView) findViewById(R.id.timeElapsed);
+        remainingText = (TextView) findViewById(R.id.timeRemaining);
 
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,6 +141,29 @@ public class PlayerActivity extends Activity {
                 audioService.pauseMedia();
             }
         });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser) {
+                    audioService.setProgress(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Allow us to display potential seek to time by removing update of time.
+                timerHandler.removeCallbacks(updateTimers);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Allow us to display potential seek to time by removing update of time.
+                timerHandler.removeCallbacks(updateTimers);
+
+                updatePlayerTimers();
+            }
+        });
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -104,6 +183,7 @@ public class PlayerActivity extends Activity {
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
                 syncControlPanel();
+
             }
         };
 
@@ -113,6 +193,7 @@ public class PlayerActivity extends Activity {
 
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
 
         syncControlPanel();
     }
@@ -133,6 +214,7 @@ public class PlayerActivity extends Activity {
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
+                    updatePlayerTimers();
                 }
             }
         } else {
@@ -158,5 +240,13 @@ public class PlayerActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void updatePlayerTimers() {
+        timerHandler.post(updateTimers);
+    }
+
+    public void episodeFinished() {
+
     }
 }

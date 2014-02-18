@@ -32,8 +32,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
     public static final String DIRECTORY = "directory";
     public static final String ACTION_DISCONNECT = "1";
-    private String directory;
-    private Episode episode;
+    private static String directory;
+    private static Episode episode;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
         @Override
@@ -61,14 +61,14 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
                     player.stop();
+                    PodcastDataSource pds = new PodcastDataSource(this);
+                    pds.openDb();
+                    pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
+                    pds.closeDb();
+                    player.release();
+                    player = null;
                 }
-                PodcastDataSource pds = new PodcastDataSource(this);
-                pds.openDb();
-                pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
-                pds.closeDb();
-                // TODO: Write to DB the current time that you stopped at
-                player.release();
-                player = null;
+
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
@@ -141,6 +141,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     @SuppressWarnings("UnusedAssignment")
     @Override
     public void onCompletion(MediaPlayer player) {
+        Intent finished = new Intent(Utilities.ACTION_FINISHED);
+        sendBroadcast(finished);
         player.release();
         player = null;
     }
@@ -160,6 +162,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         episode = null;
         iBinder = null;
         directory = null;
+        unregisterReceiver(disconnectJackR);
         super.onDestroy();
     }
 
@@ -182,6 +185,16 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         intent.setAction(Utilities.ACTION_PLAY);
         sendBroadcast(intent);
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+    }
+
+    public void setProgress(int progress) {
+        if(progress < 100) {
+            player.seekTo((player.getDuration()/100)*progress);
+        } else {
+            Intent finished = new Intent(Utilities.ACTION_FINISHED);
+            sendBroadcast(finished);
+            stopSelf();
+        }
     }
 
     public MediaPlayer getPlayer() {
