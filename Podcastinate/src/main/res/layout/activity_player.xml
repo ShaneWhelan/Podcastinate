@@ -8,7 +8,15 @@
                   android:orientation="vertical"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
-                  android:layout_weight="1">
+                  android:layout_weight="1"
+                  android:id="@+id/playerWindow">
+        <ImageView
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/podcastImage"/>
+
         <TextView
             android:id="@+id/timeElapsed"
             android:layout_width="wrap_content"

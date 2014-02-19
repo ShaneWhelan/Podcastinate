@@ -32,12 +32,9 @@ import java.net.URISyntaxException;
 import java.util.Random;
 
 public class DownloadService extends IntentService {
-    public static final String DIRECTORY = "/Podcastinate";
     private NotificationManager notifyManager;
     private Builder builder;
     private double dlProgress;
-
-
 
     public DownloadService() {
         super("Download service");
@@ -70,7 +67,7 @@ public class DownloadService extends IntentService {
             }
 
             // Check if default directory exists and create it if not.
-            File externalStorage = new File(Environment.getExternalStorageDirectory() + DIRECTORY);
+            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY);
             if(!externalStorage.isDirectory()) {
                 if(!externalStorage.mkdir()) {
                     throw new IOException("Could not create directory");

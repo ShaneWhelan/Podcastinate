@@ -188,9 +188,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void setProgress(int progress) {
-        if(progress < 100) {
-            player.seekTo((player.getDuration()/100)*progress);
+        if(progress < player.getDuration()) {
+            player.seekTo(progress);
         } else {
+            // TODO: Broadcasting intent before finished
             Intent finished = new Intent(Utilities.ACTION_FINISHED);
             sendBroadcast(finished);
             stopSelf();
@@ -218,7 +219,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 pds.closeDb();
 
                 if(isPlaying) {
-                    this.directory = directory;
+                    AudioPlayerService.directory = directory;
                 }else {
                     player = new MediaPlayer();
                 }

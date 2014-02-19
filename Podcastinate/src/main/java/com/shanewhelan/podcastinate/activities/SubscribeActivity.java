@@ -66,8 +66,6 @@ public class SubscribeActivity extends Activity {
         }
     }
 
-
-
     public String[] getPodcastLinks() {
         PodcastDataSource dataSource = new PodcastDataSource(this);
         dataSource.openDb();

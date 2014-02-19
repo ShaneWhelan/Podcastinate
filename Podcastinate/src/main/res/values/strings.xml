@@ -21,5 +21,6 @@
     <string name="baseElapsedTime">00:00</string>
     <string name="rewindButton">rewindButton</string>
     <string name="fastForward">fastForward</string>
+    <string name="podcastImage">podcastImage</string>
 
 </resources>

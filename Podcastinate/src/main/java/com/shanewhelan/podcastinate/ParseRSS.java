@@ -296,7 +296,6 @@ public class ParseRSS {
 
             String filename = "";
             // Get image file extension
-            // TODO: Remove special characters
             if(podcast.getImageDirectory() != null) {
                 filename = podcast.getImageDirectory().substring(podcast.getImageDirectory().lastIndexOf("/"));
             }
