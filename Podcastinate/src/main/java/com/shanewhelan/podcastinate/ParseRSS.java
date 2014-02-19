@@ -1,12 +1,24 @@
 package com.shanewhelan.podcastinate;
 
+import android.os.Environment;
 import android.util.Log;
 import android.util.Xml;
+
+import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -41,6 +53,8 @@ public class ParseRSS {
         try {
             boolean hasParentNodeChannel = false;
             boolean hasParentNodeItem = false;
+            boolean hasParentNodeImage = false;
+
             Episode episode = null;
 
             // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
@@ -59,7 +73,10 @@ public class ParseRSS {
                         } else if (nodeName.equals("description")) {
                             savePodcastDescription(xmlPullParser);
                         } else if (nodeName.equals("image")) {
-                            podcast.setImageDirectory("testDir");
+                            hasParentNodeImage = true;
+                        } else if (nodeName.equals("itunes:image")) {
+                            // Temporarily save image link to directory member of podcast object
+                            savePodcastItunesImage(xmlPullParser);
                         } else if (nodeName.equals("atom:link")) {
                             savePodcastLink(xmlPullParser);
                             if (!isLinkUnique(listOfLinks, podcast.getLink())) {
@@ -93,15 +110,26 @@ public class ParseRSS {
                             saveEnclosure(xmlPullParser, episode);
                         }
                     }
+
+                    if(hasParentNodeImage) {
+                        if (nodeName.equals("url")) {
+                            // Temporarily save image link to directory member of podcast object
+                            savePodcastImageDirectory(xmlPullParser);
+                        }
+                    }
                 } else if (xmlPullParser.getEventType() == XmlPullParser.END_TAG) {
                     if (nodeName.equals("item")) {
                         hasParentNodeItem = false;
                         episodeList.add(episode);
+                    }else if(nodeName.equals("image")) {
+                        hasParentNodeImage = false;
                     }
                 }
             }
+
             podcast.setEpisodeList(episodeList);
             Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
+            downloadEpisodeImage(podcast);
             return podcast;
         } catch (XmlPullParserException e) {
             Log.e("sw9", e.getMessage());
@@ -124,6 +152,10 @@ public class ParseRSS {
         podcast.setImageDirectory(xmlPullParser.nextText());
     }
 
+    public void savePodcastItunesImage(XmlPullParser xmlPullParser) throws IOException,
+            XmlPullParserException {
+        podcast.setImageDirectory(xmlPullParser.getAttributeValue(null, "href"));
+    }
     public boolean isLinkUnique(String[] listOfLinks, String link) {
         boolean linkUnique = true;
         for (String currentLink : listOfLinks) {
@@ -138,6 +170,7 @@ public class ParseRSS {
             XmlPullParserException {
         podcast.setLink(xmlPullParser.getAttributeValue(null, "href"));
     }
+
 
     public void saveTitle(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
         episode.setTitle(xmlPullParser.nextText());
@@ -237,5 +270,70 @@ public class ParseRSS {
             Log.e("sw9", e.getMessage());
         }
         return null;
+    }
+
+    public void downloadEpisodeImage(Podcast podcast) {
+        try {
+            // Download podcast file
+            HttpGet httpGet = new HttpGet(new URI(podcast.getImageDirectory()));
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+
+            // Exception handle the fact that server could be down
+            int responseCode = httpResponse.getStatusLine().getStatusCode();
+            if(responseCode != 200) {
+                // Throw custom exception
+                throw new HTTPConnectionException(responseCode);
+            }
+
+            // Check if default directory exists and create it if not.
+            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + podcast.getTitle().replaceAll("[^A-Za-z0-9]", "-") + "/images");
+            if(!externalStorage.isDirectory()) {
+                if(!externalStorage.mkdirs()) {
+                    throw new IOException("Could not create directory");
+                }
+            }
+
+            String filename = "";
+            // Get image file extension
+            // TODO: Remove special characters
+            if(podcast.getImageDirectory() != null) {
+                filename = podcast.getImageDirectory().substring(podcast.getImageDirectory().lastIndexOf("/"));
+            }
+
+            Log.d("sw9", filename);
+            File imageFile = new File(externalStorage, filename);
+
+            // Create new image from InputStream
+            if(imageFile.createNewFile()) {
+                FileOutputStream fileOutput = new FileOutputStream(imageFile);
+                InputStream inputStream = httpResponse.getEntity().getContent();
+
+                // Stats for downloading
+                long contentLength = httpResponse.getEntity().getContentLength();
+                double downloadedSize = 0;
+                byte[] buffer = new byte[32768];
+                int bufferLength;
+
+                // Use count to make sure we only update the progress bar 50 times in total
+                while((bufferLength = inputStream.read(buffer)) > 0 ) {
+                    fileOutput.write(buffer, 0, bufferLength);
+                    downloadedSize += bufferLength;
+                    // Download progress as a percentage
+                }
+
+                // Tidy up and close streams
+                inputStream.close();
+                fileOutput.close();
+
+                if(downloadedSize == contentLength) {
+                    podcast.setImageDirectory(imageFile.getAbsolutePath());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 }
