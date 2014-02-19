@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -68,10 +69,6 @@ public class PlayerActivity extends Activity {
                         int minutes = (currentPos / 1000 / 60) % 60;
                         int seconds = currentPos / 1000 % 60;
 
-                        int remHours = (duration - currentPos) / 1000 / 60 / 60;
-                        int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
-                        int remSeconds = (duration - currentPos) / 1000 % 60;
-
                         if(hours > 0 && hours < 10) {
                             elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
                         } else if(hours > 10) {
@@ -79,6 +76,10 @@ public class PlayerActivity extends Activity {
                         } else {
                             elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
                         }
+
+                        int remHours = (duration - currentPos) / 1000 / 60 / 60;
+                        int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
+                        int remSeconds = (duration - currentPos) / 1000 % 60;
 
                         if(remHours > 0 && remHours < 10) {
                             remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
@@ -114,7 +115,6 @@ public class PlayerActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
-                // TODO: Verify code
                 if (audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
@@ -128,7 +128,6 @@ public class PlayerActivity extends Activity {
                     }
                 } else {
                     audioService.resumeMedia();
-                    // Check this isn't called twice
                 }
             }
         });
@@ -136,7 +135,6 @@ public class PlayerActivity extends Activity {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
                 audioService.pauseMedia();
             }
@@ -145,8 +143,31 @@ public class PlayerActivity extends Activity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser) {
-                    audioService.setProgress(progress);
+
+                int duration = audioService.getPlayer().getDuration();
+
+                int hours = progress / 1000 / 60 / 60;
+                int minutes = (progress / 1000 / 60) % 60;
+                int seconds = progress / 1000 % 60;
+
+                if(hours > 0 && hours < 10) {
+                    elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
+                } else if(hours > 10) {
+                    elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                } else {
+                    elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
+                }
+
+                int remHours = (duration - progress) / 1000 / 60 / 60;
+                int remMinutes = ((duration - progress) / 1000 / 60) % 60;
+                int remSeconds = (duration - progress) / 1000 % 60;
+
+                if(remHours > 0 && remHours < 10) {
+                    remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
+                } else if(hours > 10) {
+                    remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
+                } else {
+                    remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
                 }
             }
 
@@ -159,8 +180,9 @@ public class PlayerActivity extends Activity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // Allow us to display potential seek to time by removing update of time.
-                timerHandler.removeCallbacks(updateTimers);
-
+                if(audioService != null) {
+                    audioService.setProgress(seekBar.getProgress());
+                }
                 updatePlayerTimers();
             }
         });
@@ -176,13 +198,13 @@ public class PlayerActivity extends Activity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
                 audioService = b.getService();
-                syncControlPanel();
+                syncUserInterface();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
-                syncControlPanel();
+                syncUserInterface();
 
             }
         };
@@ -194,8 +216,6 @@ public class PlayerActivity extends Activity {
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
-
-        syncControlPanel();
     }
 
     @Override
@@ -205,26 +225,28 @@ public class PlayerActivity extends Activity {
         unregisterReceiver(audioReceiver);
     }
 
-    public void syncControlPanel() {
+    public void syncUserInterface() {
         LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
-
         if (audioService != null) {
             if(audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
+                    seekBar.setMax(audioService.getPlayer().getDuration());
+                    seekBar.setVisibility(View.VISIBLE);
                     updatePlayerTimers();
                 }
             }
         } else {
+            RelativeLayout playerWindow = (RelativeLayout) findViewById(R.id.playerWindow);
+            playerWindow.setVisibility(View.GONE);
             controlPanel.setVisibility(View.GONE);
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.player, menu);
         return true;
@@ -236,17 +258,11 @@ public class PlayerActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     public void updatePlayerTimers() {
+        // Start the thread that updates the elapsed/remaining timers
         timerHandler.post(updateTimers);
-    }
-
-    public void episodeFinished() {
-
     }
 }
