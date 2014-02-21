@@ -48,9 +48,7 @@ TODO: Write current time to DB on pause - investigate
 TODO: Help Section
 TODO: On delete clear current time
 TODO: Start Main activity if subscribed
-TODO: BUG REFRESH
 TODO: On delete of podcast release media player
-TODO: Error message
  */
 
 public class MainActivity extends Activity {

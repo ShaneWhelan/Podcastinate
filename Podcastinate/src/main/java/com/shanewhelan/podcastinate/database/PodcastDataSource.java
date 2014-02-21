@@ -106,8 +106,6 @@ public class PodcastDataSource {
         return podcastId;
     }
 
-
-    // TODO: Maybe refactor this to not return cursor
     public Cursor getAllPodcastTitles() {
         return database.rawQuery("SELECT " + PodcastEntry.COLUMN_NAME_PODCAST_ID
                 + " as _id, title FROM " + PodcastEntry.TABLE_NAME, null);
@@ -190,7 +188,6 @@ public class PodcastDataSource {
         return enclosure;
     }
 
-    // TODO: Look into refactoring with podcastTitle as a parameter
     public Episode getEpisodeMetaData(String directory) {
         String[] columns = {EpisodeEntry.COLUMN_NAME_EPISODE_ID, EpisodeEntry.COLUMN_NAME_LISTENED,
                 EpisodeEntry.COLUMN_NAME_CURRENT_TIME, EpisodeEntry.COLUMN_NAME_PODCAST_ID,

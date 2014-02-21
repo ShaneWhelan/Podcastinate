@@ -195,7 +195,6 @@ public class PodcastViewerActivity extends Activity {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                    //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
                     intent.setAction(AudioPlayerService.ACTION_PLAY);
                     // Investigate Correct flag and compatibility
                     if (getApplicationContext() != null) {
@@ -441,7 +440,7 @@ public class PodcastViewerActivity extends Activity {
                             if (audioService.getDirectory().equals(directory)) {
                                 audioService.resumeMedia();
                                 // TODO: Check this isn't called twice by the broadcast receiver
-                                updateListOfPodcasts();
+                                //updateListOfPodcasts();
                             } else {
                                 audioService.playNewEpisode(directory, true);
                             }

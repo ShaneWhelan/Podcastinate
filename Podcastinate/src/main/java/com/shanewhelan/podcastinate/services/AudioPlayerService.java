@@ -190,7 +190,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         if (progress < player.getDuration()) {
             player.seekTo(progress);
         } else {
-            // TODO: Broadcasting intent before finished
             Intent finished = new Intent(Utilities.ACTION_FINISHED);
             sendBroadcast(finished);
             stopSelf();
