@@ -50,6 +50,7 @@ TODO: On delete clear current time
 TODO: Start Main activity if subscribed
 TODO: BUG REFRESH
 TODO: On delete of podcast release media player
+TODO: Error message
  */
 
 public class MainActivity extends Activity {
@@ -63,10 +64,11 @@ public class MainActivity extends Activity {
         this.setTitle("Podcasts");
         setContentView(R.layout.activity_main);
 
+        // TODO: Dev only, take out for release
         try {
             copyAppDbToDownloadFolder();
         } catch (IOException e) {
-            e.printStackTrace();
+            Utilities.logException(e);
         }
 
         dataSource = new PodcastDataSource(this);
@@ -167,7 +169,7 @@ public class MainActivity extends Activity {
                 runtime.exec(deleteCmd);
                 Log.d("sw9", "Directory deleted");
             } catch (IOException e) {
-                Log.d("sw9", "Oh shit");
+                Utilities.logException(e);
             }
         }
     }
@@ -204,10 +206,12 @@ public class MainActivity extends Activity {
                     resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
                 }
                 return resultMap;
-            } catch (HTTPConnectionException httpException) {
-                resultMap.put("error", "Connection Error " + httpException.getResponseCode());
+            } catch (HTTPConnectionException e) {
+                Utilities.logException(e);
+                resultMap.put("error", "Connection Error " + e.getResponseCode());
                 return resultMap;
             } catch (IOException e) {
+                Utilities.logException(e);
                 resultMap.put("error", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
                 return resultMap;
             }
@@ -288,7 +292,7 @@ public class MainActivity extends Activity {
                     try {
                         inputStream.close();
                     } catch (IOException e) {
-                        Log.e("sw9", e.getMessage());
+                        Utilities.logException(e);
                     }
                 }
             }

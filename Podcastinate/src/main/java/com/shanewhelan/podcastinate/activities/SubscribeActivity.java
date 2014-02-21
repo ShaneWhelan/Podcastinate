@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -93,12 +92,13 @@ public class SubscribeActivity extends Activity {
                     return "Not Valid Podcast Feed";
                 }
             } catch (DuplicatePodcastException e) {
-                e.printStackTrace();
+                Utilities.logException(e);
                 return "Already subscribed to podcast";
-            } catch (HTTPConnectionException httpException) {
-                return "Connection Error " + httpException.getResponseCode();
+            } catch (HTTPConnectionException e) {
+                Utilities.logException(e);
+                return "Connection Error " + e.getResponseCode();
             } catch (IOException e) {
-                Log.e("sw9", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
+                Utilities.logException(e);
                 return "Exception: " + e.getClass();
             }
             return "Error";
@@ -168,7 +168,7 @@ public class SubscribeActivity extends Activity {
                     try {
                         inputStream.close();
                     } catch (IOException e) {
-                        Log.e("sw9", e.getMessage());
+                        Utilities.logException(e);
                     }
                 }
             }

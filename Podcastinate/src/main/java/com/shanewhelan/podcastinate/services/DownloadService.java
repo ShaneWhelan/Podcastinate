@@ -168,11 +168,11 @@ public class DownloadService extends IntentService {
                 pds.closeDb();
             }
         } catch (MalformedURLException e) {
-            Log.e("sw9", "Malformed URL " + e.getMessage());
+            Utilities.logException(e);
         } catch (IOException e) {
-            Log.e("sw9", "IO EXCEPTION " + e.getMessage());
+            Utilities.logException(e);
         } catch (URISyntaxException e) {
-            Log.e("sw9", "URI SYNTAX " + e.getMessage());
+            Utilities.logException(e);
         }
     }
 }

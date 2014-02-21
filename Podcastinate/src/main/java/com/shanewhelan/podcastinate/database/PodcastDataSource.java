@@ -5,13 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
-
 import com.shanewhelan.podcastinate.Episode;
+import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -46,7 +44,7 @@ public class PodcastDataSource {
             result = database.insertOrThrow(PodcastEntry.TABLE_NAME, PodcastEntry.COLUMN_NAME_TITLE,
                     contentValues);
         } catch (SQLiteConstraintException e) {
-            Log.e("sw9", Arrays.toString(e.getStackTrace()));
+            Utilities.logException(e);
         }
         return result;
     }

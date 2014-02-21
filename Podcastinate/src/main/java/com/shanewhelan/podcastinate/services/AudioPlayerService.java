@@ -234,7 +234,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 player.prepareAsync();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Utilities.logException(e);
         }
     }
 

@@ -6,24 +6,6 @@ import java.util.ArrayList;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class Podcast {
-      /*
-      item
-	  title
-	  link
-	  description
-	  pubDate
-	  guid
-	  itunes:subtitle
-	  itunes:summary
-	  itunes:author
-	  itunes:explicit
-	  itunes:duration
-	  itunes:keywords
-	  itunes:image
-	  media:content
-	  enclosure
-     */
-
     String title;
     String description;
     String imageDirectory;

@@ -55,9 +55,9 @@ public class ParseRSS {
             xmlPullParser.nextTag();
             return xmlPullParser;
         } catch (XmlPullParserException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         } catch (IOException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         }
         return null;
     }
@@ -143,9 +143,9 @@ public class ParseRSS {
             downloadEpisodeImage(podcast.getImageDirectory(), podcast.getTitle(), true);
             return podcast;
         } catch (XmlPullParserException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         } catch (IOException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         }
         return null;
     }
@@ -199,7 +199,7 @@ public class ParseRSS {
             cal.setTime(podcastDate);
             episode.setPubDate(formattedDate);
         } catch (ParseException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         }
     }
 
@@ -268,9 +268,9 @@ public class ParseRSS {
             podcast.setEpisodeList(episodeList);
             return podcast;
         } catch (XmlPullParserException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         } catch (IOException e) {
-            Utilities.printError(e);
+            Utilities.logException(e);
         }
         return null;
     }

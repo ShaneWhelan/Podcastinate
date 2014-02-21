@@ -105,4 +105,8 @@ public class Utilities {
             }
         }
     }
+
+    public static void logException(Exception e) {
+        Log.e(e.getClass().getName(), e.getMessage(), e);
+    }
 }
