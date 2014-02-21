@@ -32,6 +32,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String DIRECTORY = "directory";
     public static final String ACTION_DISCONNECT = "1";
     private static String directory;
+    private String podcastTitle;
     private static Episode episode;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
@@ -44,6 +45,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             }
         }
     };
+
 
     @Override
     public void onAudioFocusChange(int focusChange) {
@@ -115,6 +117,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (ACTION_PLAY.equals(intent.getAction())) {
             directory = intent.getStringExtra(DIRECTORY);
+            podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
             playNewEpisode(directory, false);
         } else if (ACTION_DISCONNECT.equals(intent.getAction())) {
             if (player != null) {
@@ -141,6 +144,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public void onCompletion(MediaPlayer player) {
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
+        finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         sendBroadcast(finished);
         player.release();
         player = null;
@@ -191,6 +195,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             player.seekTo(progress);
         } else {
             Intent finished = new Intent(Utilities.ACTION_FINISHED);
+            finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
             sendBroadcast(finished);
             stopSelf();
         }

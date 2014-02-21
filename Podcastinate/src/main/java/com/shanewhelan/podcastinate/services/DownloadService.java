@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
@@ -43,9 +42,9 @@ public class DownloadService extends IntentService {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onHandleIntent(Intent intent) {
-        String podcastTitle = intent.getStringExtra(DownloadActivity.PODCAST_TITLE);
-        String episodeTitle = intent.getStringExtra(DownloadActivity.EPISODE_TITLE);
-        String enclosure = intent.getStringExtra(DownloadActivity.ENCLOSURE);
+        String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
+        String episodeTitle = intent.getStringExtra(Utilities.EPISODE_TITLE);
+        String enclosure = intent.getStringExtra(Utilities.ENCLOSURE);
 
         String directory = null;
         try {

@@ -56,6 +56,7 @@ public class PodcastViewerActivity extends Activity {
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
     private ListView listView;
+    private String podcastTitle;
 
     BroadcastReceiver audioReceiver = new BroadcastReceiver() {
         @Override
@@ -83,13 +84,13 @@ public class PodcastViewerActivity extends Activity {
         setContentView(R.layout.activity_podcast_viewer);
 
         Intent intent = getIntent();
-        String podcastName = intent.getStringExtra("userChoice");
+        podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
         // Set title of current activity to Podcast Name
-        setTitle(podcastName);
+        setTitle(podcastTitle);
 
         listView = (ListView) findViewById(R.id.listOfEpisodes);
 
-        initialiseAdapter(podcastName);
+        initialiseAdapter(podcastTitle);
         initialiseMultiSelect();
         initialiseButtons();
 
@@ -113,7 +114,6 @@ public class PodcastViewerActivity extends Activity {
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter = new EpisodeAdapter(this, episodeCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
-        episodeAdapter.setPodcastTitle(podcastName);
         listView.setAdapter(episodeAdapter);
         dataSource.closeDb();
     }
@@ -190,11 +190,11 @@ public class PodcastViewerActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
-                // TODO: Verify code
                 if (audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                    intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                     intent.setAction(AudioPlayerService.ACTION_PLAY);
                     // Investigate Correct flag and compatibility
                     if (getApplicationContext() != null) {
@@ -203,8 +203,6 @@ public class PodcastViewerActivity extends Activity {
                     }
                 } else {
                     audioService.resumeMedia();
-                    // Check this isn't called twice
-                    updateListOfPodcasts();
                 }
             }
         });
@@ -215,7 +213,6 @@ public class PodcastViewerActivity extends Activity {
                 // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
                 audioService.pauseMedia();
-                updateListOfPodcasts();
             }
         });
 
@@ -290,7 +287,6 @@ public class PodcastViewerActivity extends Activity {
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
 
         syncControlPanel();
-        // TODO: Careful with performance here
         updateListOfPodcasts();
     }
 
@@ -314,6 +310,7 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void updateListOfPodcasts() {
+        Log.d("sw9", "updateListOfPodcasts() hit");
         dataSource.openDb();
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter.swapCursor(episodeCursor);
@@ -324,17 +321,12 @@ public class PodcastViewerActivity extends Activity {
     public class EpisodeAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
         public Context context;
-        private String podcastTitle;
         private SparseBooleanArray sparseBArray = new SparseBooleanArray();
 
         public EpisodeAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
             layoutInflater = LayoutInflater.from(context);
             this.context = context;
-        }
-
-        public void setPodcastTitle(String podcastTitle) {
-            this.podcastTitle = podcastTitle;
         }
 
         @Override
@@ -420,15 +412,15 @@ public class PodcastViewerActivity extends Activity {
                 // Download the podcast
                 // TODO: Send more info to downloader service
                 Intent intent = new Intent(context, DownloadActivity.class);
-                intent.putExtra(DownloadActivity.EPISODE_TITLE, v.getContentDescription());
-                intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
+                intent.putExtra(Utilities.EPISODE_TITLE, v.getContentDescription());
+                intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                 context.startActivity(intent);
             } else if (viewId == R.id.play_icon) {
                 if (audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(context, AudioPlayerService.class);
                     intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                    intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
+                    intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                     intent.setAction(AudioPlayerService.ACTION_PLAY);
                     // Investigate Correct flag and compatibility
                     context.startService(intent);
@@ -439,8 +431,6 @@ public class PodcastViewerActivity extends Activity {
                         if (audioService.getPlayer() != null) {
                             if (audioService.getDirectory().equals(directory)) {
                                 audioService.resumeMedia();
-                                // TODO: Check this isn't called twice by the broadcast receiver
-                                //updateListOfPodcasts();
                             } else {
                                 audioService.playNewEpisode(directory, true);
                             }
@@ -450,7 +440,6 @@ public class PodcastViewerActivity extends Activity {
             } else if (viewId == R.id.pause_icon) {
                 // Pause podcast in background service
                 audioService.pauseMedia();
-                updateListOfPodcasts();
             }
         }
     }

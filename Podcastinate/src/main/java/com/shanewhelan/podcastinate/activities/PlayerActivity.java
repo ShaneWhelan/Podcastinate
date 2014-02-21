@@ -50,10 +50,11 @@ public class PlayerActivity extends Activity {
                 pauseButton.setVisibility(View.GONE);
                 timerHandler.removeCallbacks(updateTimers);
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
+
                 // Verify this is the right thing to do
                 timerHandler.removeCallbacks(updateTimers);
-                // TODO: Send podcast name so we can go back to list of episodes
-                Intent episodesIntent = new Intent(getApplicationContext(), MainActivity.class);
+                Intent episodesIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+                episodesIntent.putExtra(Utilities.PODCAST_TITLE, intent.getStringExtra(Utilities.PODCAST_TITLE));
                 startActivity(episodesIntent);
             }
         }

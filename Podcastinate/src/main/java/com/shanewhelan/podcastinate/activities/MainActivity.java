@@ -42,6 +42,7 @@ import java.util.Set;
 
 /*
 TODO: Add picture beside podcast name
+TODO: Add Paging to podcast viewing activity to
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Write current time to DB on pause - investigate
@@ -174,7 +175,7 @@ public class MainActivity extends Activity {
 
     public void viewEpisode(String podcastChosen) {
         Intent intent = new Intent(this, PodcastViewerActivity.class);
-        intent.putExtra("userChoice", podcastChosen);
+        intent.putExtra(Utilities.PODCAST_TITLE, podcastChosen);
         startActivity(intent);
     }
 
@@ -200,7 +201,6 @@ public class MainActivity extends Activity {
                 int result;
                 for (Object anEntrySet : entrySet) {
                     Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                    Log.d("sw9", "Refreshing " + mapEntry.getValue().toString() + " " + mapEntry.getKey().toString());
                     result = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
                     resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
                 }
