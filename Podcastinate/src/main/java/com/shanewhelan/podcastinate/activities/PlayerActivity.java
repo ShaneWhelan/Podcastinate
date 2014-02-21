@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -23,6 +25,7 @@ import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 public class PlayerActivity extends Activity {
@@ -230,6 +233,27 @@ public class PlayerActivity extends Activity {
         if (audioService != null) {
             if(audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
+                new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                // Set up image for podcast
+                                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                                pds.openDb();
+                                final String imageDirectory = pds.getPodcastImage(audioService.getEpisode().getPodcastID());
+                                pds.closeDb();
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ImageView podcastImage = (ImageView) findViewById(R.id.podcastImage);
+                                        podcastImage.setImageBitmap(BitmapFactory.decodeFile(imageDirectory));
+                                    }
+                                });
+                            }
+                        }
+                ).start();
+
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);

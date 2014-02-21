@@ -134,6 +134,21 @@ public class PodcastDataSource {
         return listOfPodcasts;
     }
 
+    public String getPodcastImage(int podcastID) {
+        String[] columns = {PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY};
+        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
+                PodcastEntry.COLUMN_NAME_PODCAST_ID + " = \"" + podcastID + "\"", null, null, null, null);
+
+        String imageDirectory = null;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            imageDirectory = cursor.getString(cursor.getColumnIndex(PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY));
+            cursor.close();
+        }
+        return imageDirectory;
+    }
+
+
     public HashMap<String, String> getAllPodcastTitlesLinks() {
         String[] columns = {PodcastEntry.COLUMN_NAME_LINK, PodcastEntry.COLUMN_NAME_TITLE};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null, null);

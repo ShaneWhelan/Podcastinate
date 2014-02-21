@@ -295,6 +295,8 @@ public class PodcastViewerActivity extends Activity {
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
 
         syncControlPanel();
+        // TODO: Careful with performance here
+        updateListOfPodcasts();
     }
 
     public void syncControlPanel() {
@@ -306,6 +308,9 @@ public class PodcastViewerActivity extends Activity {
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
+                } else {
+                    pauseButton.setVisibility(View.GONE);
+                    playButton.setVisibility(View.VISIBLE);
                 }
             }
         } else {

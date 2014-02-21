@@ -173,7 +173,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PAUSE);
         sendBroadcast(intent);
-        // TODO: FIX BUG HERE
+        // TODO: FIX BUG HERE not registered sometimes
         unregisterReceiver(disconnectJackR);
     }
 

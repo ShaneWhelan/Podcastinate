@@ -46,6 +46,7 @@ TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Write current time to DB on pause - investigate
+TODO: Help Section
  */
 
 public class MainActivity extends Activity {
