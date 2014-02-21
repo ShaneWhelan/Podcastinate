@@ -27,7 +27,6 @@ public final class PodcastContract {
         public static final String COLUMN_NAME_CURRENT_TIME = "current_time";
         public static final String COLUMN_NAME_PODCAST_ID = "podcast_id";
         public static final String COLUMN_NAME_TITLE = "title";
-        public static final String COLUMN_NAME_EPISODE_LINK = "episode_link";
         public static final String COLUMN_NAME_DESCRIPTION = "description";
         public static final String COLUMN_NAME_PUB_DATE = "pub_date";
         public static final String COLUMN_NAME_GUID = "guid";

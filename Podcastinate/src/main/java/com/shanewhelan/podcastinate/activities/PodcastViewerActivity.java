@@ -242,14 +242,12 @@ public class PodcastViewerActivity extends Activity {
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
                     if (cursor != null) {
                         String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
-                        //noinspection ConstantConditions
-                        if (cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)) != null) {
-                            File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)));
-                            boolean isFileDeleted = fileToDelete.delete();
-                            if (isFileDeleted) {
-                                pds.updateEpisodeDirectory(enclosure, null);
-                            }
+                        File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)));
+                        boolean isFileDeleted = fileToDelete.delete();
+                        if (isFileDeleted) {
+                            pds.updateEpisodeDirectory(enclosure, null);
                         }
+
                     }
                 }
             }

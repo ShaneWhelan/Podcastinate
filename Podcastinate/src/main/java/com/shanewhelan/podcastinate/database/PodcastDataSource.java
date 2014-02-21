@@ -51,14 +51,13 @@ public class PodcastDataSource {
         return result;
     }
 
-    public long insertEpisode(int podcastId, String episodeTitle, String link,
+    public long insertEpisode(int podcastId, String episodeTitle,
                               String description, String date, String guid, String duration,
                               String imageDirectory, String enclosure) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(EpisodeEntry.COLUMN_NAME_PODCAST_ID, podcastId);
         contentValues.put(EpisodeEntry.COLUMN_NAME_TITLE, episodeTitle);
-        contentValues.put(EpisodeEntry.COLUMN_NAME_EPISODE_LINK, link);
         contentValues.put(EpisodeEntry.COLUMN_NAME_DESCRIPTION, description);
         contentValues.put(EpisodeEntry.COLUMN_NAME_PUB_DATE, date);
         contentValues.put(EpisodeEntry.COLUMN_NAME_GUID, guid);

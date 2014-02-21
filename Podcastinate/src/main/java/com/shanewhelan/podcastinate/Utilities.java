@@ -76,9 +76,9 @@ public class Utilities {
         if (podcastID != -1) {
             ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
             for (Episode episode : listOfEpisodes) {
-                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getLink(),
-                        episode.getDescription(), episode.getPubDate(), episode.getGuid(),
-                        episode.getDuration(), episode.getEpisodeImage(), episode.getEnclosure());
+                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getDescription(),
+                        episode.getPubDate(), episode.getGuid(), episode.getDuration(),
+                        episode.getEpisodeImage(), episode.getEnclosure());
             }
         } else {
             int duration = Toast.LENGTH_LONG;

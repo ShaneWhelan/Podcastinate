@@ -30,6 +30,8 @@ import java.util.Locale;
 /**
  * Created by Shane on 29/10/13. Podcastinate.
  */
+
+// TODO: Optimise
 public class ParseRSS {
     private Podcast podcast = new Podcast();
 
@@ -95,8 +97,6 @@ public class ParseRSS {
                     if (hasParentNodeItem) { // Needs some work to get the right metadata
                         if (nodeName.equals("title")) {
                             saveTitle(xmlPullParser, episode);
-                        } else if (nodeName.equals("link")) {
-                            saveLink(xmlPullParser, episode);
                         } else if (nodeName.equals("description")) {
                             saveDescription(xmlPullParser, episode);
                         } else if (nodeName.equals("pubDate")) {
@@ -130,7 +130,7 @@ public class ParseRSS {
 
             podcast.setEpisodeList(episodeList);
             Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
-            downloadEpisodeImage(podcast);
+            downloadEpisodeImage(podcast.getImageDirectory(), podcast.getTitle(), true);
             return podcast;
         } catch (XmlPullParserException e) {
             Log.e("sw9", e.getMessage());
@@ -176,10 +176,6 @@ public class ParseRSS {
 
     public void saveTitle(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
         episode.setTitle(xmlPullParser.nextText());
-    }
-
-    public void saveLink(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
-        episode.setLink(xmlPullParser.nextText());
     }
 
     public void saveDescription(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
@@ -236,8 +232,6 @@ public class ParseRSS {
                     if (hasParentNodeItem) { // Needs some work to get the right metadata
                         if (nodeName.equals("title")) {
                             saveTitle(xmlPullParser, episode);
-                        } else if (nodeName.equals("link")) {
-                            saveLink(xmlPullParser, episode);
                         } else if (nodeName.equals("description")) {
                             saveDescription(xmlPullParser, episode);
                         } else if (nodeName.equals("pubDate")) {
@@ -274,10 +268,10 @@ public class ParseRSS {
         return null;
     }
 
-    public void downloadEpisodeImage(Podcast podcast) {
+    public void downloadEpisodeImage(String imageDirectory, String title, boolean isNewImage) {
         try {
             // Download podcast file
-            HttpGet httpGet = new HttpGet(new URI(podcast.getImageDirectory()));
+            HttpGet httpGet = new HttpGet(new URI(imageDirectory));
             HttpClient httpClient = new DefaultHttpClient();
             HttpResponse httpResponse = httpClient.execute(httpGet);
 
@@ -289,7 +283,7 @@ public class ParseRSS {
             }
 
             // Check if default directory exists and create it if not.
-            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + podcast.getTitle().replaceAll("[^A-Za-z0-9]", "-") + "/images");
+            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + title.replaceAll("[^A-Za-z0-9]", "-") + "/images");
             if (!externalStorage.isDirectory()) {
                 if (!externalStorage.mkdirs()) {
                     throw new IOException("Could not create directory");
@@ -298,38 +292,34 @@ public class ParseRSS {
 
             String filename = "";
             // Get image file extension
-            if (podcast.getImageDirectory() != null) {
-                filename = podcast.getImageDirectory().substring(podcast.getImageDirectory().lastIndexOf("/"));
+            if (imageDirectory != null) {
+                filename = imageDirectory.substring(imageDirectory.lastIndexOf("/"));
             }
 
             Log.d("sw9", filename);
             File imageFile = new File(externalStorage, filename);
+
+            if(isNewImage) {
+                podcast.setImageDirectory(imageFile.getAbsolutePath());
+            }
 
             // Create new image from InputStream
             if (imageFile.createNewFile()) {
                 FileOutputStream fileOutput = new FileOutputStream(imageFile);
                 InputStream inputStream = httpResponse.getEntity().getContent();
 
-                // Stats for downloading
-                long contentLength = httpResponse.getEntity().getContentLength();
-                double downloadedSize = 0;
                 byte[] buffer = new byte[32768];
                 int bufferLength;
 
                 // Use count to make sure we only update the progress bar 50 times in total
                 while ((bufferLength = inputStream.read(buffer)) > 0) {
                     fileOutput.write(buffer, 0, bufferLength);
-                    downloadedSize += bufferLength;
                     // Download progress as a percentage
                 }
 
                 // Tidy up and close streams
                 inputStream.close();
                 fileOutput.close();
-
-                if (downloadedSize == contentLength) {
-                    podcast.setImageDirectory(imageFile.getAbsolutePath());
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -47,6 +47,9 @@ TODO: Streaming: Must keep WIFI from sleeping
 TODO: Write current time to DB on pause - investigate
 TODO: Help Section
 TODO: On delete clear current time
+TODO: Start Main activity if subscribed
+TODO: BUG REFRESH
+TODO: On delete of podcast release media player
  */
 
 public class MainActivity extends Activity {
@@ -149,10 +152,24 @@ public class MainActivity extends Activity {
     }
 
     public void wipeDb() {
+        // Only to be left in developer version - wipes db and external storage directory
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDb();
         pds.upgradeDB();
         pds.closeDb();
+        Log.d("sw9", Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
+        File externalDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
+
+        if (externalDir.exists()) {
+            String deleteCmd = "rm -r " + externalDir.getAbsolutePath();
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                runtime.exec(deleteCmd);
+                Log.d("sw9", "Directory deleted");
+            } catch (IOException e) {
+                Log.d("sw9", "Oh shit");
+            }
+        }
     }
 
     public void viewEpisode(String podcastChosen) {

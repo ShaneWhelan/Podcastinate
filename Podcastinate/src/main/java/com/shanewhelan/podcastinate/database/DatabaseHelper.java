@@ -31,13 +31,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     EpisodeEntry.COLUMN_NAME_LISTENED + " INTEGER" + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_CURRENT_TIME + " INTEGER" + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_EPISODE_LINK + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_PUB_DATE + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_GUID + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_DURATION + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_ENCLOSURE + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.COLUMN_NAME_ENCLOSURE + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
                     "FOREIGN KEY(" + EpisodeEntry.COLUMN_NAME_PODCAST_ID + ") REFERENCES " +
                     PodcastEntry.TABLE_NAME + "(" + PodcastEntry.COLUMN_NAME_PODCAST_ID + ") " +
                     " );";
