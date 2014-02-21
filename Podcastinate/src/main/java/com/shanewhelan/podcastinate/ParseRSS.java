@@ -62,9 +62,11 @@ public class ParseRSS {
         return null;
     }
 
-    public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String[] listOfLinks) throws DuplicatePodcastException {
+    public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String feedLink) throws DuplicatePodcastException {
         ArrayList<Episode> episodeList = new ArrayList<Episode>();
         try {
+            podcast.setLink(feedLink);
+
             boolean hasParentNodeChannel = false;
             boolean hasParentNodeItem = false;
             boolean hasParentNodeImage = false;
@@ -90,11 +92,6 @@ public class ParseRSS {
                         } else if (nodeName.equals("itunes:image")) {
                             // Temporarily save image link to directory member of podcast object
                             savePodcastItunesImage(xmlPullParser);
-                        } else if (nodeName.equals("atom:link")) {
-                            savePodcastLink(xmlPullParser);
-                            if (!isLinkUnique(listOfLinks, podcast.getLink())) {
-                                throw new DuplicatePodcastException("Podcast Already in Database");
-                            }
                         }
                     }
 
@@ -167,22 +164,6 @@ public class ParseRSS {
             XmlPullParserException {
         podcast.setImageDirectory(xmlPullParser.getAttributeValue(null, "href"));
     }
-
-    public boolean isLinkUnique(String[] listOfLinks, String link) {
-        boolean linkUnique = true;
-        for (String currentLink : listOfLinks) {
-            if (link.equals(currentLink)) {
-                linkUnique = false;
-            }
-        }
-        return linkUnique;
-    }
-
-    public void savePodcastLink(XmlPullParser xmlPullParser) throws IOException,
-            XmlPullParserException {
-        podcast.setLink(xmlPullParser.getAttributeValue(null, "href"));
-    }
-
 
     public void saveTitle(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
         episode.setTitle(xmlPullParser.nextText());

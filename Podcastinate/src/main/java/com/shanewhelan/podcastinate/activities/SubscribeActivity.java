@@ -128,6 +128,12 @@ public class SubscribeActivity extends Activity {
         }
 
         private int downloadRSSFeed(String url) throws DuplicatePodcastException, IOException {
+            // Check for existing podcast
+            String[] listOfLinks = getPodcastLinks();
+            if (!isLinkUnique(listOfLinks, url)) {
+                throw new DuplicatePodcastException("Podcast Already in Database");
+            }
+
             InputStream inputStream = null;
             int response;
             try {
@@ -151,8 +157,8 @@ public class SubscribeActivity extends Activity {
                 ParseRSS parseRSS = new ParseRSS();
                 XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
                 if (xmlPullParser != null) {
-                    String[] listOfLinks = getPodcastLinks();
-                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, listOfLinks);
+
+                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, url);
 
                     if (podcast != null) {
                         Utilities.savePodcastToDb(getApplicationContext(), podcast, true);
@@ -174,6 +180,16 @@ public class SubscribeActivity extends Activity {
             }
             return Utilities.INVALID_URL;
         }
+    }
+
+    public boolean isLinkUnique(String[] listOfLinks, String link) {
+        boolean linkUnique = true;
+        for (String currentLink : listOfLinks) {
+            if (link.equals(currentLink)) {
+                linkUnique = false;
+            }
+        }
+        return linkUnique;
     }
 }
 

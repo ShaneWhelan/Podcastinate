@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/*=
+/*
 TODO: Add picture beside podcast name
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
@@ -202,6 +202,7 @@ public class MainActivity extends Activity {
                 int result;
                 for (Object anEntrySet : entrySet) {
                     Map.Entry mapEntry = (Map.Entry) anEntrySet;
+                    Log.d("sw9", "Refreshing " + mapEntry.getValue().toString() + " " + mapEntry.getKey().toString());
                     result = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
                     resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
                 }
@@ -260,6 +261,8 @@ public class MainActivity extends Activity {
                 response = httpCon.getResponseCode();
 
                 if (response == 200) {
+
+                    //TODO STOP HERE
                     inputStream = httpCon.getInputStream();
                 } else {
                     throw new HTTPConnectionException(response);
