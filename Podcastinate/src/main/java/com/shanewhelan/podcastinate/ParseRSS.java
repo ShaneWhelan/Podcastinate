@@ -31,9 +31,21 @@ import java.util.Locale;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 
-// TODO: Optimise
 public class ParseRSS {
     private Podcast podcast = new Podcast();
+    private DateFormat rssDateFormatter;
+    private SimpleDateFormat sqlDateFormat;
+    private Calendar cal;
+    private Date podcastDate;
+    private String formattedDate;
+
+    public ParseRSS() {
+        rssDateFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+        sqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        cal = Calendar.getInstance();
+        podcastDate = null;
+        formattedDate = null;
+    }
 
     public XmlPullParser inputStreamToPullParser(InputStream inputStream) {
         try {
@@ -42,11 +54,10 @@ public class ParseRSS {
             xmlPullParser.setInput(inputStream, null);
             xmlPullParser.nextTag();
             return xmlPullParser;
-        } catch (XmlPullParserException ex) {
-            Log.d("sw9", ex.toString());
-        } catch (IOException ex) {
-            Log.d("sw9", ex.toString() + ex.getMessage());
-            ex.printStackTrace();
+        } catch (XmlPullParserException e) {
+            Utilities.printError(e);
+        } catch (IOException e) {
+            Utilities.printError(e);
         }
         return null;
     }
@@ -59,7 +70,6 @@ public class ParseRSS {
             boolean hasParentNodeImage = false;
 
             Episode episode = null;
-
             // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
             xmlPullParser.require(XmlPullParser.START_TAG, null, "rss");
             while (xmlPullParser.next() != XmlPullParser.END_DOCUMENT) {
@@ -129,13 +139,13 @@ public class ParseRSS {
             }
 
             podcast.setEpisodeList(episodeList);
-            Log.d("sw9", "Episode List size: " + podcast.getEpisodeList().size());
+            
             downloadEpisodeImage(podcast.getImageDirectory(), podcast.getTitle(), true);
             return podcast;
         } catch (XmlPullParserException e) {
-            Log.e("sw9", e.getMessage());
+            Utilities.printError(e);
         } catch (IOException e) {
-            Log.e("sw9", e.getMessage());
+            Utilities.printError(e);
         }
         return null;
     }
@@ -184,15 +194,12 @@ public class ParseRSS {
 
     public void savePubDate(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
         try {
-            DateFormat pubDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
-            Date podcastDate = pubDateFormat.parse(xmlPullParser.nextText());
-            Calendar cal = Calendar.getInstance();
+            podcastDate = rssDateFormatter.parse(xmlPullParser.nextText());
+            formattedDate = sqlDateFormat.format(cal.getTime());
             cal.setTime(podcastDate);
-            SimpleDateFormat sqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-            String formattedDate = sqlDateFormat.format(cal.getTime());
             episode.setPubDate(formattedDate);
         } catch (ParseException e) {
-            e.printStackTrace();
+            Utilities.printError(e);
         }
     }
 
@@ -261,9 +268,9 @@ public class ParseRSS {
             podcast.setEpisodeList(episodeList);
             return podcast;
         } catch (XmlPullParserException e) {
-            Log.e("sw9", e.getMessage());
+            Utilities.printError(e);
         } catch (IOException e) {
-            Log.e("sw9", e.getMessage());
+            Utilities.printError(e);
         }
         return null;
     }
