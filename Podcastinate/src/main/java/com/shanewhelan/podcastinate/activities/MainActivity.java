@@ -22,7 +22,6 @@ import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.database.DatabaseHelper;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
@@ -47,6 +46,7 @@ TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Write current time to DB on pause - investigate
 TODO: Help Section
+TODO: On delete clear current time
  */
 
 public class MainActivity extends Activity {
@@ -110,18 +110,18 @@ public class MainActivity extends Activity {
 
                 return true;
             case R.id.action_refresh:
-                if(Utilities.testNetwork(this)) {
+                if (Utilities.testNetwork(this)) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
                     dataSource.openDb();
                     HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();
                     dataSource.closeDb();
                     RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
-                    if(podcastInfo != null){
+                    if (podcastInfo != null) {
                         //noinspection unchecked
                         refreshFeed.execute(podcastInfo);
                     }
                     return true;
-                }else{
+                } else {
                     return false;
                 }
             case R.id.action_wipe_db:
@@ -149,8 +149,10 @@ public class MainActivity extends Activity {
     }
 
     public void wipeDb() {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 1, 2);
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDb();
+        pds.upgradeDB();
+        pds.closeDb();
     }
 
     public void viewEpisode(String podcastChosen) {
@@ -201,21 +203,21 @@ public class MainActivity extends Activity {
             String error = null;
             for (Object anEntrySet : entrySet) {
                 Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                if(mapEntry.getValue() == String.valueOf(Utilities.SUCCESS)) {
+                if (mapEntry.getValue() == String.valueOf(Utilities.SUCCESS)) {
                     numNewEpisodes++;
-                } else if(mapEntry.getKey().toString().equals("error")){
+                } else if (mapEntry.getKey().toString().equals("error")) {
                     error = mapEntry.getValue().toString();
                 }
             }
 
             if (getApplicationContext() != null) {
-                if(numNewEpisodes > 1) {
-                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episodes." , Toast.LENGTH_LONG).show();
-                } else if(numNewEpisodes == 1) {
-                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episode." , Toast.LENGTH_LONG).show();
-                } else if(numNewEpisodes == 0) {
+                if (numNewEpisodes > 1) {
+                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episodes.", Toast.LENGTH_LONG).show();
+                } else if (numNewEpisodes == 1) {
+                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episode.", Toast.LENGTH_LONG).show();
+                } else if (numNewEpisodes == 0) {
                     Toast.makeText(getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
-                } else if(error != null ) {
+                } else if (error != null) {
                     Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
                 }
             }
@@ -252,7 +254,7 @@ public class MainActivity extends Activity {
                     Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
 
                     if (podcast != null) {
-                        if(podcast.getEpisodeList().size() > 0) {
+                        if (podcast.getEpisodeList().size() > 0) {
                             Utilities.savePodcastToDb(getApplicationContext(), podcast, false);
                             return Utilities.SUCCESS;
                         } else {

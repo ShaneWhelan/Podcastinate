@@ -62,9 +62,9 @@ public class PlayerActivity extends Activity {
     private Runnable updateTimers = new Runnable() {
         @Override
         public void run() {
-            if(audioService != null) {
-                if(audioService.getPlayer() != null) {
-                    if(audioService.getPlayer().isPlaying()) {
+            if (audioService != null) {
+                if (audioService.getPlayer() != null) {
+                    if (audioService.getPlayer().isPlaying()) {
                         int currentPos = audioService.getPlayer().getCurrentPosition();
                         int duration = audioService.getPlayer().getDuration();
 
@@ -72,9 +72,9 @@ public class PlayerActivity extends Activity {
                         int minutes = (currentPos / 1000 / 60) % 60;
                         int seconds = currentPos / 1000 % 60;
 
-                        if(hours > 0 && hours < 10) {
+                        if (hours > 0 && hours < 10) {
                             elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
-                        } else if(hours > 10) {
+                        } else if (hours > 10) {
                             elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
                         } else {
                             elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
@@ -84,9 +84,9 @@ public class PlayerActivity extends Activity {
                         int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
                         int remSeconds = (duration - currentPos) / 1000 % 60;
 
-                        if(remHours > 0 && remHours < 10) {
+                        if (remHours > 0 && remHours < 10) {
                             remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
-                        } else if(hours > 10) {
+                        } else if (hours > 10) {
                             remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
                         } else {
                             remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
@@ -153,9 +153,9 @@ public class PlayerActivity extends Activity {
                 int minutes = (progress / 1000 / 60) % 60;
                 int seconds = progress / 1000 % 60;
 
-                if(hours > 0 && hours < 10) {
+                if (hours > 0 && hours < 10) {
                     elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
-                } else if(hours > 10) {
+                } else if (hours > 10) {
                     elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
                 } else {
                     elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
@@ -165,9 +165,9 @@ public class PlayerActivity extends Activity {
                 int remMinutes = ((duration - progress) / 1000 / 60) % 60;
                 int remSeconds = (duration - progress) / 1000 % 60;
 
-                if(remHours > 0 && remHours < 10) {
+                if (remHours > 0 && remHours < 10) {
                     remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
-                } else if(hours > 10) {
+                } else if (hours > 10) {
                     remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
                 } else {
                     remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
@@ -183,7 +183,7 @@ public class PlayerActivity extends Activity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // Allow us to display potential seek to time by removing update of time.
-                if(audioService != null) {
+                if (audioService != null) {
                     audioService.setProgress(seekBar.getProgress());
                 }
                 updatePlayerTimers();
@@ -231,7 +231,7 @@ public class PlayerActivity extends Activity {
     public void syncUserInterface() {
         LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
         if (audioService != null) {
-            if(audioService.getPlayer() != null) {
+            if (audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
                 new Thread(
                         new Runnable() {

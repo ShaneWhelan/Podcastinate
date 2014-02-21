@@ -2,7 +2,7 @@ package com.shanewhelan.podcastinate.services;
 
 import android.annotation.TargetApi;
 import android.app.IntentService;
-import android.app.Notification.*;
+import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -56,7 +56,7 @@ public class DownloadService extends IntentService {
 
             // Exception handle the fact that server could be down
             int responseCode = httpResponse.getStatusLine().getStatusCode();
-            if(responseCode != 200) {
+            if (responseCode != 200) {
                 int duration = Toast.LENGTH_LONG;
                 if (getApplicationContext() != null) {
                     Toast.makeText(getApplicationContext(), "HTTP Error - Could not download file",
@@ -68,8 +68,8 @@ public class DownloadService extends IntentService {
 
             // Check if default directory exists and create it if not.
             File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY);
-            if(!externalStorage.isDirectory()) {
-                if(!externalStorage.mkdir()) {
+            if (!externalStorage.isDirectory()) {
+                if (!externalStorage.mkdir()) {
                     throw new IOException("Could not create directory");
                 }
             }
@@ -87,13 +87,13 @@ public class DownloadService extends IntentService {
             String filename;
             if (podcastTitle != null) {
                 filename = String.valueOf(podcastTitle.charAt(0)) +
-                        String.valueOf(podcastTitle.charAt(podcastTitle.length()-1)) + "-" + fileNameTemp;
+                        String.valueOf(podcastTitle.charAt(podcastTitle.length() - 1)) + "-" + fileNameTemp;
             } else {
                 filename = "RP" + "-" + fileNameTemp;
             }
 
             // Get podcast file extension
-            if(enclosure != null) {
+            if (enclosure != null) {
                 filename = filename + enclosure.substring(enclosure.lastIndexOf("."));
             }
 
@@ -101,7 +101,7 @@ public class DownloadService extends IntentService {
             File podcastFile = new File(externalStorage, filename);
 
             // Create new episode from InputStream
-            if(podcastFile.createNewFile()) {
+            if (podcastFile.createNewFile()) {
                 FileOutputStream fileOutput = new FileOutputStream(podcastFile);
                 InputStream inputStream = httpResponse.getEntity().getContent();
 
@@ -122,24 +122,24 @@ public class DownloadService extends IntentService {
 
                 // Use count to make sure we only update the progress bar 50 times in total
                 double count = 0;
-                while((bufferLength = inputStream.read(buffer)) > 0 ) {
+                while ((bufferLength = inputStream.read(buffer)) > 0) {
                     fileOutput.write(buffer, 0, bufferLength);
                     downloadedSize += bufferLength;
                     // Download progress as a percentage
-                    dlProgress = ((downloadedSize /contentLengthInt)*100);
+                    dlProgress = ((downloadedSize / contentLengthInt) * 100);
 
-                    if(dlProgress > count) {
+                    if (dlProgress > count) {
                         // Number we add on here is how frequently we want the progress bar to update
                         count = dlProgress + 2;
                         // Set off a new thread to update the Notification progress bar
                         new Thread(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    builder.setProgress(100, (int) dlProgress, false);
-                                    notifyManager.notify(0, builder.build());
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        builder.setProgress(100, (int) dlProgress, false);
+                                        notifyManager.notify(0, builder.build());
+                                    }
                                 }
-                            }
                         ).start();
                     }
                 }
@@ -158,7 +158,7 @@ public class DownloadService extends IntentService {
                 inputStream.close();
                 fileOutput.close();
 
-                if(downloadedSize == contentLength) {
+                if (downloadedSize == contentLength) {
                     directory = podcastFile.getAbsolutePath();
                 }
 

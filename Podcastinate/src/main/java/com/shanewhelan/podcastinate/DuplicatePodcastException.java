@@ -8,10 +8,4 @@ public class DuplicatePodcastException extends Exception {
     public DuplicatePodcastException(String message) {
         super(message);
     }
-
-    /*
-    public DuplicatePodcastException(String message, Throwable throwable){
-        super(message, throwable);
-    }
-    */
 }

@@ -21,7 +21,6 @@ public class PodcastDataSource {
     private DatabaseHelper databaseHelper;
     private SQLiteDatabase database;
 
-
     public PodcastDataSource(Context context) {
         databaseHelper = new DatabaseHelper(context);
     }
@@ -178,15 +177,15 @@ public class PodcastDataSource {
                 + " = " + podcastID + " ORDER BY " + EpisodeEntry.COLUMN_NAME_PUB_DATE + " DESC", null);
     }
 
-    public String getEpisodeEnclosure(String podcastTitle, String episodeTitle){
+    public String getEpisodeEnclosure(String podcastTitle, String episodeTitle) {
         String enclosure = "";
         int podcastId = getPodcastID(podcastTitle);
         String[] columns = {EpisodeEntry.COLUMN_NAME_ENCLOSURE};
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.COLUMN_NAME_TITLE + " = \"" + episodeTitle + "\" AND " +
-                EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = " + podcastId,
+                        EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = " + podcastId,
                 null, null, null, null);
-        if(cursor != null) {
+        if (cursor != null) {
             cursor.moveToFirst();
             enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
             cursor.close();
@@ -205,12 +204,12 @@ public class PodcastDataSource {
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.COLUMN_NAME_DIRECTORY + " = \"" + directory + "\"",
                 null, null, null, null);
-        if(cursor != null) {
+        if (cursor != null) {
             cursor.moveToFirst();
             Episode episode = new Episode();
             int listened = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_LISTENED));
 
-            if(listened == 1) {
+            if (listened == 1) {
                 episode.setListened(true);
             } else {
                 episode.setListened(false);
@@ -245,10 +244,14 @@ public class PodcastDataSource {
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.COLUMN_NAME_PODCAST_ID + " = \"" + podcastID + "\"",
                 null, null, null, EpisodeEntry.COLUMN_NAME_PUB_DATE + " DESC", "1");
-        if(cursor != null) {
+        if (cursor != null) {
             cursor.moveToFirst();
             return cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
         }
         return null;
+    }
+
+    public void upgradeDB() {
+        databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 1, 2);
     }
 }

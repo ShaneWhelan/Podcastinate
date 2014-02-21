@@ -23,7 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AbsListView.*;
+import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -40,10 +40,8 @@ import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Set;
 
-import static android.widget.CursorAdapter.*;
+import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
@@ -55,7 +53,6 @@ public class PodcastViewerActivity extends Activity {
     private int podcastID;
     private ImageButton playButton;
     private ImageButton pauseButton;
-    private Button startPlayer;
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
     private ListView listView;
@@ -126,6 +123,7 @@ public class PodcastViewerActivity extends Activity {
         listView.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 
             private int nr = 0;
+
             @Override
             public void onItemCheckedStateChanged(ActionMode mode, int position,
                                                   long id, boolean checked) {
@@ -186,7 +184,7 @@ public class PodcastViewerActivity extends Activity {
     private void initialiseButtons() {
         playButton = (ImageButton) findViewById(R.id.mainPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
-        startPlayer = (Button) findViewById(R.id.startPlayer);
+        Button startPlayer = (Button) findViewById(R.id.startPlayer);
 
         playButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -234,21 +232,21 @@ public class PodcastViewerActivity extends Activity {
     private void deleteSelectedItems() {
         SQLiteCursor cursor;
         SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
-        if(booleanArray != null) {
+        if (booleanArray != null) {
             // Open connection to DB
             PodcastDataSource pds = new PodcastDataSource(this);
             pds.openDb();
             // Loop through the SparseBooleanArray and delete directory form db and file from disk
-            for(int i = 0; i < booleanArray.size(); i++) {
-                if(booleanArray.valueAt(i)) {
+            for (int i = 0; i < booleanArray.size(); i++) {
+                if (booleanArray.valueAt(i)) {
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
                     if (cursor != null) {
                         String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
                         //noinspection ConstantConditions
-                        if(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)) != null) {
+                        if (cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)) != null) {
                             File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)));
                             boolean isFileDeleted = fileToDelete.delete();
-                            if(isFileDeleted) {
+                            if (isFileDeleted) {
                                 pds.updateEpisodeDirectory(enclosure, null);
                             }
                         }
@@ -303,7 +301,7 @@ public class PodcastViewerActivity extends Activity {
         LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
 
         if (audioService != null) {
-            if(audioService.getPlayer() != null) {
+            if (audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
@@ -330,7 +328,7 @@ public class PodcastViewerActivity extends Activity {
         private final LayoutInflater layoutInflater;
         public Context context;
         private String podcastTitle;
-        private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
+        private SparseBooleanArray sparseBArray = new SparseBooleanArray();
 
         public EpisodeAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -390,31 +388,18 @@ public class PodcastViewerActivity extends Activity {
         }
 
         public void setNewSelection(int position, boolean value) {
-            mSelection.put(position, value);
+            sparseBArray.put(position, value);
             notifyDataSetChanged();
         }
 
-        public boolean isPositionChecked(int position) {
-            Boolean result = mSelection.get(position);
-            return result == null ? false : result;
-        }
-
-        public Set<Integer> getCurrentCheckedPosition() {
-            return mSelection.keySet();
-        }
-
         public void removeSelection(int position) {
-            mSelection.remove(position);
+            sparseBArray.delete(position);
             notifyDataSetChanged();
         }
 
         public void clearSelection() {
-            mSelection = new HashMap<Integer, Boolean>();
+            sparseBArray = new SparseBooleanArray();
             notifyDataSetChanged();
-        }
-
-        public HashMap<Integer, Boolean> getmSelection() {
-            return mSelection;
         }
 
         @Override
@@ -422,7 +407,7 @@ public class PodcastViewerActivity extends Activity {
             View v = super.getView(position, convertView, parent);//let the adapter handle setting up the row views
             if (v != null) {
                 v.setBackgroundColor(getResources().getColor(android.R.color.background_light)); //default color
-                if (mSelection.get(position) != null) {
+                if (sparseBArray.get(position)) {
                     v.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));// this is a selected position so make it red
                 }
             }
@@ -454,7 +439,7 @@ public class PodcastViewerActivity extends Activity {
                 } else {
                     if (v.getContentDescription() != null) {
                         String directory = v.getContentDescription().toString();
-                        if(audioService.getPlayer() != null) {
+                        if (audioService.getPlayer() != null) {
                             if (audioService.getDirectory().equals(directory)) {
                                 audioService.resumeMedia();
                                 // TODO: Check this isn't called twice by the broadcast receiver

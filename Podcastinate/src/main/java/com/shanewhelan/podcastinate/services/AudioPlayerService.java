@@ -9,7 +9,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-
 import android.os.PowerManager;
 
 import com.shanewhelan.podcastinate.Episode;
@@ -39,7 +38,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         @Override
         public void onReceive(Context context, Intent intent) {
             if (ACTION_DISCONNECT.equals(intent.getAction())) {
-                if(player != null) {
+                if (player != null) {
                     pauseMedia();
                 }
             }
@@ -114,12 +113,12 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(ACTION_PLAY.equals(intent.getAction())) {
+        if (ACTION_PLAY.equals(intent.getAction())) {
             directory = intent.getStringExtra(DIRECTORY);
             playNewEpisode(directory, false);
-        } else if(ACTION_DISCONNECT.equals(intent.getAction())) {
-            if(player != null) {
-                if(player.isPlaying()) {
+        } else if (ACTION_DISCONNECT.equals(intent.getAction())) {
+            if (player != null) {
+                if (player.isPlaying()) {
                     pauseMedia();
                 }
             } else {
@@ -188,7 +187,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void setProgress(int progress) {
-        if(progress < player.getDuration()) {
+        if (progress < player.getDuration()) {
             player.seekTo(progress);
         } else {
             // TODO: Broadcasting intent before finished
@@ -218,9 +217,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 episode = pds.getEpisodeMetaData(directory);
                 pds.closeDb();
 
-                if(isPlaying) {
+                if (isPlaying) {
                     AudioPlayerService.directory = directory;
-                }else {
+                } else {
                     player = new MediaPlayer();
                 }
 

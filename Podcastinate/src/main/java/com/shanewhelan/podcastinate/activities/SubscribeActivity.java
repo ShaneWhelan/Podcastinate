@@ -14,8 +14,8 @@ import android.widget.Toast;
 import com.shanewhelan.podcastinate.DuplicatePodcastException;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
-import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 

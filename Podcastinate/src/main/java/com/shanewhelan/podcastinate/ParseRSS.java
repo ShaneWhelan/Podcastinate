@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate.
@@ -111,7 +112,7 @@ public class ParseRSS {
                         }
                     }
 
-                    if(hasParentNodeImage) {
+                    if (hasParentNodeImage) {
                         if (nodeName.equals("url")) {
                             // Temporarily save image link to directory member of podcast object
                             savePodcastImageDirectory(xmlPullParser);
@@ -121,7 +122,7 @@ public class ParseRSS {
                     if (nodeName.equals("item")) {
                         hasParentNodeItem = false;
                         episodeList.add(episode);
-                    }else if(nodeName.equals("image")) {
+                    } else if (nodeName.equals("image")) {
                         hasParentNodeImage = false;
                     }
                 }
@@ -156,6 +157,7 @@ public class ParseRSS {
             XmlPullParserException {
         podcast.setImageDirectory(xmlPullParser.getAttributeValue(null, "href"));
     }
+
     public boolean isLinkUnique(String[] listOfLinks, String link) {
         boolean linkUnique = true;
         for (String currentLink : listOfLinks) {
@@ -186,7 +188,7 @@ public class ParseRSS {
 
     public void savePubDate(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
         try {
-            DateFormat pubDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+            DateFormat pubDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
             Date podcastDate = pubDateFormat.parse(xmlPullParser.nextText());
             Calendar cal = Calendar.getInstance();
             cal.setTime(podcastDate);
@@ -248,7 +250,7 @@ public class ParseRSS {
                             saveEpisodeImage(xmlPullParser, episode);
                         } else if (nodeName.equals("enclosure")) {
                             // Check if already exists in database and quit if it does.
-                            if(!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
+                            if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
                                 saveEnclosure(xmlPullParser, episode);
                             } else {
                                 break;
@@ -281,22 +283,22 @@ public class ParseRSS {
 
             // Exception handle the fact that server could be down
             int responseCode = httpResponse.getStatusLine().getStatusCode();
-            if(responseCode != 200) {
+            if (responseCode != 200) {
                 // Throw custom exception
                 throw new HTTPConnectionException(responseCode);
             }
 
             // Check if default directory exists and create it if not.
             File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + podcast.getTitle().replaceAll("[^A-Za-z0-9]", "-") + "/images");
-            if(!externalStorage.isDirectory()) {
-                if(!externalStorage.mkdirs()) {
+            if (!externalStorage.isDirectory()) {
+                if (!externalStorage.mkdirs()) {
                     throw new IOException("Could not create directory");
                 }
             }
 
             String filename = "";
             // Get image file extension
-            if(podcast.getImageDirectory() != null) {
+            if (podcast.getImageDirectory() != null) {
                 filename = podcast.getImageDirectory().substring(podcast.getImageDirectory().lastIndexOf("/"));
             }
 
@@ -304,7 +306,7 @@ public class ParseRSS {
             File imageFile = new File(externalStorage, filename);
 
             // Create new image from InputStream
-            if(imageFile.createNewFile()) {
+            if (imageFile.createNewFile()) {
                 FileOutputStream fileOutput = new FileOutputStream(imageFile);
                 InputStream inputStream = httpResponse.getEntity().getContent();
 
@@ -315,7 +317,7 @@ public class ParseRSS {
                 int bufferLength;
 
                 // Use count to make sure we only update the progress bar 50 times in total
-                while((bufferLength = inputStream.read(buffer)) > 0 ) {
+                while ((bufferLength = inputStream.read(buffer)) > 0) {
                     fileOutput.write(buffer, 0, bufferLength);
                     downloadedSize += bufferLength;
                     // Download progress as a percentage
@@ -325,7 +327,7 @@ public class ParseRSS {
                 inputStream.close();
                 fileOutput.close();
 
-                if(downloadedSize == contentLength) {
+                if (downloadedSize == contentLength) {
                     podcast.setImageDirectory(imageFile.getAbsolutePath());
                 }
             }

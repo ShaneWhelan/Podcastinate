@@ -33,7 +33,7 @@ public class Utilities {
     }
 
     public static boolean testNetwork(Context context) {
-        if(context.getApplicationContext() != null) {
+        if (context.getApplicationContext() != null) {
             ConnectivityManager conMan = (ConnectivityManager)
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
@@ -53,7 +53,7 @@ public class Utilities {
                 Log.i("sw9", "Connected but no internet access");
                 int duration = Toast.LENGTH_LONG;
                 Toast.makeText(context.getApplicationContext(), "Connected but no internet access",
-                            duration).show();
+                        duration).show();
                 return false;
             }
         }
@@ -65,9 +65,9 @@ public class Utilities {
         dataSource.openDb();
         int podcastID;
 
-        if(isNewFeed){
+        if (isNewFeed) {
             podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
-                podcast.getImageDirectory(), podcast.getLink());
+                    podcast.getImageDirectory(), podcast.getLink());
         } else {
             podcastID = dataSource.getPodcastID(podcast.getTitle());
         }
