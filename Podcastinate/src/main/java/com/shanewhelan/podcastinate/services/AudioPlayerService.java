@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;
@@ -46,13 +47,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     };
 
-
     @Override
     public void onAudioFocusChange(int focusChange) {
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 // resume playback
                 if (player == null) {
+                    // TODO: HMMM Potential Bug here
                     initialiseMediaPlayer();
                 }
                 player.setVolume(1.0f, 1.0f);
@@ -61,15 +62,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             case AudioManager.AUDIOFOCUS_LOSS:
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
+                    saveEpisodeTimer();
                     player.stop();
-                    PodcastDataSource pds = new PodcastDataSource(this);
-                    pds.openDb();
-                    pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
-                    pds.closeDb();
                     player.release();
                     player = null;
                 }
-
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
@@ -77,7 +74,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // playback. We don't release the media player because playback
                 // is likely to resume
                 if (player.isPlaying()) {
-                    player.pause();
+                    pauseMedia();
                 }
                 break;
 
@@ -92,14 +89,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     private void initialiseMediaPlayer() {
-        PodcastDataSource pds = new PodcastDataSource(this);
-        pds.openDb();
         player = new MediaPlayer();
         player.reset();
         player.setLooping(false);
-        player.seekTo(pds.getCurrentTime(episode.getEpisodeID()));
         player.prepareAsync();
-        pds.closeDb();
     }
 
     public class AudioPlayerBinder extends Binder {
@@ -134,6 +127,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public void onPrepared(MediaPlayer player) {
         player.start();
+        // Resume podcast if partially listened
+        if(episode.getCurrentTime() > 0) {
+            Log.d("sw9", "Current time: " + episode.getCurrentTime());
+            player.seekTo(episode.getCurrentTime());
+        }
         Intent intent = new Intent();
         intent.setAction(Utilities.ACTION_PLAY);
         sendBroadcast(intent);
@@ -152,6 +150,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.e("sw9", "Media Player Error " + what + " " + extra);
         player.reset();
         return false;
     }
@@ -171,11 +170,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void pauseMedia() {
         player.pause();
+        saveEpisodeTimer();
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
-        Intent intent = new Intent();
-        intent.setAction(Utilities.ACTION_PAUSE);
-        sendBroadcast(intent);
+        // Tell Application about pause
+        sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
         // TODO: FIX BUG HERE not registered sometimes
         unregisterReceiver(disconnectJackR);
     }
@@ -184,9 +183,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         player.start();
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        Intent intent = new Intent();
-        intent.setAction(Utilities.ACTION_PLAY);
-        sendBroadcast(intent);
+        sendBroadcast(new Intent(Utilities.ACTION_PLAY));
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
     }
 
@@ -216,16 +213,18 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                     AudioManager.AUDIOFOCUS_GAIN);
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                PodcastDataSource pds = new PodcastDataSource(this);
-                pds.openDb();
-                episode = pds.getEpisodeMetaData(directory);
-                pds.closeDb();
-
+                // TODO Check if playing
                 if (isPlaying) {
+                    saveEpisodeTimer();
                     AudioPlayerService.directory = directory;
                 } else {
                     player = new MediaPlayer();
                 }
+                // Retrieve episode information from database
+                PodcastDataSource pds = new PodcastDataSource(this);
+                pds.openDb();
+                episode = pds.getEpisodeMetaData(directory);
+                pds.closeDb();
 
                 player.reset();
                 player.setDataSource(directory);
@@ -244,5 +243,14 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public String getDirectory() {
         return directory;
+    }
+
+    public void saveEpisodeTimer() {
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDb();
+        Log.d("sw9", "Saved Current time: " + player.getCurrentPosition());
+        episode.setCurrentTime(player.getCurrentPosition());
+        pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
+        pds.closeDb();
     }
 }

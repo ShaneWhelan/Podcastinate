@@ -310,7 +310,6 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void updateListOfPodcasts() {
-        Log.d("sw9", "updateListOfPodcasts() hit");
         dataSource.openDb();
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter.swapCursor(episodeCursor);

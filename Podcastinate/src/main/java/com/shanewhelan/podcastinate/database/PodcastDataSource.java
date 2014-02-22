@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
@@ -187,14 +189,16 @@ public class PodcastDataSource {
     }
 
     public Episode getEpisodeMetaData(String directory) {
-        String[] columns = {EpisodeEntry.EPISODE_ID, EpisodeEntry.LISTENED,
-                EpisodeEntry.CURRENT_TIME, EpisodeEntry.PODCAST_ID,
-                EpisodeEntry.TITLE, EpisodeEntry.DESCRIPTION,
-                EpisodeEntry.PUB_DATE, EpisodeEntry.DURATION};
-
+        String[] columns = {EpisodeEntry.EPISODE_ID, EpisodeEntry.PODCAST_ID,
+                EpisodeEntry.TITLE, EpisodeEntry.DESCRIPTION, EpisodeEntry.PUB_DATE,
+                EpisodeEntry.DURATION, EpisodeEntry.LISTENED, EpisodeEntry.CURRENT_TIME};
+/*
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.DIRECTORY + " = \"" + directory + "\"",
                 null, null, null, null);
+ */
+        // TODO REPORT THIS
+        Cursor cursor = database.rawQuery("SELECT * FROM episode WHERE directory = '" + directory + "'", null);
         if (cursor != null) {
             cursor.moveToFirst();
             Episode episode = new Episode();
@@ -205,8 +209,7 @@ public class PodcastDataSource {
             } else {
                 episode.setListened(false);
             }
-            episode.setCurrentTime(cursor.getInt(cursor.getColumnIndex(
-                    EpisodeEntry.CURRENT_TIME)));
+
             episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.PODCAST_ID)));
             episode.setTitle(cursor.getString(cursor.getColumnIndex(
@@ -219,6 +222,9 @@ public class PodcastDataSource {
                     EpisodeEntry.DURATION)));
             episode.setEpisodeID(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.EPISODE_ID)));
+            episode.setCurrentTime(cursor.getInt(cursor.getColumnIndex(
+                    EpisodeEntry.CURRENT_TIME)));
+            Log.d("sw9", "DB CURRENT TIME: " + cursor.getType(cursor.getColumnIndex(EpisodeEntry.CURRENT_TIME)));
             cursor.close();
             return episode;
         }

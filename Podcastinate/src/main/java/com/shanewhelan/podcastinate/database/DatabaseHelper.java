@@ -43,7 +43,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + CategoryEntry.TABLE_NAME + " (" +
                     CategoryEntry.CAT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     CategoryEntry.PODCAST_ID + " INTEGER" + COMMA_SEP +
-                    CategoryEntry.CATEGORY + " TEXT" +
+                    CategoryEntry.CATEGORY + " TEXT" + COMMA_SEP +
                     "FOREIGN KEY(" + CategoryEntry.PODCAST_ID + ") REFERENCES " +
                     PodcastEntry.TABLE_NAME + "(" + PodcastEntry.PODCAST_ID + ") " +
                     " );";

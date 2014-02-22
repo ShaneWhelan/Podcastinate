@@ -112,8 +112,6 @@ public class ParseRSS {
                             saveGuid(xmlPullParser, episode);
                         } else if (nodeName.equals("itunes:duration")) {
                             saveDuration(xmlPullParser, episode);
-                        } else if (nodeName.equals("episodeImage")) {
-                            saveEpisodeImage(xmlPullParser, episode);
                         } else if (nodeName.equals("enclosure")) {
                             saveEnclosure(xmlPullParser, episode);
                         }
@@ -192,10 +190,6 @@ public class ParseRSS {
         episode.setDuration(xmlPullParser.nextText());
     }
 
-    public void saveEpisodeImage(XmlPullParser xmlPullParser, Episode episode) throws IOException, XmlPullParserException {
-        episode.setEpisodeImage(xmlPullParser.nextText());
-    }
-
     public void saveEnclosure(XmlPullParser xmlPullParser, Episode episode) {
         episode.setEnclosure(xmlPullParser.getAttributeValue(null, "url"));
     }
@@ -228,8 +222,6 @@ public class ParseRSS {
                             saveGuid(xmlPullParser, episode);
                         } else if (nodeName.equals("itunes:duration")) {
                             saveDuration(xmlPullParser, episode);
-                        } else if (nodeName.equals("episodeImage")) {
-                            saveEpisodeImage(xmlPullParser, episode);
                         } else if (nodeName.equals("enclosure")) {
                             // Check if already exists in database and quit if it does.
                             if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
