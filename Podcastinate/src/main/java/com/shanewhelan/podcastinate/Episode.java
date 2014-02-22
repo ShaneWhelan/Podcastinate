@@ -13,7 +13,6 @@ public class Episode {
     private String pubDate;
     private String guid;
     private String duration;
-    private String episodeImage;
     private String enclosure;
 
     public String getTitle() {
@@ -54,14 +53,6 @@ public class Episode {
 
     public void setDuration(String duration) {
         this.duration = duration;
-    }
-
-    public String getEpisodeImage() {
-        return episodeImage;
-    }
-
-    public void setEpisodeImage(String episodeImage) {
-        this.episodeImage = episodeImage;
     }
 
     public String getEnclosure() {

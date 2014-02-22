@@ -81,7 +81,7 @@ public class Utilities {
             for (Episode episode : listOfEpisodes) {
                 dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getDescription(),
                         episode.getPubDate(), episode.getGuid(), episode.getDuration(),
-                        episode.getEpisodeImage(), episode.getEnclosure());
+                        episode.getEnclosure());
             }
         } else {
             int duration = Toast.LENGTH_LONG;

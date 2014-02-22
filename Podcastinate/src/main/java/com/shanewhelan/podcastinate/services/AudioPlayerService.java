@@ -22,7 +22,7 @@ import java.io.IOException;
  */
 
 // TODO: Should have subtitle controller already set
-// TODO: E/AudioSink﹕ received unknown event type: 1 inside CallbackWrapper !
+// TODO: E/AudioSink received unknown event type: 1 inside CallbackWrapper !
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 

@@ -17,34 +17,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COMMA_SEP = ", ";
     private static final String SQL_CREATE_PODCAST =
             "CREATE TABLE " + PodcastEntry.TABLE_NAME + " (" +
-                    PodcastEntry.COLUMN_NAME_PODCAST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    PodcastEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
-                    PodcastEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
-                    PodcastEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    PodcastEntry.COLUMN_NAME_LINK + TEXT_TYPE + " UNIQUE" +
+                    PodcastEntry.PODCAST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    PodcastEntry.TITLE + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.DESCRIPTION + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.LINK + TEXT_TYPE + " UNIQUE" +
                     " );";
     private static final String SQL_CREATE_EPISODE =
             "CREATE TABLE " + EpisodeEntry.TABLE_NAME + " (" +
-                    EpisodeEntry.COLUMN_NAME_EPISODE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    EpisodeEntry.COLUMN_NAME_PODCAST_ID + " INTEGER" + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_LISTENED + " INTEGER" + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_CURRENT_TIME + " INTEGER" + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_PUB_DATE + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_GUID + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_DURATION + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.COLUMN_NAME_ENCLOSURE + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
-                    "FOREIGN KEY(" + EpisodeEntry.COLUMN_NAME_PODCAST_ID + ") REFERENCES " +
-                    PodcastEntry.TABLE_NAME + "(" + PodcastEntry.COLUMN_NAME_PODCAST_ID + ") " +
+                    EpisodeEntry.EPISODE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    EpisodeEntry.PODCAST_ID + " INTEGER" + COMMA_SEP +
+                    EpisodeEntry.TITLE + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.DESCRIPTION + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.ENCLOSURE + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
+                    EpisodeEntry.PUB_DATE + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.DURATION + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.GUID + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.DIRECTORY + TEXT_TYPE + COMMA_SEP +
+                    EpisodeEntry.LISTENED + " INTEGER" + COMMA_SEP +
+                    EpisodeEntry.CURRENT_TIME + " INTEGER" + COMMA_SEP +
+                    "FOREIGN KEY(" + EpisodeEntry.PODCAST_ID + ") REFERENCES " +
+                    PodcastEntry.TABLE_NAME + "(" + PodcastEntry.PODCAST_ID + ") " +
                     " );";
     private static final String SQL_CREATE_CATEGORY =
             "CREATE TABLE " + CategoryEntry.TABLE_NAME + " (" +
-                    CategoryEntry.COLUMN_NAME_CAT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    CategoryEntry.COLUMN_NAME_NAME + " TEXT" +
+                    CategoryEntry.CAT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    CategoryEntry.PODCAST_ID + " INTEGER" + COMMA_SEP +
+                    CategoryEntry.CATEGORY + " TEXT" +
+                    "FOREIGN KEY(" + CategoryEntry.PODCAST_ID + ") REFERENCES " +
+                    PodcastEntry.TABLE_NAME + "(" + PodcastEntry.PODCAST_ID + ") " +
                     " );";
+
     private static final String SQL_DELETE_PODCAST_TABLE =
             "DROP TABLE IF EXISTS " + PodcastEntry.TABLE_NAME;
     private static final String SQL_DELETE_EPISODE_TABLE =

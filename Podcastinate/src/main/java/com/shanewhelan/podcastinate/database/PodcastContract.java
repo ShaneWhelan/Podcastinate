@@ -12,32 +12,32 @@ public final class PodcastContract {
 
     public static abstract class PodcastEntry implements BaseColumns {
         public static final String TABLE_NAME = "podcast";
-        public static final String COLUMN_NAME_PODCAST_ID = "podcast_id";
-        public static final String COLUMN_NAME_TITLE = "title";
-        public static final String COLUMN_NAME_DESCRIPTION = "description";
-        public static final String COLUMN_NAME_IMAGE_DIRECTORY = "image_directory";
-        public static final String COLUMN_NAME_LINK = "link";
+        public static final String PODCAST_ID = "podcast_id";
+        public static final String TITLE = "title";
+        public static final String DESCRIPTION = "description";
+        public static final String IMAGE_DIRECTORY = "image_directory";
+        public static final String LINK = "link";
     }
 
     public static abstract class EpisodeEntry implements BaseColumns {
         public static final String TABLE_NAME = "episode";
-        public static final String COLUMN_NAME_EPISODE_ID = "episode_id";
-        public static final String COLUMN_NAME_DIRECTORY = "directory";
-        public static final String COLUMN_NAME_LISTENED = "listened";
-        public static final String COLUMN_NAME_CURRENT_TIME = "current_time";
-        public static final String COLUMN_NAME_PODCAST_ID = "podcast_id";
-        public static final String COLUMN_NAME_TITLE = "title";
-        public static final String COLUMN_NAME_DESCRIPTION = "description";
-        public static final String COLUMN_NAME_PUB_DATE = "pub_date";
-        public static final String COLUMN_NAME_GUID = "guid";
-        public static final String COLUMN_NAME_DURATION = "duration";
-        public static final String COLUMN_NAME_IMAGE_DIRECTORY = "image_directory";
-        public static final String COLUMN_NAME_ENCLOSURE = "enclosure";
+        public static final String EPISODE_ID = "episode_id";
+        public static final String PODCAST_ID = "podcast_id";
+        public static final String TITLE = "title";
+        public static final String DESCRIPTION = "description";
+        public static final String ENCLOSURE = "enclosure";
+        public static final String PUB_DATE = "pub_date";
+        public static final String DURATION = "duration";
+        public static final String GUID = "guid";
+        public static final String DIRECTORY = "directory";
+        public static final String LISTENED = "listened";
+        public static final String CURRENT_TIME = "current_time";
     }
 
     public static abstract class CategoryEntry implements BaseColumns {
         public static final String TABLE_NAME = "category";
-        public static final String COLUMN_NAME_CAT_ID = "cat_id";
-        public static final String COLUMN_NAME_NAME = "name";
+        public static final String CAT_ID = "cat_id";
+        public static final String PODCAST_ID = "podcast_id";
+        public static final String CATEGORY = "category";
     }
 }

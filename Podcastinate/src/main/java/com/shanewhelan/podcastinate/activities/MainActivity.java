@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
 
         dataSource.openDb();
         allPodcastNames = dataSource.getAllPodcastTitles();
-        String[] fromColumns = new String[]{PodcastEntry.COLUMN_NAME_TITLE};
+        String[] fromColumns = new String[]{PodcastEntry.TITLE};
         int[] toViews = new int[]{R.id.podcastName};
         simpleCursorAdapter = new SimpleCursorAdapter(this, R.layout.podcast_list_item,
                 allPodcastNames, fromColumns, toViews, 0);

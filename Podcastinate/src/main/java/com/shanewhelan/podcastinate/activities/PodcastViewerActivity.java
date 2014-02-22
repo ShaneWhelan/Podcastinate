@@ -237,8 +237,8 @@ public class PodcastViewerActivity extends Activity {
                 if (booleanArray.valueAt(i)) {
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
                     if (cursor != null) {
-                        String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_ENCLOSURE));
-                        File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY)));
+                        String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.ENCLOSURE));
+                        File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY)));
                         boolean isFileDeleted = fileToDelete.delete();
                         if (isFileDeleted) {
                             pds.updateEpisodeDirectory(enclosure, null);
@@ -331,7 +331,7 @@ public class PodcastViewerActivity extends Activity {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            String episodeTitle = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_TITLE));
+            String episodeTitle = cursor.getString(cursor.getColumnIndex(EpisodeEntry.TITLE));
             TextView episodeNameView = (TextView) view.findViewById(R.id.episodeName);
             episodeNameView.setText(episodeTitle);
 
@@ -345,7 +345,7 @@ public class PodcastViewerActivity extends Activity {
             playButton.setOnClickListener(this);
             pauseButton.setOnClickListener(this);
 
-            String directory = cursor.getString(cursor.getColumnIndex(EpisodeEntry.COLUMN_NAME_DIRECTORY));
+            String directory = cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY));
 
             if (directory != null && episodeTitle != null) { // Check if the file is downloaded
                 if (audioService == null) { // Check if audio service is initialised
