@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;
@@ -79,19 +78,6 @@ public class PodcastDataSource {
         contentValues.put(EpisodeEntry.CURRENT_TIME, currentTime);
         return database.update(EpisodeEntry.TABLE_NAME, contentValues,
                 EpisodeEntry.EPISODE_ID + " = \"" + episodeID + "\"", null);
-    }
-
-    public int getCurrentTime(int episodeID) {
-        int currentTime = 0;
-        String[] columns = {EpisodeEntry.CURRENT_TIME};
-        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
-                EpisodeEntry.EPISODE_ID + " = \"" + episodeID + "\"", null, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            currentTime = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.CURRENT_TIME));
-            cursor.close();
-        }
-        return currentTime;
     }
 
     public int getPodcastID(String podcastTitle) {
@@ -188,17 +174,15 @@ public class PodcastDataSource {
         return enclosure;
     }
 
+    // Called by the AudioService to get all info it needs about podcast
     public Episode getEpisodeMetaData(String directory) {
-        String[] columns = {EpisodeEntry.EPISODE_ID, EpisodeEntry.PODCAST_ID,
-                EpisodeEntry.TITLE, EpisodeEntry.DESCRIPTION, EpisodeEntry.PUB_DATE,
-                EpisodeEntry.DURATION, EpisodeEntry.LISTENED, EpisodeEntry.CURRENT_TIME};
-/*
-        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
-                EpisodeEntry.DIRECTORY + " = \"" + directory + "\"",
-                null, null, null, null);
- */
-        // TODO REPORT THIS
-        Cursor cursor = database.rawQuery("SELECT * FROM episode WHERE directory = '" + directory + "'", null);
+        Cursor cursor = database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID + ", " +
+                EpisodeEntry.PODCAST_ID + ", " + EpisodeEntry.TITLE + ", " +
+                EpisodeEntry.DESCRIPTION + ", " + EpisodeEntry.PUB_DATE + ", " +
+                EpisodeEntry.DURATION + ", " + EpisodeEntry.LISTENED + ", " +
+                EpisodeEntry.CURRENT_TIME + " FROM episode WHERE directory = '"
+                + directory + "'", null);
+
         if (cursor != null) {
             cursor.moveToFirst();
             Episode episode = new Episode();
@@ -224,7 +208,7 @@ public class PodcastDataSource {
                     EpisodeEntry.EPISODE_ID)));
             episode.setCurrentTime(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.CURRENT_TIME)));
-            Log.d("sw9", "DB CURRENT TIME: " + cursor.getType(cursor.getColumnIndex(EpisodeEntry.CURRENT_TIME)));
+
             cursor.close();
             return episode;
         }
