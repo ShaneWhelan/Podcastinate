@@ -50,9 +50,8 @@ public class PodcastDataSource {
         return result;
     }
 
-    public long insertEpisode(int podcastId, String episodeTitle,
-                              String description, String date, String guid, String duration,
-                              String enclosure) {
+    public long insertEpisode(int podcastId, String episodeTitle, String description, String date,
+                              String guid, String duration, String enclosure) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(EpisodeEntry.PODCAST_ID, podcastId);
@@ -187,7 +186,6 @@ public class PodcastDataSource {
             cursor.moveToFirst();
             Episode episode = new Episode();
             int listened = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.LISTENED));
-
             if (listened == 1) {
                 episode.setListened(true);
             } else {
