@@ -29,6 +29,8 @@ import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
+
+// TODO: PodcastViewerActivity returning to wrong screen if change episode
 public class PlayerActivity extends Activity {
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
