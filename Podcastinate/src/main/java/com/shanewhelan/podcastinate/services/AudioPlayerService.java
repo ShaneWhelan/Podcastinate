@@ -22,9 +22,6 @@ import java.io.IOException;
  * Created by Shane on 03/02/14. Podcastinate.
  */
 
-// TODO: Should have subtitle controller already set
-// TODO: E/AudioSink received unknown event type: 1 inside CallbackWrapper !
-// TODO: Bug in seekbar when seekto is used.
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -37,6 +34,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     private static String directory;
     private static String podcastTitle;
     private static Episode episode;
+    private static int lastPausedPosition;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
         @Override
@@ -54,20 +52,31 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 // resume playback
-                if (player == null) {
+                if (player != null) {
+                    if(player.isPlaying()) {
+                        player.setVolume(1.0f, 1.0f);
+                    } else {
+                        resumeMedia();
+                    }
+
+                } else {
                     // TODO: HMMM Potential Bug here
                     initialiseMediaPlayer();
                 }
-                player.setVolume(1.0f, 1.0f);
+
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS:
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
                     saveEpisodeTimer(false);
+                    // TODO: SEND AN EVENT THAT I HAVE STOPPED THE PLAYER
                     player.stop();
                     player.release();
                     player = null;
+
+                    sendBroadcast(new Intent (Utilities.ACTION_FINISHED));
+                    // TODO Maybe stop self
                 }
                 break;
 
@@ -134,9 +143,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             Log.d("sw9", "Current time: " + episode.getCurrentTime());
             player.seekTo(episode.getCurrentTime());
         }
-        Intent intent = new Intent();
-        intent.setAction(Utilities.ACTION_PLAY);
-        sendBroadcast(intent);
+
+        sendBroadcast(new Intent (Utilities.ACTION_PLAY));
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
     }
 
@@ -160,6 +168,12 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public void onDestroy() {
+        if(disconnectJackR != null && player != null) {
+            if(player.isPlaying()) {
+                unregisterReceiver(disconnectJackR);
+                disconnectJackR = null;
+            }
+        }
         if (player != null) {
             player.release();
             player = null;
@@ -167,23 +181,29 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         episode = null;
         iBinder = null;
         directory = null;
-        unregisterReceiver(disconnectJackR);
+
         super.onDestroy();
     }
 
     public void pauseMedia() {
+        lastPausedPosition = player.getCurrentPosition();
         player.pause();
         saveEpisodeTimer(false);
+
+        // TODO Very Problematic Requesting audio focus
+        /*
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
+        */
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
-        // TODO: FIX BUG HERE not registered sometimes
         unregisterReceiver(disconnectJackR);
+
     }
 
     public void resumeMedia() {
         player.start();
+        // TODO Very Problematic Requesting audio focus
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         sendBroadcast(new Intent(Utilities.ACTION_PLAY));
@@ -262,5 +282,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
         }
         pds.closeDb();
+    }
+
+    public String getPodcastTitle() {
+        return podcastTitle;
+    }
+
+    public int getLastPausedPosition() {
+        return lastPausedPosition;
     }
 }

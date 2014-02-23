@@ -65,15 +65,22 @@ public class PodcastViewerActivity extends Activity {
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.VISIBLE);
                 updateListOfPodcasts();
+
+                // This call fixes an issue where we are overriding the audio from third party app
+                // and the control panel doesn't appear because the service is already up.
+                syncControlPanel();
             } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
                 playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
                 updateListOfPodcasts();
+                syncControlPanel();
             } else if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
                 updateListOfPodcasts();
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
+
                 // Verify this is the right thing to do
                 updateListOfPodcasts();
+                syncControlPanel();
             }
         }
     };
@@ -268,13 +275,14 @@ public class PodcastViewerActivity extends Activity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
                 audioService = b.getService();
-                syncControlPanel();
+                // TODO: Test
+                //syncControlPanel();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
-                syncControlPanel();
+                //syncControlPanel();
             }
         };
 
@@ -352,11 +360,18 @@ public class PodcastViewerActivity extends Activity {
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
                     playButton.setContentDescription(directory);
-                } else if (audioService.getPlayer().isPlaying() && episodeTitle.equals(audioService.getEpisode().getTitle())) {
-                    downloadButton.setVisibility(View.GONE);
-                    playButton.setVisibility(View.GONE);
-                    pauseButton.setVisibility(View.VISIBLE);
-                    pauseButton.setContentDescription(directory);
+                } else if (audioService.getPlayer() != null) {
+                    if(audioService.getPlayer().isPlaying() && episodeTitle.equals(audioService.getEpisode().getTitle())) {
+                        downloadButton.setVisibility(View.GONE);
+                        playButton.setVisibility(View.GONE);
+                        pauseButton.setVisibility(View.VISIBLE);
+                        pauseButton.setContentDescription(directory);
+                    } else {
+                        downloadButton.setVisibility(View.GONE);
+                        playButton.setVisibility(View.VISIBLE);
+                        pauseButton.setVisibility(View.GONE);
+                        playButton.setContentDescription(directory);
+                    }
                 } else {
                     downloadButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.GONE);
@@ -433,6 +448,15 @@ public class PodcastViewerActivity extends Activity {
                             } else {
                                 audioService.playNewEpisode(directory, true, podcastTitle);
                             }
+                        } else {
+                            // Play pressed while other app is playing
+                            Intent intent = new Intent(context, AudioPlayerService.class);
+                            intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                            intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+                            intent.setAction(AudioPlayerService.ACTION_PLAY);
+                            // Investigate Correct flag and compatibility
+                            context.startService(intent);
+                            context.bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                         }
                     }
                 }

@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,7 +60,6 @@ public class PlayerActivity extends Activity {
                 TaskStackBuilder.create(getApplicationContext())
                         // Make sure that we return to PodcastViewerActivity and set the MainActivity as the back button action
                         .addNextIntentWithParentStack(backIntent).startActivities();
-
             }
         }
     };
@@ -69,33 +69,46 @@ public class PlayerActivity extends Activity {
         public void run() {
             if (audioService != null) {
                 if (audioService.getPlayer() != null) {
+                    int currentPos;
+
                     if (audioService.getPlayer().isPlaying()) {
-                        int currentPos = audioService.getPlayer().getCurrentPosition();
-                        int duration = audioService.getPlayer().getDuration();
+                        // Current position while playing
+                        currentPos = audioService.getPlayer().getCurrentPosition();
+                    } else {
+                        // Last position that podcast was at before pausing
+                        currentPos = audioService.getLastPausedPosition();
+                    }
+                    //Update SeekBar too
+                    seekBar.setProgress(currentPos);
 
-                        int hours = currentPos / 1000 / 60 / 60;
-                        int minutes = (currentPos / 1000 / 60) % 60;
-                        int seconds = currentPos / 1000 % 60;
+                    int duration = audioService.getPlayer().getDuration();
 
-                        if (hours > 0 && hours < 10) {
-                            elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
-                        } else if (hours > 10) {
-                            elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
-                        } else {
-                            elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
-                        }
+                    int hours = currentPos / 1000 / 60 / 60;
+                    int minutes = (currentPos / 1000 / 60) % 60;
+                    int seconds = currentPos / 1000 % 60;
 
-                        int remHours = (duration - currentPos) / 1000 / 60 / 60;
-                        int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
-                        int remSeconds = (duration - currentPos) / 1000 % 60;
+                    if (hours > 0 && hours < 10) {
+                        elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
+                    } else if (hours > 10) {
+                        elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                    } else {
+                        elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
+                    }
 
-                        if (remHours > 0 && remHours < 10) {
-                            remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
-                        } else if (hours > 10) {
-                            remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
-                        } else {
-                            remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
-                        }
+                    int remHours = (duration - currentPos) / 1000 / 60 / 60;
+                    int remMinutes = ((duration - currentPos) / 1000 / 60) % 60;
+                    int remSeconds = (duration - currentPos) / 1000 % 60;
+
+                    if (remHours > 0 && remHours < 10) {
+                        remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
+                    } else if (hours > 10) {
+                        remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
+                    } else {
+                        remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
+                    }
+
+
+                    if(audioService.getPlayer().isPlaying()) {
                         // Call this thread again
                         timerHandler.postDelayed(this, 1000);
                     }
@@ -151,32 +164,35 @@ public class PlayerActivity extends Activity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser) {
+                    // This happens when the seekbar is moved physically by the user#
+                    int duration = audioService.getPlayer().getDuration();
 
-                int duration = audioService.getPlayer().getDuration();
+                    int hours = progress / 1000 / 60 / 60;
+                    int minutes = (progress / 1000 / 60) % 60;
+                    int seconds = progress / 1000 % 60;
 
-                int hours = progress / 1000 / 60 / 60;
-                int minutes = (progress / 1000 / 60) % 60;
-                int seconds = progress / 1000 % 60;
+                    if (hours > 0 && hours < 10) {
+                        elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
+                    } else if (hours > 10) {
+                        elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                    } else {
+                        elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
+                    }
 
-                if (hours > 0 && hours < 10) {
-                    elapsedText.setText(String.format("%01d:%02d:%02d", hours, minutes, seconds));
-                } else if (hours > 10) {
-                    elapsedText.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
-                } else {
-                    elapsedText.setText(String.format("%02d:%02d", minutes, seconds));
+                    int remHours = (duration - progress) / 1000 / 60 / 60;
+                    int remMinutes = ((duration - progress) / 1000 / 60) % 60;
+                    int remSeconds = (duration - progress) / 1000 % 60;
+
+                    if (remHours > 0 && remHours < 10) {
+                        remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
+                    } else if (hours > 10) {
+                        remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
+                    } else {
+                        remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
+                    }
                 }
 
-                int remHours = (duration - progress) / 1000 / 60 / 60;
-                int remMinutes = ((duration - progress) / 1000 / 60) % 60;
-                int remSeconds = (duration - progress) / 1000 % 60;
-
-                if (remHours > 0 && remHours < 10) {
-                    remainingText.setText(String.format("-%01d:%02d:%02d", remHours, remMinutes, remSeconds));
-                } else if (hours > 10) {
-                    remainingText.setText(String.format("-%02d:%02d:%02d", remHours, remMinutes, remSeconds));
-                } else {
-                    remainingText.setText(String.format("-%02d:%02d", remMinutes, remSeconds));
-                }
             }
 
             @Override
@@ -190,8 +206,11 @@ public class PlayerActivity extends Activity {
                 // Allow us to display potential seek to time by removing update of time.
                 if (audioService != null) {
                     audioService.setProgress(seekBar.getProgress());
+                    // Only if playing, continue updating the time
+                    if(audioService.getPlayer().isPlaying()){
+                        updatePlayerTimers();
+                    }
                 }
-                updatePlayerTimers();
             }
         });
     }
@@ -237,6 +256,8 @@ public class PlayerActivity extends Activity {
         LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
         if (audioService != null) {
             if (audioService.getPlayer() != null) {
+                // Change title of activity
+                setTitle(audioService.getPodcastTitle());
                 controlPanel.setVisibility(View.VISIBLE);
                 new Thread(
                         new Runnable() {
@@ -262,6 +283,12 @@ public class PlayerActivity extends Activity {
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
+                    seekBar.setProgress(audioService.getPlayer().getCurrentPosition());
+                    seekBar.setMax(audioService.getPlayer().getDuration());
+                    seekBar.setVisibility(View.VISIBLE);
+                    updatePlayerTimers();
+                } else {
+                    seekBar.setProgress(audioService.getLastPausedPosition());
                     seekBar.setMax(audioService.getPlayer().getDuration());
                     seekBar.setVisibility(View.VISIBLE);
                     updatePlayerTimers();
@@ -286,8 +313,28 @@ public class PlayerActivity extends Activity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Intent upIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+                upIntent.putExtra(Utilities.PODCAST_TITLE, audioService.getPodcastTitle());
+                if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+                    TaskStackBuilder.create(this)
+                            // Add all of this activity's parents to the back stack
+                            .addNextIntentWithParentStack(upIntent)
+                                    // Navigate up to the closest parent
+                            .startActivities();
+                } else {
+                    // This activity is part of this app's task, so simply
+                    // navigate up to the logical parent activity.
+                    NavUtils.navigateUpTo(this, upIntent);
+                }
+                return true;
+            case R.id.action_settings:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public void updatePlayerTimers() {

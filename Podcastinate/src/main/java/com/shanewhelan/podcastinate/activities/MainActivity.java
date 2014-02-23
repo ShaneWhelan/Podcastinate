@@ -3,7 +3,6 @@ package com.shanewhelan.podcastinate.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
-import android.media.MediaScannerConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,11 +44,16 @@ TODO: Add picture beside podcast name
 TODO: Add Paging to podcast viewing activity to
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
-TODO: Write current time to DB on pause - investigate
 TODO: Help Section
-TODO: On delete clear current time
 TODO: Start Main activity if subscribed
 TODO: On delete of podcast release media player
+TODO: On delete clear current time
+TODO: Populate is Listened DB entry
+TODO: When start player activity on pause the seekbar and timer are blank.
+TODO: Test Other app taking over audio on my app
+ToDO: Test what happens when podcast ends
+
+PAUSE BUTTON FD UP ON CALL should have been play
  */
 
 public class MainActivity extends Activity {
@@ -188,7 +192,8 @@ public class MainActivity extends Activity {
             dst.transferFrom(src, 0, src.size());
             src.close();
             dst.close();
-            MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
+            // TODO: Service connection leak here
+            //MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
         }
     }
 
@@ -259,7 +264,6 @@ public class MainActivity extends Activity {
                 response = httpCon.getResponseCode();
 
                 if (response == 200) {
-
                     //TODO STOP HERE
                     inputStream = httpCon.getInputStream();
                 } else {
