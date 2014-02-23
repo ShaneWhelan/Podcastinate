@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.TaskStackBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,12 +51,15 @@ public class PlayerActivity extends Activity {
                 pauseButton.setVisibility(View.GONE);
                 timerHandler.removeCallbacks(updateTimers);
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
-
-                // Verify this is the right thing to do
                 timerHandler.removeCallbacks(updateTimers);
-                Intent episodesIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
-                episodesIntent.putExtra(Utilities.PODCAST_TITLE, intent.getStringExtra(Utilities.PODCAST_TITLE));
-                startActivity(episodesIntent);
+
+                // Start Podcast Viewer Activity and
+                Intent backIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+                backIntent.putExtra(Utilities.PODCAST_TITLE, intent.getStringExtra(Utilities.PODCAST_TITLE));
+                TaskStackBuilder.create(getApplicationContext())
+                        // Make sure that we return to PodcastViewerActivity and set the MainActivity as the back button action
+                        .addNextIntentWithParentStack(backIntent).startActivities();
+
             }
         }
     };

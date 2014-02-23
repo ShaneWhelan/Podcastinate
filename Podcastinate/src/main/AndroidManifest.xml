@@ -26,20 +26,15 @@
         <activity
             android:name="com.shanewhelan.podcastinate.activities.SubscribeActivity"
             android:label="@string/title_subscribe" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.shanewhelan.podcastinate.activities.PodcastViewerActivity"
-            android:label="@string/title_podcast_viewer" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+            android:label="@string/title_podcast_viewer"
+            android:parentActivityName ="com.shanewhelan.podcastinate.activities.MainActivity" >
+            <!-- The meta-data element is needed for versions lower than 4.1 -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.shanewhelan.podcastinate.activities.MainActivity" />
         </activity>
         <activity
             android:name="com.shanewhelan.podcastinate.activities.DownloadActivity"
