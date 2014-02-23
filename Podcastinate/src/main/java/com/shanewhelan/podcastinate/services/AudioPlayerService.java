@@ -24,6 +24,7 @@ import java.io.IOException;
 
 // TODO: Should have subtitle controller already set
 // TODO: E/AudioSink received unknown event type: 1 inside CallbackWrapper !
+// TODO: Bug in seekbar when seekto is used.
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -32,8 +33,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
     public static final String DIRECTORY = "directory";
     public static final String ACTION_DISCONNECT = "1";
+    // Episode info - essential that it is updated
     private static String directory;
-    private String podcastTitle;
+    private static String podcastTitle;
     private static Episode episode;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
@@ -62,7 +64,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             case AudioManager.AUDIOFOCUS_LOSS:
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
-                    saveEpisodeTimer();
+                    saveEpisodeTimer(false);
                     player.stop();
                     player.release();
                     player = null;
@@ -111,7 +113,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         if (ACTION_PLAY.equals(intent.getAction())) {
             directory = intent.getStringExtra(DIRECTORY);
             podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
-            playNewEpisode(directory, false);
+            playNewEpisode(directory, false, podcastTitle);
         } else if (ACTION_DISCONNECT.equals(intent.getAction())) {
             if (player != null) {
                 if (player.isPlaying()) {
@@ -146,6 +148,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         sendBroadcast(finished);
         player.release();
         player = null;
+        saveEpisodeTimer(true);
     }
 
     @Override
@@ -170,7 +173,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void pauseMedia() {
         player.pause();
-        saveEpisodeTimer();
+        saveEpisodeTimer(false);
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
         // Tell Application about pause
@@ -194,6 +197,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             Intent finished = new Intent(Utilities.ACTION_FINISHED);
             finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
             sendBroadcast(finished);
+            saveEpisodeTimer(true);
             stopSelf();
         }
     }
@@ -206,7 +210,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         return episode;
     }
 
-    public void playNewEpisode(String directory, boolean isPlaying) {
+    public void playNewEpisode(String directory, boolean isNewPodcast, String podcastTitle) {
         try {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
@@ -214,9 +218,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 // TODO Check if playing
-                if (isPlaying) {
-                    saveEpisodeTimer();
+                if (isNewPodcast) {
+                    saveEpisodeTimer(false);
                     AudioPlayerService.directory = directory;
+                    AudioPlayerService.podcastTitle = podcastTitle;
                 } else {
                     player = new MediaPlayer();
                 }
@@ -245,12 +250,17 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         return directory;
     }
 
-    public void saveEpisodeTimer() {
+    public void saveEpisodeTimer(boolean isFinished) {
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDb();
-        Log.d("sw9", "Saved Current time: " + player.getCurrentPosition());
-        episode.setCurrentTime(player.getCurrentPosition());
-        pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
+        if(isFinished) {
+            episode.setCurrentTime(0);
+            pds.updateCurrentTime(episode.getEpisodeID(), 0);
+        } else {
+            Log.d("sw9", "Saved Current time: " + player.getCurrentPosition());
+            episode.setCurrentTime(player.getCurrentPosition());
+            pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
+        }
         pds.closeDb();
     }
 }

@@ -175,12 +175,8 @@ public class PodcastDataSource {
 
     // Called by the AudioService to get all info it needs about podcast
     public Episode getEpisodeMetaData(String directory) {
-        Cursor cursor = database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID + ", " +
-                EpisodeEntry.PODCAST_ID + ", " + EpisodeEntry.TITLE + ", " +
-                EpisodeEntry.DESCRIPTION + ", " + EpisodeEntry.PUB_DATE + ", " +
-                EpisodeEntry.DURATION + ", " + EpisodeEntry.LISTENED + ", " +
-                EpisodeEntry.CURRENT_TIME + " FROM episode WHERE directory = '"
-                + directory + "'", null);
+        Cursor cursor = database.rawQuery("SELECT * FROM episode WHERE directory = \""
+                + directory + "\"", null);
 
         if (cursor != null) {
             cursor.moveToFirst();

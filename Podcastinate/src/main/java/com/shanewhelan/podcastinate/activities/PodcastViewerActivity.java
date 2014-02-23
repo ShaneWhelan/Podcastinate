@@ -431,7 +431,7 @@ public class PodcastViewerActivity extends Activity {
                             if (audioService.getDirectory().equals(directory)) {
                                 audioService.resumeMedia();
                             } else {
-                                audioService.playNewEpisode(directory, true);
+                                audioService.playNewEpisode(directory, true, podcastTitle);
                             }
                         }
                     }
