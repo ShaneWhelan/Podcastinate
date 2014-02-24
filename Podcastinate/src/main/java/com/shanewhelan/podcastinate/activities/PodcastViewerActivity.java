@@ -275,13 +275,13 @@ public class PodcastViewerActivity extends Activity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
                 audioService = b.getService();
-                // TODO: Test
-                //syncControlPanel();
+                syncControlPanel();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
+                // TODO Test
                 //syncControlPanel();
             }
         };
@@ -293,6 +293,7 @@ public class PodcastViewerActivity extends Activity {
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
+        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
 
         syncControlPanel();
         updateListOfPodcasts();
@@ -311,6 +312,8 @@ public class PodcastViewerActivity extends Activity {
                     pauseButton.setVisibility(View.GONE);
                     playButton.setVisibility(View.VISIBLE);
                 }
+            } else {
+                controlPanel.setVisibility(View.GONE);
             }
         } else {
             controlPanel.setVisibility(View.GONE);

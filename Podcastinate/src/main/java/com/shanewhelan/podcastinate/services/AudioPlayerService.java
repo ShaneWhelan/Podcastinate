@@ -22,6 +22,7 @@ import java.io.IOException;
  * Created by Shane on 03/02/14. Podcastinate.
  */
 
+// TODO: After seekto save episode time
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -154,8 +155,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
         finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         sendBroadcast(finished);
-        player.release();
-        player = null;
+        AudioPlayerService.player.release();
+        AudioPlayerService.player = null;
         saveEpisodeTimer(true);
     }
 
@@ -213,6 +214,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public void setProgress(int progress) {
         if (progress < player.getDuration()) {
             player.seekTo(progress);
+            saveEpisodeTimer(false);
         } else {
             Intent finished = new Intent(Utilities.ACTION_FINISHED);
             finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
