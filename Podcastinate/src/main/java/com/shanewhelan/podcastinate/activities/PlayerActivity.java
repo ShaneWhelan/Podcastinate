@@ -157,7 +157,7 @@ public class PlayerActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Pause podcast in background service
-                audioService.pauseMedia();
+                audioService.pauseMedia(false);
             }
         });
 

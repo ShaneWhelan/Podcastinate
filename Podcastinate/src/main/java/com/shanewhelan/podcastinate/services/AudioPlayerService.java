@@ -22,7 +22,7 @@ import java.io.IOException;
  * Created by Shane on 03/02/14. Podcastinate.
  */
 
-// TODO: After seekto save episode time
+// TODO changing phonecall volume when the podcast is paused is impossible
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -42,7 +42,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         public void onReceive(Context context, Intent intent) {
             if (ACTION_DISCONNECT.equals(intent.getAction())) {
                 if (player != null) {
-                    pauseMedia();
+                    pauseMedia(false);
                 }
             }
         }
@@ -59,25 +59,16 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                     } else {
                         resumeMedia();
                     }
-
-                } else {
-                    // TODO: HMMM Potential Bug here
-                    initialiseMediaPlayer();
                 }
-
                 break;
-
             case AudioManager.AUDIOFOCUS_LOSS:
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
                     saveEpisodeTimer(false);
-                    // TODO: SEND AN EVENT THAT I HAVE STOPPED THE PLAYER
                     player.stop();
                     player.release();
                     player = null;
-
-                    sendBroadcast(new Intent (Utilities.ACTION_FINISHED));
-                    // TODO Maybe stop self
+                    sendBroadcast(new Intent (Utilities.ACTION_PAUSE));
                 }
                 break;
 
@@ -86,7 +77,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // playback. We don't release the media player because playback
                 // is likely to resume
                 if (player.isPlaying()) {
-                    pauseMedia();
+                    pauseMedia(true);
                 }
                 break;
 
@@ -100,24 +91,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
-    private void initialiseMediaPlayer() {
-        player = new MediaPlayer();
-        player.reset();
-        player.setLooping(false);
-        player.prepareAsync();
-    }
-
-    public class AudioPlayerBinder extends Binder {
-        public AudioPlayerService getService() {
-            return AudioPlayerService.this;
-        }
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return iBinder;
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (ACTION_PLAY.equals(intent.getAction())) {
@@ -127,13 +100,48 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         } else if (ACTION_DISCONNECT.equals(intent.getAction())) {
             if (player != null) {
                 if (player.isPlaying()) {
-                    pauseMedia();
+                    pauseMedia(false);
                 }
             } else {
                 stopSelf();
             }
         }
         return START_STICKY;
+    }
+
+    public void playNewEpisode(String directory, boolean isNewPodcast, String podcastTitle) {
+        try {
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+                    AudioManager.AUDIOFOCUS_GAIN);
+
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                if (isNewPodcast) {
+                    saveEpisodeTimer(false);
+                    AudioPlayerService.directory = directory;
+                    AudioPlayerService.podcastTitle = podcastTitle;
+                } else {
+                    player = new MediaPlayer();
+                }
+                // Retrieve episode information from database
+                PodcastDataSource pds = new PodcastDataSource(this);
+                pds.openDb();
+                episode = pds.getEpisodeMetaData(directory);
+                pds.closeDb();
+
+                player.reset();
+                player.setDataSource(directory);
+                player.setLooping(false);
+                player.setOnPreparedListener(this);
+                player.setOnErrorListener(this);
+                player.setOnCompletionListener(this);
+                // Keeps CPU from sleeping
+                player.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+                player.prepareAsync();
+            }
+        } catch (IOException e) {
+            Utilities.logException(e);
+        }
     }
 
     @Override
@@ -186,16 +194,27 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         super.onDestroy();
     }
 
-    public void pauseMedia() {
+    public class AudioPlayerBinder extends Binder {
+        public AudioPlayerService getService() {
+            return AudioPlayerService.this;
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return iBinder;
+    }
+
+    public void pauseMedia(boolean isTransient) {
         lastPausedPosition = player.getCurrentPosition();
         player.pause();
         saveEpisodeTimer(false);
 
-        // TODO Very Problematic Requesting audio focus
-        /*
-        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.abandonAudioFocus(this);
-        */
+        if(!isTransient) {
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            audioManager.abandonAudioFocus(this);
+        }
+
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
         unregisterReceiver(disconnectJackR);
@@ -204,7 +223,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void resumeMedia() {
         player.start();
-        // TODO Very Problematic Requesting audio focus
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         sendBroadcast(new Intent(Utilities.ACTION_PLAY));
@@ -224,54 +242,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
-    public MediaPlayer getPlayer() {
-        return player;
-    }
-
-    public Episode getEpisode() {
-        return episode;
-    }
-
-    public void playNewEpisode(String directory, boolean isNewPodcast, String podcastTitle) {
-        try {
-            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN);
-
-            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                // TODO Check if playing
-                if (isNewPodcast) {
-                    saveEpisodeTimer(false);
-                    AudioPlayerService.directory = directory;
-                    AudioPlayerService.podcastTitle = podcastTitle;
-                } else {
-                    player = new MediaPlayer();
-                }
-                // Retrieve episode information from database
-                PodcastDataSource pds = new PodcastDataSource(this);
-                pds.openDb();
-                episode = pds.getEpisodeMetaData(directory);
-                pds.closeDb();
-
-                player.reset();
-                player.setDataSource(directory);
-                player.setLooping(false);
-                player.setOnPreparedListener(this);
-                player.setOnErrorListener(this);
-                player.setOnCompletionListener(this);
-                // Keeps CPU from sleeping
-                player.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-                player.prepareAsync();
-            }
-        } catch (IOException e) {
-            Utilities.logException(e);
-        }
-    }
-
-    public String getDirectory() {
-        return directory;
-    }
-
     public void saveEpisodeTimer(boolean isFinished) {
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDb();
@@ -284,6 +254,18 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
         }
         pds.closeDb();
+    }
+
+    public MediaPlayer getPlayer() {
+        return player;
+    }
+
+    public Episode getEpisode() {
+        return episode;
+    }
+
+    public String getDirectory() {
+        return directory;
     }
 
     public String getPodcastTitle() {

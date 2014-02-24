@@ -219,7 +219,7 @@ public class PodcastViewerActivity extends Activity {
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
-                audioService.pauseMedia();
+                audioService.pauseMedia(false);
             }
         });
 
@@ -465,7 +465,7 @@ public class PodcastViewerActivity extends Activity {
                 }
             } else if (viewId == R.id.pause_icon) {
                 // Pause podcast in background service
-                audioService.pauseMedia();
+                audioService.pauseMedia(false);
             }
         }
     }
