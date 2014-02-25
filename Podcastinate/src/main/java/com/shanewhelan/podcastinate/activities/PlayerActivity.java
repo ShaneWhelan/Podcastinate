@@ -282,10 +282,12 @@ public class PlayerActivity extends Activity {
                     seekBar.setVisibility(View.VISIBLE);
                     updatePlayerTimers();
                 } else {
+                    playButton.setVisibility(View.VISIBLE);
+                    pauseButton.setVisibility(View.GONE);
                     seekBar.setProgress(audioService.getLastPausedPosition());
                     seekBar.setMax(audioService.getPlayer().getDuration());
                     seekBar.setVisibility(View.VISIBLE);
-                    updatePlayerTimers();
+                    timerHandler.removeCallbacks(updateTimers);
                 }
             } else {
                 returnToPodcastViewer(audioService.getPodcastTitle());
