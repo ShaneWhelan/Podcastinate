@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
     private PodcastDataSource dataSource;
     private SimpleCursorAdapter simpleCursorAdapter;
     private Cursor allPodcastNames;
+    private MenuItem refreshAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
@@ -117,6 +118,7 @@ public class MainActivity extends Activity {
 
                 return true;
             case R.id.action_refresh:
+                refreshAction = item;
                 if (Utilities.testNetwork(this)) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
                     dataSource.openDb();
@@ -197,6 +199,14 @@ public class MainActivity extends Activity {
     }
 
     public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
+
+        @Override
+        protected void onPreExecute() {
+            // Put a progress bar in place of the refresh icon
+            refreshAction.setActionView(R.layout.action_progress_bar);
+            refreshAction.expandActionView();
+        }
+
         @Override
         protected HashMap<String, String> doInBackground(HashMap<String, String>... urlList) {
             HashMap<String, String> resultMap = new HashMap<String, String>(urlList[0].size());
@@ -222,6 +232,10 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(HashMap<String, String> resultMap) {
+            // Replace the progress bar with the refresh button again
+            refreshAction.collapseActionView();
+            refreshAction.setActionView(null);
+
             Set entrySet = resultMap.entrySet();
             int numNewEpisodes = 0;
             String error = null;
