@@ -53,6 +53,8 @@ TODO: Populate is Listened DB entry
 TODO: When start player activity on pause the seekbar and timer are blank.
 TODO: Test Other app taking over audio on my app
 TODO: Test what happens when podcast ends
+TODO: Delete Podcasts
+TODO: CLICK RSS LINK GO TO MY APP
  */
 
 public class MainActivity extends Activity {
@@ -202,7 +204,6 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-            // Put a progress bar in place of the refresh icon
             refreshAction.setActionView(R.layout.action_progress_bar);
             refreshAction.expandActionView();
         }

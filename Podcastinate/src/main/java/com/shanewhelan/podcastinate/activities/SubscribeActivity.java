@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +30,7 @@ import java.net.URL;
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
 public class SubscribeActivity extends Activity {
-
+    Button subscribeButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,12 +40,10 @@ public class SubscribeActivity extends Activity {
         // Test Line
         subscribeUrl.setText("http://www.tested.com/podcast-xml/this-is-only-a-test/");
 
-        final Button button = (Button) findViewById(R.id.button_subscribe);
-        button.setOnClickListener(new View.OnClickListener() {
+        subscribeButton = (Button) findViewById(R.id.button_subscribe);
+        subscribeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (Utilities.testNetwork(getApplicationContext())) {
-                    button.setClickable(false);
-                    button.setVisibility(View.INVISIBLE);
                     subscribeToFeed(subscribeUrl);
                 }
             }
@@ -80,6 +79,18 @@ public class SubscribeActivity extends Activity {
     }
 
     public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
+        private ProgressBar subscribeProgress;
+
+        @Override
+        protected void onPreExecute() {
+            subscribeButton.setClickable(false);
+            subscribeButton.setVisibility(View.INVISIBLE);
+            // Put a progress bar in place of the subscribe button
+            subscribeProgress = (ProgressBar) findViewById(R.id.subscribeProgress);
+            subscribeProgress.setVisibility(View.VISIBLE);
+            subscribeProgress.setIndeterminate(true);
+        }
+
         @Override
         protected String doInBackground(String... urls) {
             try {
@@ -92,7 +103,6 @@ public class SubscribeActivity extends Activity {
                     return "Not Valid Podcast Feed";
                 }
             } catch (DuplicatePodcastException e) {
-                Utilities.logException(e);
                 return "Already subscribed to podcast";
             } catch (HTTPConnectionException e) {
                 Utilities.logException(e);
@@ -106,9 +116,9 @@ public class SubscribeActivity extends Activity {
 
         @Override
         protected void onPostExecute(String subscribed) {
-            Button button = (Button) findViewById(R.id.button_subscribe);
-            button.setClickable(true);
-            button.setVisibility(View.VISIBLE);
+            subscribeProgress.setVisibility(View.GONE);
+            subscribeButton.setClickable(true);
+            subscribeButton.setVisibility(View.VISIBLE);
 
             int duration = Toast.LENGTH_LONG;
             if (subscribed.equals("subscribed")) {

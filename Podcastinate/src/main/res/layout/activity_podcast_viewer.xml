@@ -38,7 +38,6 @@
             android:id="@+id/mainPlayButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
-
             android:background="@drawable/play_icon_selector"
             android:contentDescription="@string/mainPlayButton"/>
 

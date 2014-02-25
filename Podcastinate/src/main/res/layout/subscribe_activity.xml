@@ -21,7 +21,15 @@
         android:layout_height="wrap_content"
         android:text="@string/button_subscribe"
         android:layout_gravity="bottom"
-        android:fontFamily="monospace"
+        android:fontFamily="sans-serif"
         android:freezesText="false"/>
+
+    <ProgressBar xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:id="@+id/subscribeProgress"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center"
+                 android:visibility="gone">
+    </ProgressBar>
 
 </LinearLayout>
