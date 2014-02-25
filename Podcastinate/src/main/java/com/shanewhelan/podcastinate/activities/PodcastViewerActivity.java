@@ -281,8 +281,6 @@ public class PodcastViewerActivity extends Activity {
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
-                // TODO Test
-                //syncControlPanel();
             }
         };
 

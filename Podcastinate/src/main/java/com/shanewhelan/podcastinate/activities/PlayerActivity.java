@@ -54,12 +54,7 @@ public class PlayerActivity extends Activity {
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
                 timerHandler.removeCallbacks(updateTimers);
 
-                // Start Podcast Viewer Activity and
-                Intent backIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
-                backIntent.putExtra(Utilities.PODCAST_TITLE, intent.getStringExtra(Utilities.PODCAST_TITLE));
-                TaskStackBuilder.create(getApplicationContext())
-                        // Make sure that we return to PodcastViewerActivity and set the MainActivity as the back button action
-                        .addNextIntentWithParentStack(backIntent).startActivities();
+                returnToPodcastViewer(intent.getStringExtra(Utilities.PODCAST_TITLE));
             }
         }
     };
@@ -165,7 +160,7 @@ public class PlayerActivity extends Activity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(fromUser) {
-                    // This happens when the seekbar is moved physically by the user#
+                    // This happens when the SeekBar is moved physically by the user#
                     int duration = audioService.getPlayer().getDuration();
 
                     int hours = progress / 1000 / 60 / 60;
@@ -232,7 +227,6 @@ public class PlayerActivity extends Activity {
             public void onServiceDisconnected(ComponentName name) {
                 audioService = null;
                 syncUserInterface();
-
             }
         };
 
@@ -293,6 +287,8 @@ public class PlayerActivity extends Activity {
                     seekBar.setVisibility(View.VISIBLE);
                     updatePlayerTimers();
                 }
+            } else {
+                returnToPodcastViewer(audioService.getPodcastTitle());
             }
         } else {
             RelativeLayout playerWindow = (RelativeLayout) findViewById(R.id.playerWindow);
@@ -340,5 +336,14 @@ public class PlayerActivity extends Activity {
     public void updatePlayerTimers() {
         // Start the thread that updates the elapsed/remaining timers
         timerHandler.post(updateTimers);
+    }
+
+    public void returnToPodcastViewer(String podcastTitle) {
+        // Start Podcast Viewer Activity and
+        Intent backIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+        backIntent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+        TaskStackBuilder.create(getApplicationContext())
+                // Make sure that we return to PodcastViewerActivity and set the MainActivity as the back button action
+                .addNextIntentWithParentStack(backIntent).startActivities();
     }
 }

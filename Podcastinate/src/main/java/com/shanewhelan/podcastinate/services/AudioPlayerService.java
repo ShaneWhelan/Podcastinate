@@ -22,7 +22,7 @@ import java.io.IOException;
  * Created by Shane on 03/02/14. Podcastinate.
  */
 
-// TODO changing phonecall volume when the podcast is paused is impossible
+// TODO changing Calls volume when the podcast is paused is impossible
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -157,9 +157,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
     }
 
-    @SuppressWarnings("UnusedAssignment")
     @Override
     public void onCompletion(MediaPlayer player) {
+        // So that we don't keep listening for audio changes
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.abandonAudioFocus(this);
+        unregisterReceiver(disconnectJackR);
+
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
         finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         sendBroadcast(finished);
@@ -218,7 +222,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
         unregisterReceiver(disconnectJackR);
-
     }
 
     public void resumeMedia() {

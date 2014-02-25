@@ -41,6 +41,7 @@ import java.util.Set;
 
 /*
 TODO: Add picture beside podcast name
+TODO: Create Download Queue
 TODO: Add Paging to podcast viewing activity to
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
@@ -51,9 +52,7 @@ TODO: On delete clear current time
 TODO: Populate is Listened DB entry
 TODO: When start player activity on pause the seekbar and timer are blank.
 TODO: Test Other app taking over audio on my app
-ToDO: Test what happens when podcast ends
-
-PAUSE BUTTON FD UP ON CALL should have been play
+TODO: Test what happens when podcast ends
  */
 
 public class MainActivity extends Activity {
