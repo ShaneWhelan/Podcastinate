@@ -53,7 +53,6 @@ public class PlayerActivity extends Activity {
                 timerHandler.removeCallbacks(updateTimers);
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
                 timerHandler.removeCallbacks(updateTimers);
-
                 returnToPodcastViewer(intent.getStringExtra(Utilities.PODCAST_TITLE));
             }
         }
@@ -280,15 +279,16 @@ public class PlayerActivity extends Activity {
                     seekBar.setProgress(audioService.getPlayer().getCurrentPosition());
                     seekBar.setMax(audioService.getPlayer().getDuration());
                     seekBar.setVisibility(View.VISIBLE);
-                    updatePlayerTimers();
+
                 } else {
                     playButton.setVisibility(View.VISIBLE);
                     pauseButton.setVisibility(View.GONE);
                     seekBar.setProgress(audioService.getLastPausedPosition());
                     seekBar.setMax(audioService.getPlayer().getDuration());
                     seekBar.setVisibility(View.VISIBLE);
-                    timerHandler.removeCallbacks(updateTimers);
+                    // timerHandler.removeCallbacks(updateTimers);
                 }
+                updatePlayerTimers();
             } else {
                 returnToPodcastViewer(audioService.getPodcastTitle());
             }

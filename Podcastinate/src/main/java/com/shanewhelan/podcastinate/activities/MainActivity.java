@@ -40,22 +40,27 @@ import java.util.Map;
 import java.util.Set;
 
 /*
+FEATURES:
 TODO: Add picture beside podcast name
 TODO: Create Download Queue
 TODO: Add Paging to podcast viewing activity to
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
+TODO: Delete Podcasts
+TODO: Populate is Listened DB entry
+TODO: App declare images off the grid .nomedia
+TODO: Persistent music notification
+TODO: CLICK RSS LINK GO TO MY APP
+
+BUGS:
+TODO: BUG download service, no notification on retry
+TODO: Test Other app taking over audio on my app
+TODO: Test what happens when podcast ends
 TODO: Start Main activity if subscribed
 TODO: On delete of podcast release media player
 TODO: On delete clear current time
-TODO: Populate is Listened DB entry
-TODO: When start player activity on pause the seekbar and timer are blank.
-TODO: Test Other app taking over audio on my app
-TODO: Test what happens when podcast ends
-TODO: Delete Podcasts
-TODO: CLICK RSS LINK GO TO MY APP
- */
+*/
 
 public class MainActivity extends Activity {
     private PodcastDataSource dataSource;
