@@ -220,7 +220,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
-        unregisterReceiver(disconnectJackR);
+
+        // Unreproducible bug Receiver not registered
+        try {
+            unregisterReceiver(disconnectJackR);
+        } catch (Exception e) {
+            Utilities.logException(e);
+        }
     }
 
     public void resumeMedia() {

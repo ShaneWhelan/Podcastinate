@@ -55,9 +55,6 @@ TODO: CLICK RSS LINK GO TO MY APP
 
 BUGS:
 TODO: BUG download service, no notification on retry
-TODO: Test Other app taking over audio on my app
-TODO: Test what happens when podcast ends
-TODO: Start Main activity if subscribed
 TODO: On delete of podcast release media player
 TODO: On delete clear current time
 */
