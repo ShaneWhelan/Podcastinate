@@ -194,6 +194,8 @@ public class PodcastDataSource {
                     EpisodeEntry.TITLE)));
             episode.setDescription(cursor.getString(cursor.getColumnIndex(
                     EpisodeEntry.DESCRIPTION)));
+            episode.setEnclosure(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.ENCLOSURE)));
             episode.setPubDate(cursor.getString(cursor.getColumnIndex(
                     EpisodeEntry.PUB_DATE)));
             episode.setDuration(cursor.getString(cursor.getColumnIndex(

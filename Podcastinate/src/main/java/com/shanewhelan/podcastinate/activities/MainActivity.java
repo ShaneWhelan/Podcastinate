@@ -55,8 +55,6 @@ TODO: CLICK RSS LINK GO TO MY APP
 
 BUGS:
 TODO: BUG download service, no notification on retry
-TODO: On delete of podcast release media player
-TODO: On delete clear current time
 */
 
 public class MainActivity extends Activity {

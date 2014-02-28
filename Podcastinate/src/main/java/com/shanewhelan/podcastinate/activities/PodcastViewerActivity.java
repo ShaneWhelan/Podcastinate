@@ -249,8 +249,16 @@ public class PodcastViewerActivity extends Activity {
                         boolean isFileDeleted = fileToDelete.delete();
                         if (isFileDeleted) {
                             pds.updateEpisodeDirectory(enclosure, null);
+                            pds.updateCurrentTime(cursor.getInt(cursor.getColumnIndex("_id")), 0);
+                            if(audioService != null) {
+                                if(audioService.getEpisode() != null) {
+                                    if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
+                                        // Stop Service as the deleted podcast is also currently playing
+                                        audioService.stopService();
+                                    }
+                                }
+                            }
                         }
-
                     }
                 }
             }

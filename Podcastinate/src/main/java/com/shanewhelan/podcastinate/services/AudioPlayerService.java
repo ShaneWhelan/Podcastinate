@@ -250,6 +250,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
+    public void stopService() {
+        if(player.isPlaying()) {
+            pauseMedia(false);
+        }
+        stopSelf();
+    }
+
     public void saveEpisodeTimer(boolean isFinished) {
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDb();
