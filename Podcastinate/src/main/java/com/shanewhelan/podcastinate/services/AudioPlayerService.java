@@ -22,7 +22,6 @@ import java.io.IOException;
  * Created by Shane on 03/02/14. Podcastinate.
  */
 
-// TODO changing Calls volume when the podcast is paused is impossible
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 

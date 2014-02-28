@@ -200,7 +200,7 @@ public class MainActivity extends Activity {
             dst.transferFrom(src, 0, src.size());
             src.close();
             dst.close();
-            // TODO: Service connection leak here
+
             //MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
         }
     }
@@ -283,7 +283,6 @@ public class MainActivity extends Activity {
                 response = httpCon.getResponseCode();
 
                 if (response == 200) {
-                    //TODO STOP HERE
                     inputStream = httpCon.getInputStream();
                 } else {
                     throw new HTTPConnectionException(response);

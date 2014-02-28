@@ -72,9 +72,11 @@ public class SubscribeActivity extends Activity {
         return listOfLinks;
     }
 
-    public void successfulSubscription() {
+    public void successfulSubscription(boolean isSuccessful) {
         Intent intent = new Intent(this, MainActivity.class);
-        setResult(RESULT_OK, intent);
+        if(isSuccessful) {
+            setResult(RESULT_OK, intent);
+        }
         finish();
     }
 
@@ -127,13 +129,13 @@ public class SubscribeActivity extends Activity {
                 if (getApplicationContext() != null) {
                     Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
                 }
-                successfulSubscription();
+                successfulSubscription(true);
             } else {
                 if (getApplicationContext() != null) {
                     Toast.makeText(getApplicationContext(), subscribed, duration).show();
                 }
+                successfulSubscription(false);
             }
-            // Implement the observer design pattern here to move to feeds page.
 
         }
 
