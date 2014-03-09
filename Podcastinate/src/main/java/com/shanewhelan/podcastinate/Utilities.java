@@ -12,6 +12,11 @@ import android.widget.Toast;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 /**
@@ -111,5 +116,26 @@ public class Utilities {
 
     public static void logException(Exception e) {
         Log.e(e.getClass().getName(), e.getMessage(), e);
+    }
+
+    public static int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
+    }
+
+    public static String convertInputStreamToString(InputStream inputStream, long contentLength) {
+        try {
+            Reader reader = new InputStreamReader(inputStream, "UTF-8");
+            char[] buffer = new char[Utilities.safeLongToInt(contentLength)];
+            reader.read(buffer);
+            return new String(buffer);
+        } catch (UnsupportedEncodingException e) {
+            Utilities.logException(e);
+        } catch (IOException e) {
+            Utilities.logException(e);
+        }
+        return "";
     }
 }
