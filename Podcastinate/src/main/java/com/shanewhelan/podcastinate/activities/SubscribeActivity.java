@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -15,26 +16,49 @@ import com.shanewhelan.podcastinate.DuplicatePodcastException;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.SearchResult;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
 public class SubscribeActivity extends Activity {
-    Button subscribeButton;
+    private Button subscribeButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.subscribe_activity);
+
+        final TextView searchText = (TextView) findViewById(R.id.edit_text_search_arguments);
+        searchText.setHint("Search Podcasts");
+        Button searchButton = (Button) findViewById(R.id.button_search);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                if (Utilities.testNetwork(getApplicationContext())) {
+                    searchAPI(searchText);
+                }
+            }
+        });
 
         final TextView subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
         // Test Line
@@ -48,6 +72,8 @@ public class SubscribeActivity extends Activity {
                 }
             }
         });
+
+
     }
 
     @Override
@@ -61,6 +87,14 @@ public class SubscribeActivity extends Activity {
         DownloadRSSFeed downFeed = new DownloadRSSFeed();
         if (subscribeUrl.getText() != null) {
             downFeed.execute(subscribeUrl.getText().toString());
+        }
+    }
+
+    public void searchAPI(TextView searchText) {
+        if(searchText.getText() != null) {
+            // Query Podcast API for available podcasts and display them in a list.
+            QueryPodcastAPI queryPodcastAPI = new QueryPodcastAPI();
+            queryPodcastAPI.execute(searchText.getText().toString());
         }
     }
 
@@ -78,6 +112,70 @@ public class SubscribeActivity extends Activity {
             setResult(RESULT_OK, intent);
         }
         finish();
+    }
+
+    public boolean isLinkUnique(String[] listOfLinks, String link) {
+        boolean linkUnique = true;
+        for (String currentLink : listOfLinks) {
+            if (link.equals(currentLink)) {
+                linkUnique = false;
+            }
+        }
+        return linkUnique;
+    }
+
+    public class QueryPodcastAPI extends AsyncTask<String, Void, SearchResult[]> {
+        @Override
+        protected SearchResult[] doInBackground(String... urls) {
+            String apiURL = "http://ec2-54-186-15-6.us-west-2.compute.amazonaws.com/API/search?podcastTitle=" + urls[0].replace(" ", "+");
+            InputStream jsonInputStream = null;
+            try {
+                HttpGet httpGet = new HttpGet(new URI(apiURL));
+                HttpClient httpClient = new DefaultHttpClient();
+                HttpResponse httpResponse = httpClient.execute(httpGet);
+                jsonInputStream = httpResponse.getEntity().getContent();
+                // Convert InputSteam to String and then store the JSon result in an Array
+                JSONObject jsonResult = new JSONObject(Utilities.convertInputStreamToString(
+                        jsonInputStream, httpResponse.getEntity().getContentLength()));
+                JSONArray resultArray = jsonResult.getJSONArray("result");
+                SearchResult[] searchResults = new SearchResult[resultArray.length()];
+                for(int i = 0; i < resultArray.length(); i++) {
+                    JSONObject currentJsonNode = resultArray.getJSONObject(i);
+                    SearchResult currentSearchNode = new SearchResult();
+                    currentSearchNode.setTitle(currentJsonNode.getString("title"));
+                    currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
+                    currentSearchNode.setLink(currentJsonNode.getString("link"));
+                    currentSearchNode.setDescription(currentJsonNode.getString("description"));
+                    searchResults[i] = currentSearchNode;
+                }
+                return searchResults;
+            } catch (URISyntaxException e) {
+                Utilities.logException(e);
+            } catch (ClientProtocolException e) {
+                Utilities.logException(e);
+            } catch (IOException e) {
+                Utilities.logException(e);
+            } catch (JSONException e) {
+                Utilities.logException(e);
+            } finally {
+                if (jsonInputStream != null) {
+                    try {
+                        jsonInputStream.close();
+                    } catch (IOException e) {
+                        Utilities.logException(e);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(SearchResult[] resultsArray) {
+            Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
+            searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, resultsArray);
+            startActivity(searchResultsIntent);
+        }
     }
 
     public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
@@ -192,16 +290,6 @@ public class SubscribeActivity extends Activity {
             }
             return Utilities.INVALID_URL;
         }
-    }
-
-    public boolean isLinkUnique(String[] listOfLinks, String link) {
-        boolean linkUnique = true;
-        for (String currentLink : listOfLinks) {
-            if (link.equals(currentLink)) {
-                linkUnique = false;
-            }
-        }
-        return linkUnique;
     }
 }
 

@@ -35,6 +35,7 @@ public class Utilities {
     public static final int FAILURE_TO_PARSE = 0;
     public static final int SUCCESS = 1;
     public static final int NO_NEW_EPISODES = 2;
+    public static final String SEARCH_RESULT = "search_result";
 
     public Utilities() {
 

@@ -30,7 +30,8 @@
         <activity
             android:name="com.shanewhelan.podcastinate.activities.PodcastViewerActivity"
             android:label="@string/title_podcast_viewer"
-            android:parentActivityName ="com.shanewhelan.podcastinate.activities.MainActivity" >
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity" >
+
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -55,18 +56,24 @@
         <activity
             android:name="com.shanewhelan.podcastinate.activities.PlayerActivity"
             android:label="@string/title_activity_player"
-            android:parentActivityName ="com.shanewhelan.podcastinate.activities.PodcastViewerActivity" >
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.PodcastViewerActivity" >
+
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.shanewhelan.podcastinate.activities.PodcastViewerActivity" />
         </activity>
 
-        <receiver android:name="Utilities$DisconnectHeadphonesReceiver">
+        <receiver android:name="com.shanewhelan.podcastinate.Utilities$DisconnectHeadphonesReceiver" >
             <intent-filter>
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".activities.SearchResultsActivity"
+            android:label="@string/title_activity_main_activity2" >
+        </activity>
     </application>
 
 </manifest>

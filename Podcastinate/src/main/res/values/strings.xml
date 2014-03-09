@@ -16,11 +16,15 @@
     <string name="mainPlayButton">Main Play Button</string>
     <string name="action_discard">Discard</string>
     <string name="title_activity_player">PlayerActivity</string>
-    <string name="hello_world">Hello world!</string>
     <string name="refresh_feed">Refresh Feed</string>
     <string name="baseElapsedTime">00:00</string>
     <string name="rewindButton">rewindButton</string>
     <string name="fastForward">fastForward</string>
     <string name="podcastImage">podcastImage</string>
+    <string name="manualUrlEntry">Manual URL Entry</string>
+    <string name="searchButton">Search</string>
+    <string name="searchServerSideAPI">Search Server Side API</string>
+    <string name="title_activity_main_activity2">MainActivity</string>
+    <string name="searchResultImage">searchResultImage</string>
 
 </resources>

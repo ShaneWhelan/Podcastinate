@@ -245,19 +245,25 @@ public class PodcastViewerActivity extends Activity {
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
                     if (cursor != null) {
                         String enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.ENCLOSURE));
-                        File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY)));
-                        boolean isFileDeleted = fileToDelete.delete();
-                        if (isFileDeleted) {
-                            pds.updateEpisodeDirectory(enclosure, null);
-                            pds.updateCurrentTime(cursor.getInt(cursor.getColumnIndex("_id")), 0);
-                            if(audioService != null) {
-                                if(audioService.getEpisode() != null) {
-                                    if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
-                                        // Stop Service as the deleted podcast is also currently playing
-                                        audioService.stopService();
+                        try {
+                            File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY)));
+                            boolean isFileDeleted = fileToDelete.delete();
+                            if (isFileDeleted) {
+                                pds.updateEpisodeDirectory(enclosure, null);
+                                pds.updateCurrentTime(cursor.getInt(cursor.getColumnIndex("_id")), 0);
+                                if(audioService != null) {
+                                    if(audioService.getEpisode() != null) {
+                                        if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
+                                            // Stop Service as the deleted podcast is also currently playing
+                                            audioService.stopService();
+                                            // TODO BUG HERE CONTROL PANEL NOT FUCKING OFF
+                                            syncControlPanel();
+                                        }
                                     }
                                 }
                             }
+                        } catch(Exception e) {
+                            Utilities.logException(e);
                         }
                     }
                 }
@@ -416,11 +422,12 @@ public class PodcastViewerActivity extends Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View v = super.getView(position, convertView, parent);//let the adapter handle setting up the row views
+            // Adapter handles setting up rows
+            View v = super.getView(position, convertView, parent);
             if (v != null) {
-                v.setBackgroundColor(getResources().getColor(android.R.color.background_light)); //default color
+                v.setBackgroundColor(getResources().getColor(android.R.color.background_light));
                 if (sparseBArray.get(position)) {
-                    v.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));// this is a selected position so make it red
+                    v.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
                 }
             }
             return v;

@@ -9,6 +9,30 @@
               android:orientation="vertical"
               tools:context=".SubscribeActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/searchServerSideAPI"/>
+    <EditText
+        android:id="@+id/edit_text_search_arguments"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textUri"/>
+
+    <Button
+        android:id="@+id/button_search"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="25dp"
+        android:text="@string/searchButton"
+        android:layout_gravity="bottom"
+        android:fontFamily="sans-serif"
+        android:freezesText="false"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/manualUrlEntry"/>
     <EditText
         android:id="@+id/edit_text_feed_url"
         android:layout_width="fill_parent"
