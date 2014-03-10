@@ -55,6 +55,7 @@ TODO: CLICK RSS LINK GO TO MY APP
 
 BUGS:
 TODO: BUG download service, no notification on retry
+TODO: Back button exiting to other apps
 */
 
 public class MainActivity extends Activity {

@@ -3,6 +3,9 @@ package com.shanewhelan.podcastinate.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -20,6 +23,7 @@ import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.SearchResult;
 import com.shanewhelan.podcastinate.Utilities;
 
+import java.io.InputStream;
 import java.util.Arrays;
 
 public class SearchResultsActivity extends Activity {
@@ -40,7 +44,13 @@ public class SearchResultsActivity extends Activity {
             ListView searchList = (ListView) findViewById(R.id.listOfSearchResults);
             SearchResultAdapter searchResultAdapter = new SearchResultAdapter(getApplicationContext(), R.layout.search_result_item, R.id.searchResultPodcastTitle ,resultArray);
             searchList.setAdapter(searchResultAdapter);
+            if(resultArray.length > 1) {
+                setTitle(resultArray.length + " Podcasts Found");
+            } else {
+                setTitle(resultArray.length + " Podcast Found");
+            }
         }
+
     }
 
     @Override
@@ -77,8 +87,11 @@ public class SearchResultsActivity extends Activity {
         private void bindView(int position, View view) {
             SearchResult searchResult = super.getItem(position);
             if (searchResult != null) {
+                // Load image into thumbnail slot asynchronously
                 ImageView thumbNail = (ImageView) view.findViewById(R.id.searchResultImage);
-
+                DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail);
+                downloadImage.execute(searchResult.getImageLink());
+                //Update text view for this result
                 TextView podcastTitle = (TextView) view.findViewById(R.id.searchResultPodcastTitle);
                 if(podcastTitle != null) {
                     podcastTitle.setText(searchResult.getTitle());
@@ -97,6 +110,29 @@ public class SearchResultsActivity extends Activity {
 
             }
             return view;
+        }
+    }
+
+    private class DownloadImageAsyncTask extends AsyncTask<String, Void, Bitmap> {
+        ImageView podcastImage;
+
+        public DownloadImageAsyncTask(ImageView podcastImage) {
+            this.podcastImage = podcastImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            Bitmap podcastBitmap = null;
+            try {
+                InputStream inStream = new java.net.URL(urls[0]).openStream();
+                podcastBitmap = BitmapFactory.decodeStream(inStream);
+            } catch (Exception e) {
+                Utilities.logException(e);
+            }
+            return podcastBitmap;
+        }
+
+        protected void onPostExecute(Bitmap podcastBitmap) {
+            podcastImage.setImageBitmap(podcastBitmap);
         }
     }
 }

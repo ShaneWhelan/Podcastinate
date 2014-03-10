@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -139,4 +140,20 @@ public class Utilities {
         }
         return "";
     }
+    public static String convertInputStreamToStringV2(InputStream inputStream) {
+
+        try {
+            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder total = new StringBuilder(inputStream.available());
+            String line;
+            while ((line = r.readLine()) != null) {
+                total.append(line);
+            }
+            return total.toString();
+        } catch (IOException e) {
+            logException(e);
+        }
+        return "";
+    }
+
 }

@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -134,9 +134,16 @@ public class SubscribeActivity extends Activity {
                 HttpClient httpClient = new DefaultHttpClient();
                 HttpResponse httpResponse = httpClient.execute(httpGet);
                 jsonInputStream = httpResponse.getEntity().getContent();
+
                 // Convert InputSteam to String and then store the JSon result in an Array
-                JSONObject jsonResult = new JSONObject(Utilities.convertInputStreamToString(
-                        jsonInputStream, httpResponse.getEntity().getContentLength()));
+                //TODO Temporary string remove
+                //String tempString = Utilities.convertInputStreamToString(
+                 //       jsonInputStream, httpResponse.getEntity().getContentLength());
+                String tempString = Utilities.convertInputStreamToStringV2(jsonInputStream);
+
+                Log.d("sw9", tempString);
+
+                JSONObject jsonResult = new JSONObject(tempString);
                 JSONArray resultArray = jsonResult.getJSONArray("result");
                 SearchResult[] searchResults = new SearchResult[resultArray.length()];
                 for(int i = 0; i < resultArray.length(); i++) {
