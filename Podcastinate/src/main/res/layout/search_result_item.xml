@@ -10,7 +10,8 @@
         android:layout_width="0dp"
         android:layout_weight="0.2"
         android:layout_height="65dp"
-        android:contentDescription="@string/searchResultImage" />
+        android:contentDescription="@string/searchResultImage"
+        android:visibility="invisible"/>
     <TextView
         android:id="@+id/searchResultPodcastTitle"
         android:layout_width="0dp"

@@ -16,8 +16,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 /**
@@ -37,6 +35,8 @@ public class Utilities {
     public static final int SUCCESS = 1;
     public static final int NO_NEW_EPISODES = 2;
     public static final String SEARCH_RESULT = "search_result";
+    public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
+    public static final String PODCAST_LINK = "podcast_link";
 
     public Utilities() {
 
@@ -120,6 +120,7 @@ public class Utilities {
         Log.e(e.getClass().getName(), e.getMessage(), e);
     }
 
+    /*
     public static int safeLongToInt(long l) {
         if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
@@ -128,6 +129,7 @@ public class Utilities {
     }
 
     public static String convertInputStreamToString(InputStream inputStream, long contentLength) {
+        // Broken method
         try {
             Reader reader = new InputStreamReader(inputStream, "UTF-8");
             char[] buffer = new char[Utilities.safeLongToInt(contentLength)];
@@ -139,9 +141,9 @@ public class Utilities {
             Utilities.logException(e);
         }
         return "";
-    }
-    public static String convertInputStreamToStringV2(InputStream inputStream) {
+    }*/
 
+    public static String convertInputStreamToStringV2(InputStream inputStream) {
         try {
             BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder total = new StringBuilder(inputStream.available());
@@ -155,5 +157,4 @@ public class Utilities {
         }
         return "";
     }
-
 }

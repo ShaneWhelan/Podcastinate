@@ -10,13 +10,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.shanewhelan.podcastinate.DuplicatePodcastException;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
@@ -39,6 +43,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
+
 /*
 FEATURES:
 TODO: Add picture beside podcast name
@@ -49,9 +55,8 @@ TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
 TODO: Delete Podcasts
 TODO: Populate is Listened DB entry
-TODO: App declare images off the grid .nomedia
 TODO: Persistent music notification
-TODO: CLICK RSS LINK GO TO MY APP
+TODO: Click RSS link to go to Podcastinate
 
 BUGS:
 TODO: BUG download service, no notification on retry
@@ -63,12 +68,25 @@ public class MainActivity extends Activity {
     private SimpleCursorAdapter simpleCursorAdapter;
     private Cursor allPodcastNames;
     private MenuItem refreshAction;
+    private ProgressBar mProgressBar1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
         this.setTitle("Podcasts");
         setContentView(R.layout.activity_main);
+
+        Intent incomingIntent = getIntent();
+        if(incomingIntent != null) {
+            if(incomingIntent.getAction() != null){
+                if(incomingIntent.getAction().equals(Utilities.ACTION_SUBSCRIBE)) {
+                    // Received URL to subscribe to now process it
+                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
+                    downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
+                }
+            }
+        }
 
         // TODO: Dev only, take out for release
         try {
@@ -100,6 +118,9 @@ public class MainActivity extends Activity {
             }
         };
         listView.setOnItemClickListener(itemCLickHandler);
+
+        mProgressBar1 = (ProgressBar) findViewById(R.id.smoothProgressBar);
+        mProgressBar1.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
     }
 
     @Override
@@ -115,7 +136,7 @@ public class MainActivity extends Activity {
         switch (item.getItemId()) {
             case R.id.add_feed_action:
                 Intent intent = new Intent(this, SubscribeActivity.class);
-                startActivityForResult(intent, 1);
+                startActivity(intent);
                 return true;
             case R.id.action_settings:
 
@@ -141,14 +162,6 @@ public class MainActivity extends Activity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (requestCode == 1) {
-            if (resultCode == RESULT_OK) {
-                updateListOfPodcasts();
-            }
         }
     }
 
@@ -201,12 +214,33 @@ public class MainActivity extends Activity {
         }
     }
 
+    public String[] getPodcastLinks() {
+        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
+        dataSource.openDb();
+        String[] listOfLinks = dataSource.getAllPodcastLinks();
+        dataSource.closeDb();
+        return listOfLinks;
+    }
+
+    public boolean isLinkUnique(String[] listOfLinks, String link) {
+        boolean linkUnique = true;
+        for (String currentLink : listOfLinks) {
+            if (link.equals(currentLink)) {
+                linkUnique = false;
+            }
+        }
+        return linkUnique;
+    }
+
     public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
 
         @Override
         protected void onPreExecute() {
-            refreshAction.setActionView(R.layout.action_progress_bar);
+            // Set Refresh icon to progress bar
+            refreshAction.setActionView(R.layout.actionbar_indeterminate_progress);
             refreshAction.expandActionView();
+
+            mProgressBar1.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -234,6 +268,9 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(HashMap<String, String> resultMap) {
+            mProgressBar1.setVisibility(View.GONE);
+
+
             // Replace the progress bar with the refresh button again
             refreshAction.collapseActionView();
             refreshAction.setActionView(null);
@@ -300,6 +337,113 @@ public class MainActivity extends Activity {
                         } else {
                             return Utilities.NO_NEW_EPISODES;
                         }
+                    } else {
+                        // Won't be false unless parser threw exception, causing podcast to be null
+                        return Utilities.FAILURE_TO_PARSE;
+                    }
+                }
+
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        Utilities.logException(e);
+                    }
+                }
+            }
+            return Utilities.INVALID_URL;
+        }
+    }
+
+    public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            mProgressBar1.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                int result = downloadRSSFeed(urls[0]);
+                if (result == Utilities.SUCCESS) {
+                    return "subscribed";
+                } else if (result == Utilities.INVALID_URL) {
+                    return "URL Invalid";
+                } else if (result == Utilities.FAILURE_TO_PARSE) {
+                    return "Not Valid Podcast Feed";
+                }
+            } catch (DuplicatePodcastException e) {
+                return "Already subscribed to podcast";
+            } catch (HTTPConnectionException e) {
+                Utilities.logException(e);
+                return "Connection Error " + e.getResponseCode();
+            } catch (IOException e) {
+                Utilities.logException(e);
+                return "Exception: " + e.getClass();
+            }
+            return "Error";
+        }
+
+        @Override
+        protected void onPostExecute(String subscribed) {
+
+            mProgressBar1.setVisibility(View.GONE);
+
+
+            int duration = Toast.LENGTH_LONG;
+            if (subscribed.equals("subscribed")) {
+                // Send out a toast displaying success
+                // May be able to get this toast to the user faster
+                if (getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
+                }
+                updateListOfPodcasts();
+            } else {
+                if (getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), subscribed, duration).show();
+                }
+            }
+
+        }
+
+        private int downloadRSSFeed(String url) throws DuplicatePodcastException, IOException {
+            // Check for existing podcast
+            String[] listOfLinks = getPodcastLinks();
+            if (!isLinkUnique(listOfLinks, url)) {
+                throw new DuplicatePodcastException("Podcast Already in Database");
+            }
+
+            InputStream inputStream = null;
+            int response;
+            try {
+                URL feedURL = new URL(url);
+                HttpURLConnection httpCon = (HttpURLConnection) feedURL.openConnection();
+                httpCon.setReadTimeout(100000);
+                httpCon.setConnectTimeout(150000);
+                httpCon.setRequestMethod("GET");
+                httpCon.setUseCaches(true);
+                httpCon.addRequestProperty("Content-Type", "text/xml; charset=utf-8");
+                httpCon.setDoInput(true);
+                httpCon.connect();
+                response = httpCon.getResponseCode();
+
+                if (response == 200) {
+                    inputStream = httpCon.getInputStream();
+                } else {
+                    throw new HTTPConnectionException(response);
+                }
+
+                ParseRSS parseRSS = new ParseRSS();
+                XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
+                if (xmlPullParser != null) {
+
+                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, url);
+
+                    if (podcast != null) {
+                        Utilities.savePodcastToDb(getApplicationContext(), podcast, true);
+                        return Utilities.SUCCESS;
                     } else {
                         // Won't be false unless parser threw exception, causing podcast to be null
                         return Utilities.FAILURE_TO_PARSE;

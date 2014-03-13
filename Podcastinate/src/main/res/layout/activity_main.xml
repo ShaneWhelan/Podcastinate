@@ -3,6 +3,16 @@
               android:layout_height="fill_parent"
               android:orientation="vertical">
 
+    <ProgressBar
+        android:id="@+id/smoothProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
+        android:visibility="gone"
+        android:layout_marginTop="-6dp"
+        />
+
     <ListView
         android:id="@+id/listOfPodcasts"
         android:layout_width="match_parent"

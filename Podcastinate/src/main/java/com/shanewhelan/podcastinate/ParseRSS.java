@@ -262,8 +262,11 @@ public class ParseRSS {
                 throw new HTTPConnectionException(responseCode);
             }
 
+            // Remove special characters from the filename
+            title = title.replaceAll("[^A-Za-z0-9]", "-");
             // Check if default directory exists and create it if not.
-            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + title.replaceAll("[^A-Za-z0-9]", "-") + "/images");
+            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + title + "/images");
+
             if (!externalStorage.isDirectory()) {
                 if (!externalStorage.mkdirs()) {
                     throw new IOException("Could not create directory");
@@ -278,6 +281,7 @@ public class ParseRSS {
 
             Log.d("sw9", filename);
             File imageFile = new File(externalStorage, filename);
+            File noMedia = new File(externalStorage, ".noMedia");
 
             if(isNewImage) {
                 podcast.setImageDirectory(imageFile.getAbsolutePath());
@@ -285,21 +289,23 @@ public class ParseRSS {
 
             // Create new image from InputStream
             if (imageFile.createNewFile()) {
-                FileOutputStream fileOutput = new FileOutputStream(imageFile);
-                InputStream inputStream = httpResponse.getEntity().getContent();
+                if(noMedia.createNewFile()) {
+                    FileOutputStream fileOutput = new FileOutputStream(imageFile);
+                    InputStream inputStream = httpResponse.getEntity().getContent();
 
-                byte[] buffer = new byte[32768];
-                int bufferLength;
+                    byte[] buffer = new byte[32768];
+                    int bufferLength;
 
-                // Use count to make sure we only update the progress bar 50 times in total
-                while ((bufferLength = inputStream.read(buffer)) > 0) {
-                    fileOutput.write(buffer, 0, bufferLength);
-                    // Download progress as a percentage
+                    // Use count to make sure we only update the progress bar 50 times in total
+                    while ((bufferLength = inputStream.read(buffer)) > 0) {
+                        fileOutput.write(buffer, 0, bufferLength);
+                        // Download progress as a percentage
+                    }
+
+                    // Tidy up and close streams
+                    inputStream.close();
+                    fileOutput.close();
                 }
-
-                // Tidy up and close streams
-                inputStream.close();
-                fileOutput.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -9,7 +9,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +26,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 public class SearchResultsActivity extends Activity {
+    private Bitmap[] bitmapList;
+    private SearchResult[] resultArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,10 +38,12 @@ public class SearchResultsActivity extends Activity {
         Intent searchResultsIntent = getIntent();
         Parcelable[] parcelableArray = searchResultsIntent.getParcelableArrayExtra(Utilities.SEARCH_RESULT);
 
-        SearchResult[] resultArray;
+
         if (parcelableArray != null) {
             resultArray = Arrays.copyOf(parcelableArray, parcelableArray.length, SearchResult[].class);
             Log.d("sw9", "Result Array length: " + resultArray.length);
+            bitmapList = new Bitmap[resultArray.length];
+
             ListView searchList = (ListView) findViewById(R.id.listOfSearchResults);
             SearchResultAdapter searchResultAdapter = new SearchResultAdapter(getApplicationContext(), R.layout.search_result_item, R.id.searchResultPodcastTitle ,resultArray);
             searchList.setAdapter(searchResultAdapter);
@@ -74,14 +77,10 @@ public class SearchResultsActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class SearchResultAdapter extends ArrayAdapter<SearchResult> {
-        private LayoutInflater layoutInflater;
-        public Context context;
+    public class SearchResultAdapter extends ArrayAdapter<SearchResult> implements View.OnClickListener{
 
         public SearchResultAdapter(Context context, int resource, int textViewResource, SearchResult[] objects) {
             super(context, resource, textViewResource, objects);
-            layoutInflater = LayoutInflater.from(context);
-            this.context = context;
         }
 
         private void bindView(int position, View view) {
@@ -89,12 +88,27 @@ public class SearchResultsActivity extends Activity {
             if (searchResult != null) {
                 // Load image into thumbnail slot asynchronously
                 ImageView thumbNail = (ImageView) view.findViewById(R.id.searchResultImage);
-                DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail);
-                downloadImage.execute(searchResult.getImageLink());
-                //Update text view for this result
+                thumbNail.setContentDescription("" + position);
+                thumbNail.setOnClickListener(this);
+                // Check if bitmap is stored already
+                if(bitmapList.length > position) {
+                    if(bitmapList[position] == null) {
+                        DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail, position);
+                        downloadImage.execute(searchResult.getImageLink());
+                    } else {
+                        thumbNail.setImageBitmap(bitmapList[position]);
+                    }
+                } else {
+                    DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail, position);
+                    downloadImage.execute(searchResult.getImageLink());
+                }
+
+                // Update text view for this result
                 TextView podcastTitle = (TextView) view.findViewById(R.id.searchResultPodcastTitle);
+                podcastTitle.setOnClickListener(this);
                 if(podcastTitle != null) {
                     podcastTitle.setText(searchResult.getTitle());
+                    podcastTitle.setContentDescription("" + position);
                 }
             }
         }
@@ -107,17 +121,31 @@ public class SearchResultsActivity extends Activity {
             bindView(position, view);
             if (view != null) {
                 view.setBackgroundColor(getResources().getColor(android.R.color.background_light));
-
             }
             return view;
         }
+
+        @Override
+        public void onClick(View v) {
+            if(v.getContentDescription() != null){
+                int position = Integer.parseInt(v.getContentDescription().toString());
+                // Start New Subscribe Activity
+                Intent subscribe = new Intent(getApplicationContext(), MainActivity.class);
+                subscribe.setAction(Utilities.ACTION_SUBSCRIBE);
+                subscribe.putExtra(Utilities.PODCAST_LINK, resultArray[position].getLink());
+                startActivity(subscribe);
+            }
+        }
+
     }
 
     private class DownloadImageAsyncTask extends AsyncTask<String, Void, Bitmap> {
-        ImageView podcastImage;
+        private ImageView podcastImage;
+        private int position;
 
-        public DownloadImageAsyncTask(ImageView podcastImage) {
+        public DownloadImageAsyncTask(ImageView podcastImage, int postion) {
             this.podcastImage = podcastImage;
+            this.position = postion;
         }
 
         protected Bitmap doInBackground(String... urls) {
@@ -133,6 +161,8 @@ public class SearchResultsActivity extends Activity {
 
         protected void onPostExecute(Bitmap podcastBitmap) {
             podcastImage.setImageBitmap(podcastBitmap);
+            podcastImage.setVisibility(View.VISIBLE);
+            bitmapList[position] = podcastBitmap;
         }
     }
 }
