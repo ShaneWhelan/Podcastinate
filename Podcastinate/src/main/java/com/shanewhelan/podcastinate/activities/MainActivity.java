@@ -48,19 +48,28 @@ import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 /*
 FEATURES:
 TODO: Add picture beside podcast name
-TODO: Create Download Queue
-TODO: Add Paging to podcast viewing activity to
+TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
-TODO: Streaming: Must keep WIFI from sleeping
-TODO: Help Section
-TODO: Delete Podcasts
-TODO: Populate is Listened DB entry
-TODO: Persistent music notification
+TODO: Delete Subscription
+TODO: Persistent notification while episode plays
 TODO: Click RSS link to go to Podcastinate
 TODO: Set back button to go to right activities
 
+TODO: Cloud backup
+TODO: User Settings
+TODO: Car Mode
+TODO: Recommendations
+TODO: User Settings
+
+
 BUGS:
-TODO: BUG download service, no notification on retry
+TODO: BUG download service, no retry on download fail
+TODO: Bug on binder search results - wrong picture beside search results
+
+TODO: Populate isListened DB entry
+TODO: Streaming: Must keep WIFI from sleeping
+TODO: Help Section
+TODO: Add Paging to podcast viewing activity to
 */
 
 public class MainActivity extends Activity {
@@ -116,8 +125,10 @@ public class MainActivity extends Activity {
             if(incomingIntent.getAction() != null){
                 if(incomingIntent.getAction().equals(Utilities.ACTION_SUBSCRIBE)) {
                     // Received URL to subscribe to now process it
-                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
-                    downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
+                    if(Utilities.testNetwork(getApplicationContext())) {
+                        DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
+                        downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
+                    }
                 }
             }
         }
@@ -143,7 +154,7 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.action_refresh:
                 refreshAction = item;
-                if (Utilities.testNetwork(this)) {
+                if (Utilities.testNetwork(getApplicationContext())) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
                     dataSource.openDbForReading();
                     HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();

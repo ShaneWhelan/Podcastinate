@@ -143,9 +143,9 @@ public class SearchResultsActivity extends Activity {
         private ImageView podcastImage;
         private int position;
 
-        public DownloadImageAsyncTask(ImageView podcastImage, int postion) {
+        public DownloadImageAsyncTask(ImageView podcastImage, int position) {
             this.podcastImage = podcastImage;
-            this.position = postion;
+            this.position = position;
         }
 
         protected Bitmap doInBackground(String... urls) {
@@ -160,9 +160,14 @@ public class SearchResultsActivity extends Activity {
         }
 
         protected void onPostExecute(Bitmap podcastBitmap) {
-            podcastImage.setImageBitmap(podcastBitmap);
-            podcastImage.setVisibility(View.VISIBLE);
             bitmapList[position] = podcastBitmap;
+            // Multi threading check to see if the image view has changed position
+            if(podcastImage.getContentDescription() != null) {
+                if(podcastImage.getContentDescription().toString().equals("" + position)) {
+                    podcastImage.setImageBitmap(podcastBitmap);
+                    podcastImage.setVisibility(View.VISIBLE);
+                }
+            }
         }
     }
 }
