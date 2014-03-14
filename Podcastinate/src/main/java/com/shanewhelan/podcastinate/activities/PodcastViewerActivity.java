@@ -114,8 +114,8 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void initialiseAdapter(String podcastName) {
-        dataSource = new PodcastDataSource(this);
-        dataSource.openDb();
+        dataSource = new PodcastDataSource(getApplicationContext());
+        dataSource.openDbForReading();
         // Get Podcast ID so we can get all episode names from DB
         podcastID = dataSource.getPodcastID(podcastName);
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
@@ -237,8 +237,8 @@ public class PodcastViewerActivity extends Activity {
         SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
         if (booleanArray != null) {
             // Open connection to DB
-            PodcastDataSource pds = new PodcastDataSource(this);
-            pds.openDb();
+            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+            pds.openDbForWriting();
             // Loop through the SparseBooleanArray and delete directory form db and file from disk
             for (int i = 0; i < booleanArray.size(); i++) {
                 if (booleanArray.valueAt(i)) {
@@ -333,7 +333,7 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void updateListOfPodcasts() {
-        dataSource.openDb();
+        dataSource.openDbForReading();
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter.swapCursor(episodeCursor);
         episodeAdapter.notifyDataSetChanged();

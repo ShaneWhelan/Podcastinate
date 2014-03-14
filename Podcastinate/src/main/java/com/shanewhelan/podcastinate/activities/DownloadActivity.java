@@ -22,8 +22,8 @@ public class DownloadActivity extends Activity {
         String podcastTitle = this.getIntent().getStringExtra(Utilities.PODCAST_TITLE);
         String episodeTitle = this.getIntent().getStringExtra(Utilities.EPISODE_TITLE);
 
-        PodcastDataSource dataSource = new PodcastDataSource(this);
-        dataSource.openDb();
+        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
+        dataSource.openDbForReading();
         String enclosure = dataSource.getEpisodeEnclosure(podcastTitle, episodeTitle);
         Intent intent = new Intent(this, DownloadService.class);
         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);

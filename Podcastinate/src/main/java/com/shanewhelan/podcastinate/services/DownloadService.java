@@ -162,7 +162,7 @@ public class DownloadService extends IntentService {
                 }
 
                 PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                pds.openDb();
+                pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
                 pds.closeDb();
             }

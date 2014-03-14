@@ -61,6 +61,7 @@ public class SubscribeActivity extends Activity {
                         Intent subscribeIntent = new Intent(getApplicationContext(), MainActivity.class);
                         subscribeIntent.setAction(Utilities.ACTION_SUBSCRIBE);
                         subscribeIntent.putExtra(Utilities.PODCAST_LINK, subscribeUrl.getText().toString());
+                        startActivity(subscribeIntent);
                     }
                 }
             }

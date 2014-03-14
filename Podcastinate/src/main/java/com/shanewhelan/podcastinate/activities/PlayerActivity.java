@@ -258,7 +258,7 @@ public class PlayerActivity extends Activity {
                             public void run() {
                                 // Set up image for podcast
                                 PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                                pds.openDb();
+                                pds.openDbForReading();
                                 final String imageDirectory = pds.getPodcastImage(audioService.getEpisode().getPodcastID());
                                 pds.closeDb();
 

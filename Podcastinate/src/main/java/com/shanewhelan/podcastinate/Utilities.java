@@ -72,7 +72,7 @@ public class Utilities {
 
     public static void savePodcastToDb(Context context, Podcast podcast, boolean isNewFeed) {
         PodcastDataSource dataSource = new PodcastDataSource(context.getApplicationContext());
-        dataSource.openDb();
+        dataSource.openDbForWriting();
         int podcastID;
 
         if (isNewFeed) {

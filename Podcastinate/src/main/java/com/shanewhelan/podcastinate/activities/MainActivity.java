@@ -57,10 +57,10 @@ TODO: Delete Podcasts
 TODO: Populate is Listened DB entry
 TODO: Persistent music notification
 TODO: Click RSS link to go to Podcastinate
+TODO: Set back button to go to right activities
 
 BUGS:
 TODO: BUG download service, no notification on retry
-TODO: Back button exiting to other apps
 */
 
 public class MainActivity extends Activity {
@@ -77,17 +77,6 @@ public class MainActivity extends Activity {
         this.setTitle("Podcasts");
         setContentView(R.layout.activity_main);
 
-        Intent incomingIntent = getIntent();
-        if(incomingIntent != null) {
-            if(incomingIntent.getAction() != null){
-                if(incomingIntent.getAction().equals(Utilities.ACTION_SUBSCRIBE)) {
-                    // Received URL to subscribe to now process it
-                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
-                    downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
-                }
-            }
-        }
-
         // TODO: Dev only, take out for release
         try {
             copyAppDbToDownloadFolder();
@@ -95,9 +84,9 @@ public class MainActivity extends Activity {
             Utilities.logException(e);
         }
 
-        dataSource = new PodcastDataSource(this);
+        dataSource = new PodcastDataSource(getApplicationContext());
 
-        dataSource.openDb();
+        dataSource.openDbForReading();
         allPodcastNames = dataSource.getAllPodcastTitles();
         String[] fromColumns = new String[]{PodcastEntry.TITLE};
         int[] toViews = new int[]{R.id.podcastName};
@@ -121,6 +110,17 @@ public class MainActivity extends Activity {
 
         mProgressBar1 = (ProgressBar) findViewById(R.id.smoothProgressBar);
         mProgressBar1.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
+
+        Intent incomingIntent = getIntent();
+        if(incomingIntent != null) {
+            if(incomingIntent.getAction() != null){
+                if(incomingIntent.getAction().equals(Utilities.ACTION_SUBSCRIBE)) {
+                    // Received URL to subscribe to now process it
+                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
+                    downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
+                }
+            }
+        }
     }
 
     @Override
@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
                 refreshAction = item;
                 if (Utilities.testNetwork(this)) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-                    dataSource.openDb();
+                    dataSource.openDbForReading();
                     HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();
                     dataSource.closeDb();
                     RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
@@ -166,7 +166,7 @@ public class MainActivity extends Activity {
     }
 
     public void updateListOfPodcasts() {
-        dataSource.openDb();
+        dataSource.openDbForReading();
         allPodcastNames = dataSource.getAllPodcastTitles();
         simpleCursorAdapter.swapCursor(allPodcastNames);
         simpleCursorAdapter.notifyDataSetChanged();
@@ -176,7 +176,7 @@ public class MainActivity extends Activity {
     public void wipeDb() {
         // Only to be left in developer version - wipes db and external storage directory
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-        pds.openDb();
+        pds.openDbForWriting();
         pds.upgradeDB();
         pds.closeDb();
         Log.d("sw9", Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
 
     public String[] getPodcastLinks() {
         PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-        dataSource.openDb();
+        dataSource.openDbForReading();
         String[] listOfLinks = dataSource.getAllPodcastLinks();
         dataSource.closeDb();
         return listOfLinks;
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
                 XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
                 if (xmlPullParser != null) {
                     PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                    pds.openDb();
+                    pds.openDbForReading();
                     String enclosure = pds.getMostRecentEpisodeEnclosure(podcastTitle);
                     pds.closeDb();
                     Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
@@ -360,6 +360,7 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
+
             mProgressBar1.setVisibility(View.VISIBLE);
         }
 

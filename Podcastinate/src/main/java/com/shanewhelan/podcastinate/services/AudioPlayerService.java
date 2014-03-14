@@ -124,7 +124,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 }
                 // Retrieve episode information from database
                 PodcastDataSource pds = new PodcastDataSource(this);
-                pds.openDb();
+                pds.openDbForReading();
                 episode = pds.getEpisodeMetaData(directory);
                 pds.closeDb();
 
@@ -262,7 +262,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void saveEpisodeTimer(boolean isFinished) {
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-        pds.openDb();
+        pds.openDbForWriting();
         if(isFinished) {
             episode.setCurrentTime(0);
             pds.updateCurrentTime(episode.getEpisodeID(), 0);

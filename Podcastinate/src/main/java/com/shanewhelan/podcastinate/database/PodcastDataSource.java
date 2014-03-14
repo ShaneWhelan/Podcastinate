@@ -24,8 +24,18 @@ public class PodcastDataSource {
         databaseHelper = new DatabaseHelper(context);
     }
 
-    public void openDb() {
+    public void openDbForWriting() {
         database = databaseHelper.getWritableDatabase();
+        if (database != null) {
+            database.enableWriteAheadLogging();
+        }
+    }
+
+    public void openDbForReading() {
+        database = databaseHelper.getReadableDatabase();
+        if (database != null) {
+            database.enableWriteAheadLogging();
+        }
     }
 
     public void closeDb() {
