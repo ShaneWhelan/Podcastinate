@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:orientation="vertical">
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
     <ProgressBar
         android:id="@+id/smoothProgressBar"
@@ -11,13 +12,11 @@
         style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
         android:visibility="gone"
         android:layout_marginTop="-6dp"
-        android:layout_marginBottom="-6dp"
-        />
+        android:layout_marginBottom="-6dp" />
 
     <ListView
         android:id="@+id/listOfPodcasts"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#edf2ed"/>
-
 </LinearLayout>

@@ -77,7 +77,6 @@ public class PodcastViewerActivity extends Activity {
             } else if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
                 updateListOfPodcasts();
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
-
                 // Verify this is the right thing to do
                 updateListOfPodcasts();
                 syncControlPanel();
@@ -88,15 +87,13 @@ public class PodcastViewerActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_podcast_viewer);
-
         Intent intent = getIntent();
         podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
         // Set title of current activity to Podcast Name
         setTitle(podcastTitle);
+        setContentView(R.layout.activity_podcast_viewer);
 
         listView = (ListView) findViewById(R.id.listOfEpisodes);
-
         initialiseAdapter(podcastTitle);
         initialiseMultiSelect();
         initialiseButtons();
@@ -105,7 +102,7 @@ public class PodcastViewerActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView textView = (TextView) view.findViewById(R.id.episodeName);
-                if (textView.getText() != null) {
+                if(textView.getText() != null) {
                     Log.d("sw9", textView.getText().toString());
                 }
             }
@@ -113,13 +110,20 @@ public class PodcastViewerActivity extends Activity {
         listView.setOnItemClickListener(itemCLickHandler);
     }
 
-    public void initialiseAdapter(String podcastName) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.podcast_viewer, menu);
+        return true;
+    }
+
+    public void initialiseAdapter(String podcastTitle) {
         dataSource = new PodcastDataSource(getApplicationContext());
         dataSource.openDbForReading();
         // Get Podcast ID so we can get all episode names from DB
-        podcastID = dataSource.getPodcastID(podcastName);
+        podcastID = dataSource.getPodcastID(podcastTitle);
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
-        episodeAdapter = new EpisodeAdapter(this, episodeCursor,
+        episodeAdapter = new EpisodeAdapter(getApplicationContext(), episodeCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
         listView.setAdapter(episodeAdapter);
         dataSource.closeDb();
@@ -127,6 +131,7 @@ public class PodcastViewerActivity extends Activity {
 
     public void initialiseMultiSelect() {
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
         listView.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 
             private int nr = 0;
@@ -177,6 +182,7 @@ public class PodcastViewerActivity extends Activity {
                 // Here you can make any necessary updates to the activity when
                 // the CAB is removed. By default, selected items are deselected/unchecked.
                 episodeAdapter.clearSelection();
+                nr = 0;
             }
 
             @Override
@@ -256,7 +262,6 @@ public class PodcastViewerActivity extends Activity {
                                         if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
                                             // Stop Service as the deleted podcast is also currently playing
                                             audioService.stopService();
-                                            // TODO BUG HERE CONTROL PANEL NOT FUCKING OFF
                                             syncControlPanel();
                                         }
                                     }
@@ -342,13 +347,11 @@ public class PodcastViewerActivity extends Activity {
 
     public class EpisodeAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
-        public Context context;
         private SparseBooleanArray sparseBArray = new SparseBooleanArray();
 
         public EpisodeAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
             layoutInflater = LayoutInflater.from(context);
-            this.context = context;
         }
 
         @Override
@@ -437,48 +440,53 @@ public class PodcastViewerActivity extends Activity {
         @Override
         public void onClick(View v) {
             int viewId = v.getId();
-
-            if (viewId == R.id.download_icon) {
-                // Download the podcast
-                // TODO: Send more info to downloader service
-                Intent intent = new Intent(context, DownloadActivity.class);
-                intent.putExtra(Utilities.EPISODE_TITLE, v.getContentDescription());
-                intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                context.startActivity(intent);
-            } else if (viewId == R.id.play_icon) {
-                if (audioService == null) {
-                    // Play podcast in a background service
-                    Intent intent = new Intent(context, AudioPlayerService.class);
-                    intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                    intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                    intent.setAction(AudioPlayerService.ACTION_PLAY);
-                    // Investigate Correct flag and compatibility
-                    context.startService(intent);
-                    context.bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
-                } else {
-                    if (v.getContentDescription() != null) {
-                        String directory = v.getContentDescription().toString();
-                        if (audioService.getPlayer() != null) {
-                            if (audioService.getDirectory().equals(directory)) {
-                                audioService.resumeMedia();
+            // TODO CONTEXT
+            if(getApplicationContext() != null) {
+                if (viewId == R.id.download_icon) {
+                    // Download the podcast
+                    // TODO: Send more info to downloader service
+                    if(Utilities.testNetwork(getApplicationContext())) {
+                        Intent intent = new Intent(getApplicationContext(), DownloadActivity.class);
+                        intent.putExtra(Utilities.EPISODE_TITLE, v.getContentDescription());
+                        intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+                        getApplicationContext().startActivity(intent);
+                    }
+                } else if (viewId == R.id.play_icon) {
+                    if (audioService == null) {
+                        // Play podcast in a background service
+                        Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
+                        intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                        intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+                        intent.setAction(AudioPlayerService.ACTION_PLAY);
+                        // Investigate Correct flag and compatibility
+                        getApplicationContext().startService(intent);
+                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+                    } else {
+                        if (v.getContentDescription() != null) {
+                            String directory = v.getContentDescription().toString();
+                            if (audioService.getPlayer() != null) {
+                                if (audioService.getDirectory().equals(directory)) {
+                                    audioService.resumeMedia();
+                                } else {
+                                    audioService.playNewEpisode(directory, true, podcastTitle);
+                                }
                             } else {
-                                audioService.playNewEpisode(directory, true, podcastTitle);
+                                // Play pressed while other app is playing
+                                Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
+                                intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                                intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+                                intent.setAction(AudioPlayerService.ACTION_PLAY);
+                                // Investigate Correct flag and compatibility
+                                getApplicationContext().startService(intent);
+                                getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+
                             }
-                        } else {
-                            // Play pressed while other app is playing
-                            Intent intent = new Intent(context, AudioPlayerService.class);
-                            intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                            intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                            intent.setAction(AudioPlayerService.ACTION_PLAY);
-                            // Investigate Correct flag and compatibility
-                            context.startService(intent);
-                            context.bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                         }
                     }
+                } else if (viewId == R.id.pause_icon) {
+                    // Pause podcast in background service
+                    audioService.pauseMedia(false);
                 }
-            } else if (viewId == R.id.pause_icon) {
-                // Pause podcast in background service
-                audioService.pauseMedia(false);
             }
         }
     }

@@ -24,7 +24,7 @@
     <string name="manualUrlEntry">Manual URL Entry</string>
     <string name="searchButton">Search</string>
     <string name="searchServerSideAPI">Search Server Side API</string>
-    <string name="title_activity_main_activity2">MainActivity</string>
+    <string name="title_activity_search_results">No Results</string>
     <string name="searchResultImage">searchResultImage</string>
 
 </resources>

@@ -49,7 +49,6 @@ public class DownloadService extends IntentService {
         String directory = null;
         try {
             // Download podcast file
-            // TODO Test Network
             HttpGet httpGet = new HttpGet(new URI(enclosure));
             HttpClient httpClient = new DefaultHttpClient();
             HttpResponse httpResponse = httpClient.execute(httpGet);

@@ -102,9 +102,9 @@ public class PodcastDataSource {
         return podcastId;
     }
 
-    public Cursor getAllPodcastTitles() {
+    public Cursor getAllPodcastTitlesImages() {
         return database.rawQuery("SELECT " + PodcastEntry.PODCAST_ID
-                + " as _id, title FROM " + PodcastEntry.TABLE_NAME, null);
+                + " as _id, title, image_directory FROM " + PodcastEntry.TABLE_NAME, null);
     }
 
     public String[] getAllPodcastLinks() {

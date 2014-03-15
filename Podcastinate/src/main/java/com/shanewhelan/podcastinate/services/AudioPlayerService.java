@@ -252,11 +252,14 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public void stopService() {
         // Only called on podcast delete, kind of hack to make sure the control panel goes away
-        if(player.isPlaying()) {
-            pauseMedia(false);
+        if(player != null) {
+            if(player.isPlaying()) {
+                pauseMedia(false);
+            }
             player.release();
             player = null;
         }
+
         stopSelf();
     }
 
