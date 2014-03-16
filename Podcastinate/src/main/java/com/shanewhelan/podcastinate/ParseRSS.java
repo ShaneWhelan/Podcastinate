@@ -134,8 +134,20 @@ public class ParseRSS {
             }
 
             podcast.setEpisodeList(episodeList);
-            
-            downloadEpisodeImage(podcast.getImageDirectory(), podcast.getTitle(), true);
+
+            // Remove special characters from the filename
+            String podcastTitle = podcast.getTitle().replaceAll("[^A-Za-z0-9]", "");
+            podcast.setDirectory(Environment.getExternalStorageDirectory().toString() + Utilities.DIRECTORY + "/" + podcastTitle);
+            // Check if default directory exists and create it if not.
+            File externalStorage = new File(podcast.getDirectory() + "/images");
+
+            if (!externalStorage.isDirectory()) {
+                if (!externalStorage.mkdirs()) {
+                    throw new IOException("Could not create directory");
+                }
+            }
+
+            downloadEpisodeImage(podcast.getImageDirectory(), podcast.getDirectory() + "/images", true);
             return podcast;
         } catch (XmlPullParserException e) {
             Utilities.logException(e);
@@ -238,6 +250,7 @@ public class ParseRSS {
                     }
                 }
             }
+
             podcast.setEpisodeList(episodeList);
             return podcast;
         } catch (XmlPullParserException e) {
@@ -248,7 +261,7 @@ public class ParseRSS {
         return null;
     }
 
-    public void downloadEpisodeImage(String imageDirectory, String title, boolean isNewImage) {
+    public void downloadEpisodeImage(String imageDirectory, String directory, boolean isNewImage) {
         try {
             // Download podcast file
             HttpGet httpGet = new HttpGet(new URI(imageDirectory));
@@ -262,19 +275,10 @@ public class ParseRSS {
                 throw new HTTPConnectionException(responseCode);
             }
 
-            // Remove special characters from the filename
-            title = title.replaceAll("[^A-Za-z0-9]", "-");
-            // Check if default directory exists and create it if not.
-            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY + "/" + title + "/images");
-
-            if (!externalStorage.isDirectory()) {
-                if (!externalStorage.mkdirs()) {
-                    throw new IOException("Could not create directory");
-                }
-            }
+            File externalStorage = new File(directory);
 
             String filename = "";
-            // Get image file extension
+            // Get image file name
             if (imageDirectory != null) {
                 filename = imageDirectory.substring(imageDirectory.lastIndexOf("/"));
             }
@@ -308,9 +312,9 @@ public class ParseRSS {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Utilities.logException(e);
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+            Utilities.logException(e);
         }
     }
 }

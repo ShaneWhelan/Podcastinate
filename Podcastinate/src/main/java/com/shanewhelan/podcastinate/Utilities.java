@@ -26,17 +26,18 @@ public class Utilities {
     public static final String ACTION_PAUSE = "com.shanewhelan.podcastinate.PAUSE";
     public static final String ACTION_DOWNLOADED = "com.shanewhelan.podcastinate.DOWNLOADED";
     public static final String ACTION_FINISHED = "com.shanewhelan.podcastinate.FINISHED";
-    public static final String PODCAST_TITLE = "podcast_title";
-    public static final String EPISODE_TITLE = "episode_title";
+    public static final String PODCAST_TITLE = "e_title";
+    public static final String EPISODE_TITLE = "p_title";
     public static final String ENCLOSURE = "enclosure";
     public static final String DIRECTORY = "/Podcastinate";
     public static final int INVALID_URL = -1;
     public static final int FAILURE_TO_PARSE = 0;
     public static final int SUCCESS = 1;
     public static final int NO_NEW_EPISODES = 2;
-    public static final String SEARCH_RESULT = "search_result";
+    public static final String SEARCH_RESULT = "result";
     public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
-    public static final String PODCAST_LINK = "podcast_link";
+    public static final String PODCAST_LINK = "link";
+    public static String PODCAST_ID = "id";
 
     public Utilities() {
 
@@ -77,9 +78,9 @@ public class Utilities {
 
         if (isNewFeed) {
             podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
-                    podcast.getImageDirectory(), podcast.getLink());
+                    podcast.getImageDirectory(), podcast.getDirectory(), podcast.getLink());
         } else {
-            podcastID = dataSource.getPodcastID(podcast.getTitle());
+            podcastID = dataSource.getPodcastIDWithLink(podcast.getLink());
         }
 
         // If podcast inserted correctly now insert episodes too

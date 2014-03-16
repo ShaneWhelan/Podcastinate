@@ -21,6 +21,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     PodcastEntry.TITLE + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.DESCRIPTION + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
+                    PodcastEntry.DIRECTORY + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.LINK + TEXT_TYPE + " UNIQUE" +
                     " );";
     private static final String SQL_CREATE_EPISODE =

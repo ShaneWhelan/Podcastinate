@@ -19,17 +19,19 @@ public class DownloadActivity extends Activity {
     }
 
     private void addToDownloadQueue() {
-        String podcastTitle = this.getIntent().getStringExtra(Utilities.PODCAST_TITLE);
-        String episodeTitle = this.getIntent().getStringExtra(Utilities.EPISODE_TITLE);
+        String podcastTitle = getIntent().getStringExtra(Utilities.PODCAST_TITLE);
+        String episodeTitle = getIntent().getStringExtra(Utilities.EPISODE_TITLE);
+        int podcastID = getIntent().getIntExtra(Utilities.PODCAST_ID, -1);
 
         PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
         dataSource.openDbForReading();
-        String enclosure = dataSource.getEpisodeEnclosure(podcastTitle, episodeTitle);
-        Intent intent = new Intent(this, DownloadService.class);
+        String enclosure = dataSource.getEpisodeEnclosure(podcastID, episodeTitle);
+        Intent intent = new Intent(getApplicationContext(), DownloadService.class);
         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         intent.putExtra(Utilities.EPISODE_TITLE, episodeTitle);
+        intent.putExtra(Utilities.PODCAST_ID, podcastID);
         intent.putExtra(Utilities.ENCLOSURE, enclosure);
-        this.startService(intent);
+        startService(intent);
         dataSource.closeDb();
     }
 }

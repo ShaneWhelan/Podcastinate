@@ -7,7 +7,6 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,9 +43,11 @@ public class DownloadService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
         String episodeTitle = intent.getStringExtra(Utilities.EPISODE_TITLE);
+        int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
         String enclosure = intent.getStringExtra(Utilities.ENCLOSURE);
 
         String directory = null;
+
         try {
             // Download podcast file
             HttpGet httpGet = new HttpGet(new URI(enclosure));
@@ -65,8 +66,13 @@ public class DownloadService extends IntentService {
                 throw new HTTPConnectionException(responseCode);
             }
 
+            String podcastDirectory;
+            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+            pds.openDbForReading();
+            podcastDirectory = pds.getPodcastDirectory(podcastID);
+            pds.closeDb();
             // Check if default directory exists and create it if not.
-            File externalStorage = new File(Environment.getExternalStorageDirectory() + Utilities.DIRECTORY);
+            File externalStorage = new File(podcastDirectory);
             if (!externalStorage.isDirectory()) {
                 if (!externalStorage.mkdir()) {
                     throw new IOException("Could not create directory");
@@ -77,7 +83,7 @@ public class DownloadService extends IntentService {
             // on the performance cost of this.
             String fileNameTemp;
             if (episodeTitle != null) {
-                fileNameTemp = episodeTitle.replaceAll("[^A-Za-z0-9-]", "-");
+                fileNameTemp = episodeTitle.replaceAll("[^A-Za-z0-9-]", "");
             } else {
                 Random rand = new Random();
                 fileNameTemp = "R" + rand.nextInt(10000000);
@@ -93,7 +99,8 @@ public class DownloadService extends IntentService {
 
             // Get podcast file extension
             if (enclosure != null) {
-                filename = filename + enclosure.substring(enclosure.lastIndexOf("."));
+                int indexOfExtension = enclosure.lastIndexOf(".");
+                filename = filename + enclosure.substring(indexOfExtension, indexOfExtension + 4);
             }
 
             Log.d("sw9", filename);
@@ -149,10 +156,6 @@ public class DownloadService extends IntentService {
                 builder.setContentText("Download Complete").setProgress(0, 0, false);
                 notifyManager.notify(0, builder.build());
 
-                Intent iComplete = new Intent();
-                iComplete.setAction(Utilities.ACTION_DOWNLOADED);
-                sendBroadcast(iComplete);
-
                 // Tidy up and close streams
                 inputStream.close();
                 fileOutput.close();
@@ -161,10 +164,14 @@ public class DownloadService extends IntentService {
                     directory = podcastFile.getAbsolutePath();
                 }
 
-                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+
                 pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
                 pds.closeDb();
+
+                Intent iComplete = new Intent();
+                iComplete.setAction(Utilities.ACTION_DOWNLOADED);
+                sendBroadcast(iComplete);
             }
         } catch (MalformedURLException e) {
             Utilities.logException(e);

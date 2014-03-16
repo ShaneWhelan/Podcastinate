@@ -16,6 +16,7 @@ public final class PodcastContract {
         public static final String TITLE = "title";
         public static final String DESCRIPTION = "description";
         public static final String IMAGE_DIRECTORY = "image_directory";
+        public static final String DIRECTORY = "directory";
         public static final String LINK = "link";
     }
 

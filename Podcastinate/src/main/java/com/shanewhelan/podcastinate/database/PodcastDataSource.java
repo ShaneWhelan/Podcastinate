@@ -42,12 +42,13 @@ public class PodcastDataSource {
         databaseHelper.close();
     }
 
-    public long insertPodcast(String title, String description, String imageDirectory, String link) {
+    public long insertPodcast(String title, String description, String imageDirectory, String directory, String link) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(PodcastEntry.TITLE, title);
         contentValues.put(PodcastEntry.DESCRIPTION, description);
         contentValues.put(PodcastEntry.IMAGE_DIRECTORY, imageDirectory);
+        contentValues.put(PodcastEntry.DIRECTORY, directory);
         contentValues.put(PodcastEntry.LINK, link);
 
         long result = 0;
@@ -89,11 +90,12 @@ public class PodcastDataSource {
                 EpisodeEntry.EPISODE_ID + " = \"" + episodeID + "\"", null);
     }
 
-    public int getPodcastID(String podcastTitle) {
+    // Used to verify if podcast exists already or not
+    public int getPodcastIDWithLink(String podcastLink) {
         int podcastId = 0;
         String[] columns = {PodcastEntry.PODCAST_ID};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
-                PodcastEntry.TITLE + " = \"" + podcastTitle + "\"", null, null, null, null);
+                PodcastEntry.LINK + " = \"" + podcastLink + "\"", null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
             podcastId = cursor.getInt(cursor.getColumnIndex(PodcastEntry.PODCAST_ID));
@@ -103,8 +105,9 @@ public class PodcastDataSource {
     }
 
     public Cursor getAllPodcastTitlesImages() {
-        return database.rawQuery("SELECT " + PodcastEntry.PODCAST_ID
-                + " as _id, title, image_directory FROM " + PodcastEntry.TABLE_NAME, null);
+        return database.rawQuery("SELECT " + PodcastEntry.PODCAST_ID + " as _id, " +
+                PodcastEntry.TITLE + ", " + PodcastEntry.IMAGE_DIRECTORY + ", " +
+                PodcastEntry.DIRECTORY + " FROM " + PodcastEntry.TABLE_NAME, null);
     }
 
     public String[] getAllPodcastLinks() {
@@ -139,16 +142,16 @@ public class PodcastDataSource {
     }
 
 
-    public HashMap<String, String> getAllPodcastTitlesLinks() {
-        String[] columns = {PodcastEntry.LINK, PodcastEntry.TITLE};
+    public HashMap<String, String> getAllPodcastIDsLinks() {
+        String[] columns = {PodcastEntry.PODCAST_ID, PodcastEntry.LINK};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null, null);
 
         HashMap<String, String> listOfPodcasts = new HashMap<String, String>(cursor.getCount());
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 listOfPodcasts.put(
-                        cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE)),
-                        cursor.getString(cursor.getColumnIndex(PodcastEntry.LINK)));
+                        String.valueOf(cursor.getString(cursor.getColumnIndex(PodcastEntry.PODCAST_ID))),
+                        cursor.getString(cursor.getColumnIndex(PodcastEntry.LINK)) );
             }
             cursor.close();
         }
@@ -167,9 +170,8 @@ public class PodcastDataSource {
                 + " = " + podcastID + " ORDER BY " + EpisodeEntry.PUB_DATE + " DESC", null);
     }
 
-    public String getEpisodeEnclosure(String podcastTitle, String episodeTitle) {
+    public String getEpisodeEnclosure(int podcastId, String episodeTitle) {
         String enclosure = "";
-        int podcastId = getPodcastID(podcastTitle);
         String[] columns = {EpisodeEntry.ENCLOSURE};
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
                 EpisodeEntry.TITLE + " = \"" + episodeTitle + "\" AND " +
@@ -222,8 +224,7 @@ public class PodcastDataSource {
     }
 
     // Used for comparing to the latest episode on refresh
-    public String getMostRecentEpisodeEnclosure(String podcastTitle) {
-        int podcastID = getPodcastID(podcastTitle);
+    public String getMostRecentEpisodeEnclosure(int podcastID) {
         String[] columns = {EpisodeEntry.ENCLOSURE};
 
         Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
@@ -238,5 +239,38 @@ public class PodcastDataSource {
 
     public void upgradeDB() {
         databaseHelper.onUpgrade(databaseHelper.getWritableDatabase(), 1, 2);
+    }
+
+    public int deletePodcast(int podcastID) {
+        database.delete(EpisodeEntry.TABLE_NAME, EpisodeEntry.PODCAST_ID  + " = \"" + podcastID + "\"", null);
+        return database.delete(PodcastEntry.TABLE_NAME, PodcastEntry.PODCAST_ID + " = \"" + podcastID + "\"", null);
+    }
+
+    public String getPodcastTitle(int podcastID) {
+        String[] columns = {PodcastEntry.TITLE};
+        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
+                PodcastEntry.PODCAST_ID + " = \"" + podcastID + "\"",
+                null, null, null, null);
+        String podcastTitle = "";
+        if (cursor != null) {
+            cursor.moveToFirst();
+            podcastTitle = cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE));
+            cursor.close();
+        }
+        return podcastTitle;
+    }
+
+    public String getPodcastDirectory(int podcastID) {
+        String[] columns = {PodcastEntry.DIRECTORY};
+        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
+                PodcastEntry.PODCAST_ID + " = \"" + podcastID + "\"",
+                null, null, null, null);
+        String podcastDirectory = "";
+        if (cursor != null) {
+            cursor.moveToFirst();
+            podcastDirectory = cursor.getString(cursor.getColumnIndex(PodcastEntry.DIRECTORY));
+            cursor.close();
+        }
+        return podcastDirectory;
     }
 }

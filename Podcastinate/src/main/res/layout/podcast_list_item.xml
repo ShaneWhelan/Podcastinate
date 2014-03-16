@@ -6,13 +6,14 @@
               android:weightSum="1.0"
               android:descendantFocusability="blocksDescendants">
 
-    <ImageView
+    <ImageButton
         android:id="@+id/podcastArtImage"
         android:layout_width="0dp"
         android:layout_height="65dp"
         android:layout_weight="0.2"
         android:contentDescription="@string/searchResultImage"
         android:background="@drawable/on_click_selector"
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"/>
     <TextView

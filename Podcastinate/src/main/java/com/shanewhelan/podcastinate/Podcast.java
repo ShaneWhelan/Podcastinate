@@ -6,11 +6,12 @@ import java.util.ArrayList;
  * Created by Shane on 29/10/13. Podcastinate.
  */
 public class Podcast {
-    String title;
-    String description;
-    String imageDirectory;
-    String link;
-    ArrayList<Episode> episodeList = new ArrayList<Episode>();
+    private String title;
+    private String description;
+    private String imageDirectory;
+    private String directory;
+    private String link;
+    private ArrayList<Episode> episodeList = new ArrayList<Episode>();
 
     public String getTitle() {
         return title;
@@ -50,5 +51,13 @@ public class Podcast {
 
     public void setEpisodeList(ArrayList<Episode> episodeList) {
         this.episodeList = episodeList;
+    }
+
+    public String getDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(String directory) {
+        this.directory = directory;
     }
 }

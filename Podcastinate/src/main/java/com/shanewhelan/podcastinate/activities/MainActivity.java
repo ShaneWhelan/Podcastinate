@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -22,7 +23,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.AdapterView.*;
 import android.widget.CursorAdapter;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -56,10 +57,8 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 FEATURES:
-TODO: Add picture beside podcast name
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
-TODO: Delete Subscription
 TODO: Persistent notification while episode plays
 TODO: Click RSS link to go to Podcastinate
 TODO: Set back button to go to right activities
@@ -76,7 +75,7 @@ TODO: Help Section
 TODO: Add Paging to podcast viewing activity to
 BUGS:
 TODO: BUG download service, no retry on download fail
-TODO: Multi select number of selected is fucked
+TODO: Up button on Downloads Page crash
 */
 
 public class MainActivity extends Activity {
@@ -99,7 +98,6 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             Utilities.logException(e);
         }
-
 
         listView = (ListView) findViewById(R.id.listOfPodcasts);
         initialiseAdapter();
@@ -145,7 +143,7 @@ public class MainActivity extends Activity {
                 if (Utilities.testNetwork(getApplicationContext())) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
                     dataSource.openDbForReading();
-                    HashMap<String, String> podcastInfo = dataSource.getAllPodcastTitlesLinks();
+                    HashMap<String, String> podcastInfo = dataSource.getAllPodcastIDsLinks();
                     dataSource.closeDb();
                     RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
                     if (podcastInfo != null) {
@@ -214,7 +212,7 @@ public class MainActivity extends Activity {
             // Respond to clicks on the actions in the CAB
             switch (item.getItemId()) {
                 case R.id.delete_selection_action:
-                    //deleteSelectedItems();
+                    deleteSelectedItems();
                     updateListOfPodcasts();
                     nr = 0;
                     podcastAdapter.clearSelection();
@@ -238,15 +236,10 @@ public class MainActivity extends Activity {
         OnItemClickListener itemCLickHandler = new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(view.getId() == R.id.podcastArtImage) {
-                    ImageView imageView = (ImageView) view.findViewById(R.id.podcastArtImage);
-                    if (imageView.getContentDescription() != null) {
-                        viewPodcast(imageView.getContentDescription().toString());
-                    }
-                } else {
-                    TextView textView = (TextView) view.findViewById(R.id.podcastName);
-                    if (textView.getText() != null) {
-                        viewPodcast(textView.getText().toString());
+                TextView textView = (TextView) view.findViewById(R.id.podcastName);
+                if (textView.getText() != null) {
+                    if(textView.getContentDescription() != null) {
+                        viewPodcast(textView.getText().toString(), textView.getContentDescription().toString());
                     }
                 }
             }
@@ -286,8 +279,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void viewPodcast(String podcastChosen) {
+    public void viewPodcast(String podcastChosen, String podcastID) {
         Intent intent = new Intent(this, PodcastViewerActivity.class);
+        intent.putExtra(Utilities.PODCAST_ID, podcastID);
         intent.putExtra(Utilities.PODCAST_TITLE, podcastChosen);
         startActivity(intent);
     }
@@ -323,6 +317,51 @@ public class MainActivity extends Activity {
         }
         return linkUnique;
     }
+
+    private void deleteSelectedItems() {
+        SQLiteCursor cursor;
+        SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
+        if (booleanArray != null) {
+            // Open connection to DB
+            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+            pds.openDbForWriting();
+            // Loop through the SparseBooleanArray and delete directory from db and file from disk
+            for (int i = 0; i < booleanArray.size(); i++) {
+                if (booleanArray.valueAt(i)) {
+                    cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
+                    if (cursor != null) {
+                        String podcastDirectory = cursor.getString(cursor.getColumnIndex(PodcastEntry.DIRECTORY));
+                        try {
+                            File directoryToDelete = new File(podcastDirectory);
+                            if(directoryToDelete.exists()) {
+                                String deleteCmd = "rm -r " + podcastDirectory;
+                                Runtime runtime = Runtime.getRuntime();
+                                runtime.exec(deleteCmd);
+                                pds.deletePodcast(cursor.getInt(cursor.getColumnIndex("_id")));
+                                // TODO Control Panel integration
+                                /*
+                                if(audioService != null) {
+                                    if(audioService.getEpisode() != null) {
+                                        if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
+                                            // Stop Service as the deleted podcast is also currently playing
+                                            audioService.stopService();
+                                            syncControlPanel();
+                                        }
+                                    }
+                                }
+                                */
+                            }
+
+                        } catch(Exception e) {
+                            Utilities.logException(e);
+                        }
+                    }
+                }
+            }
+            pds.closeDb();
+        }
+    }
+
 
     public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
 
@@ -392,7 +431,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        private int refreshRSSFeed(String url, String podcastTitle) throws IOException {
+        private int refreshRSSFeed(String url, String podcastID) throws IOException {
             InputStream inputStream = null;
             int response;
             try {
@@ -418,7 +457,8 @@ public class MainActivity extends Activity {
                 if (xmlPullParser != null) {
                     PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
                     pds.openDbForReading();
-                    String enclosure = pds.getMostRecentEpisodeEnclosure(podcastTitle);
+                    String enclosure = pds.getMostRecentEpisodeEnclosure(Integer.parseInt(podcastID));
+                    String podcastTitle = pds.getPodcastTitle(Integer.parseInt(podcastID));
                     pds.closeDb();
                     Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
 
@@ -564,20 +604,18 @@ public class MainActivity extends Activity {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             String podcastTitle = cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE));
+            int podcastID = cursor.getInt(cursor.getColumnIndex("_id"));
             TextView podcastTitleView = (TextView) view.findViewById(R.id.podcastName);
             podcastTitleView.setText(podcastTitle);
+            podcastTitleView.setContentDescription("" + podcastID);
 
             // Load images in background thread
-            ImageView podcastImage = (ImageView) view.findViewById(R.id.podcastArtImage);
+            ImageButton podcastImage = (ImageButton) view.findViewById(R.id.podcastArtImage);
+            podcastImage.setScaleType(ImageButton.ScaleType.CENTER_INSIDE);
             podcastImage.setContentDescription(podcastTitle);
 
             LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
             loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
-            /*
-            // Set up listeners or nothing will work
-            podcastTitleView.setOnClickListener(this);
-            podcastImage.setOnClickListener(this);
-            */
         }
 
         @Override
@@ -615,15 +653,22 @@ public class MainActivity extends Activity {
 
         @Override
         public void onClick(View view) {
-
+            /*
+            if(view.getId() == R.id.podcastArtImage) {
+                ImageButton imageButton = (ImageButton) view.findViewById(R.id.podcastArtImage);
+                if (imageButton.getContentDescription() != null) {
+                    //viewPodcast(imageButton.getContentDescription().toString());
+                }
+            }
+            */
         }
     }
 
     public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
-        private ImageView ImageView;
+        private ImageButton ImageButton;
 
-        public LoadImageFromDisk(ImageView imageView) {
-            this.ImageView = imageView;
+        public LoadImageFromDisk(ImageButton imageButton) {
+            this.ImageButton = imageButton;
         }
 
         protected Bitmap doInBackground(String... directory) {
@@ -631,7 +676,7 @@ public class MainActivity extends Activity {
         }
 
         protected void onPostExecute(Bitmap result) {
-            ImageView.setImageBitmap(result);
+            ImageButton.setImageBitmap(result);
         }
     }
 }

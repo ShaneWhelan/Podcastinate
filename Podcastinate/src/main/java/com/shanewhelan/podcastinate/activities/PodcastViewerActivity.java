@@ -89,12 +89,14 @@ public class PodcastViewerActivity extends Activity {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
+        podcastID = Integer.parseInt(intent.getStringExtra(Utilities.PODCAST_ID));
+
         // Set title of current activity to Podcast Name
         setTitle(podcastTitle);
         setContentView(R.layout.activity_podcast_viewer);
 
         listView = (ListView) findViewById(R.id.listOfEpisodes);
-        initialiseAdapter(podcastTitle);
+        initialiseAdapter();
         initialiseMultiSelect();
         initialiseButtons();
 
@@ -117,11 +119,10 @@ public class PodcastViewerActivity extends Activity {
         return true;
     }
 
-    public void initialiseAdapter(String podcastTitle) {
+    public void initialiseAdapter() {
         dataSource = new PodcastDataSource(getApplicationContext());
         dataSource.openDbForReading();
         // Get Podcast ID so we can get all episode names from DB
-        podcastID = dataSource.getPodcastID(podcastTitle);
         episodeCursor = dataSource.getAllEpisodeNames(podcastID);
         episodeAdapter = new EpisodeAdapter(getApplicationContext(), episodeCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
@@ -245,7 +246,7 @@ public class PodcastViewerActivity extends Activity {
             // Open connection to DB
             PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
             pds.openDbForWriting();
-            // Loop through the SparseBooleanArray and delete directory form db and file from disk
+            // Loop through the SparseBooleanArray and delete directory from db and file from disk
             for (int i = 0; i < booleanArray.size(); i++) {
                 if (booleanArray.valueAt(i)) {
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
@@ -449,7 +450,8 @@ public class PodcastViewerActivity extends Activity {
                         Intent intent = new Intent(getApplicationContext(), DownloadActivity.class);
                         intent.putExtra(Utilities.EPISODE_TITLE, v.getContentDescription());
                         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                        getApplicationContext().startActivity(intent);
+                        intent.putExtra(Utilities.PODCAST_ID, podcastID);
+                        startActivity(intent);
                     }
                 } else if (viewId == R.id.play_icon) {
                     if (audioService == null) {
@@ -459,8 +461,8 @@ public class PodcastViewerActivity extends Activity {
                         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                         intent.setAction(AudioPlayerService.ACTION_PLAY);
                         // Investigate Correct flag and compatibility
-                        getApplicationContext().startService(intent);
-                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+                        startService(intent);
+                        bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
                     } else {
                         if (v.getContentDescription() != null) {
                             String directory = v.getContentDescription().toString();
@@ -477,8 +479,8 @@ public class PodcastViewerActivity extends Activity {
                                 intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                                 intent.setAction(AudioPlayerService.ACTION_PLAY);
                                 // Investigate Correct flag and compatibility
-                                getApplicationContext().startService(intent);
-                                getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
+                                startService(intent);
+                                bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
 
                             }
                         }
