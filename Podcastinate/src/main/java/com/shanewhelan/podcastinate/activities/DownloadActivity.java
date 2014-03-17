@@ -14,7 +14,6 @@ import com.shanewhelan.podcastinate.services.DownloadService;
 
 public class DownloadActivity extends Activity {
     private String podcastTitle;
-    private String episodeTitle;
     private int podcastID;
 
     @Override
@@ -26,7 +25,7 @@ public class DownloadActivity extends Activity {
 
     private void addToDownloadQueue() {
         podcastTitle = getIntent().getStringExtra(Utilities.PODCAST_TITLE);
-        episodeTitle = getIntent().getStringExtra(Utilities.EPISODE_TITLE);
+        String episodeTitle = getIntent().getStringExtra(Utilities.EPISODE_TITLE);
         podcastID = getIntent().getIntExtra(Utilities.PODCAST_ID, -1);
 
         PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());

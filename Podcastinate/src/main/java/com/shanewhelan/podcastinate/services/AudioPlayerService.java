@@ -151,9 +151,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             Log.d("sw9", "Current time: " + episode.getCurrentTime());
             player.seekTo(episode.getCurrentTime());
         }
-
-        sendBroadcast(new Intent (Utilities.ACTION_PLAY));
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+        sendBroadcast(new Intent (Utilities.ACTION_PLAY));
     }
 
     @Override
@@ -180,6 +179,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public void onDestroy() {
+        // So that we don't keep listening for audio changes
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.abandonAudioFocus(this);
         if(disconnectJackR != null && player != null) {
             if(player.isPlaying()) {
                 unregisterReceiver(disconnectJackR);
@@ -221,7 +223,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
 
-        // Unreproducible bug Receiver not registered
+        // Sometimes receiver is not registered fixed most causes of this
         try {
             unregisterReceiver(disconnectJackR);
         } catch (Exception e) {
@@ -233,8 +235,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         player.start();
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        sendBroadcast(new Intent(Utilities.ACTION_PLAY));
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+        sendBroadcast(new Intent(Utilities.ACTION_PLAY));
     }
 
     public void setProgress(int progress) {

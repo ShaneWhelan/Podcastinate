@@ -10,10 +10,20 @@
                   android:layout_height="match_parent"
                   android:layout_weight="1"
                   android:id="@+id/playerWindow">
+
+        <TextView
+            android:id="@+id/playerEpisodeTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp" />
+
         <ImageView
             android:id="@+id/podcastImage"
-            android:layout_width="350dp"
-            android:layout_height="350dp"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/podcastImage"/>

@@ -251,6 +251,8 @@ public class PlayerActivity extends Activity {
             if (audioService.getPlayer() != null) {
                 // Change title of activity
                 setTitle(audioService.getPodcastTitle());
+                TextView playerEpisodeTitle = (TextView) findViewById(R.id.playerEpisodeTitle);
+                playerEpisodeTitle.setText(audioService.getEpisode().getTitle());
                 controlPanel.setVisibility(View.VISIBLE);
                 new Thread(
                         new Runnable() {
