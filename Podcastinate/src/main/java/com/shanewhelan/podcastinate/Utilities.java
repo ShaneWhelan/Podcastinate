@@ -38,6 +38,7 @@ public class Utilities {
     public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
     public static final String PODCAST_LINK = "link";
     public static String PODCAST_ID = "id";
+    public static String VIEW_PODCAST = "view";
 
     public Utilities() {
 

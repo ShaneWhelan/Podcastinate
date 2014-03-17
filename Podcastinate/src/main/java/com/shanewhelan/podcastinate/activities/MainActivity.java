@@ -57,6 +57,7 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 FEATURES:
+TODO: Control Panel Design
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Persistent notification while episode plays
@@ -239,7 +240,7 @@ public class MainActivity extends Activity {
                 TextView textView = (TextView) view.findViewById(R.id.podcastName);
                 if (textView.getText() != null) {
                     if(textView.getContentDescription() != null) {
-                        viewPodcast(textView.getText().toString(), textView.getContentDescription().toString());
+                        viewPodcast(textView.getText().toString(), Integer.parseInt(textView.getContentDescription().toString()));
                     }
                 }
             }
@@ -279,8 +280,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void viewPodcast(String podcastChosen, String podcastID) {
+    public void viewPodcast(String podcastChosen, int podcastID) {
         Intent intent = new Intent(this, PodcastViewerActivity.class);
+        intent.setAction(Utilities.VIEW_PODCAST);
         intent.putExtra(Utilities.PODCAST_ID, podcastID);
         intent.putExtra(Utilities.PODCAST_TITLE, podcastChosen);
         startActivity(intent);

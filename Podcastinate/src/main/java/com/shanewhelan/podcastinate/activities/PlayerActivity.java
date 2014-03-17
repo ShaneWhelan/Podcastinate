@@ -315,7 +315,9 @@ public class PlayerActivity extends Activity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 Intent upIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+                upIntent.setAction(Utilities.VIEW_PODCAST);
                 upIntent.putExtra(Utilities.PODCAST_TITLE, audioService.getPodcastTitle());
+                upIntent.putExtra(Utilities.PODCAST_ID, audioService.getEpisode().getPodcastID());
                 if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
                     TaskStackBuilder.create(this)
                             // Add all of this activity's parents to the back stack
@@ -343,7 +345,9 @@ public class PlayerActivity extends Activity {
     public void returnToPodcastViewer(String podcastTitle) {
         // Start Podcast Viewer Activity and
         Intent backIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
+        backIntent.setAction(Utilities.VIEW_PODCAST);
         backIntent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+        backIntent.putExtra(Utilities.PODCAST_ID, audioService.getEpisode().getPodcastID());
         TaskStackBuilder.create(getApplicationContext())
                 // Make sure that we return to PodcastViewerActivity and set the MainActivity as the back button action
                 .addNextIntentWithParentStack(backIntent).startActivities();

@@ -89,7 +89,8 @@ public class PodcastViewerActivity extends Activity {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
-        podcastID = Integer.parseInt(intent.getStringExtra(Utilities.PODCAST_ID));
+        podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
+
 
         // Set title of current activity to Podcast Name
         setTitle(podcastTitle);
