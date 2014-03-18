@@ -26,5 +26,7 @@
     <string name="searchServerSideAPI">Search Server Side API</string>
     <string name="title_activity_search_results">No Results</string>
     <string name="searchResultImage">searchResultImage</string>
+    <string name="title_activity_recommendation">RecommendationActivity</string>
+    <string name="action_recommend">Recommend</string>
 
 </resources>

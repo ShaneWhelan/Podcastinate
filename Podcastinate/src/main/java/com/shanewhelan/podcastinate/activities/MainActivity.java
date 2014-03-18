@@ -65,9 +65,9 @@ TODO: Click RSS link to go to Podcastinate
 TODO: Set back button to go to right activities
 MAJOR FEATURES:
 TODO: Cloud backup
-TODO: User Settings
 TODO: Car Mode
 TODO: Recommendations
+TODO: User Suggested Podcasts
 TODO: User Settings
 LOW PRIORITY:
 TODO: Populate isListened DB entry
@@ -75,8 +75,10 @@ TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
 TODO: Add Paging to podcast viewing activity to
 BUGS:
-TODO: BUG download service, no retry on download fail
-TODO: Up button on Downloads Page crash
+TODO: Download service, no retry on download fail
+
+Test Case:
+If you have no subscriptions and you look for recommendations
 */
 
 public class MainActivity extends Activity {
@@ -138,6 +140,10 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.action_settings:
 
+                return true;
+            case R.id.action_recommend:
+                Intent recommendIntent = new Intent(getApplicationContext(), RecommendationActivity.class);
+                startActivity(recommendIntent);
                 return true;
             case R.id.action_refresh:
                 refreshAction = item;

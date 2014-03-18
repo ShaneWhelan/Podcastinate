@@ -11,6 +11,9 @@ import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 
 /**
@@ -157,6 +160,22 @@ public class PodcastDataSource {
         }
         return listOfPodcasts;
     }
+
+    public JSONArray getAllPodcastTitles() {
+        String[] columns = {PodcastEntry.TITLE};
+        Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null, null);
+
+        if (cursor != null) {
+            JSONArray similarJson = new JSONArray();
+            while (cursor.moveToNext()) {
+                similarJson.put(cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE)));
+            }
+            cursor.close();
+            return similarJson;
+        }
+        return null;
+    }
+
 
     public Cursor getAllEpisodeNames(int podcastID) {
         return database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID +
