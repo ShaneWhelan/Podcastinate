@@ -161,14 +161,14 @@ public class PodcastDataSource {
         return listOfPodcasts;
     }
 
-    public JSONArray getAllPodcastTitles() {
-        String[] columns = {PodcastEntry.TITLE};
+    public JSONArray getAllPodcastLinksJson() {
+        String[] columns = {PodcastEntry.LINK};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns, null, null, null, null, null);
 
         if (cursor != null) {
             JSONArray similarJson = new JSONArray();
             while (cursor.moveToNext()) {
-                similarJson.put(cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE)));
+                similarJson.put(cursor.getString(cursor.getColumnIndex(PodcastEntry.LINK)));
             }
             cursor.close();
             return similarJson;

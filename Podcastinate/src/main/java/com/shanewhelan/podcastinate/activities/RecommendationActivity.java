@@ -1,14 +1,23 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 
+import com.shanewhelan.podcastinate.DownloadImagesAsyncTask;
 import com.shanewhelan.podcastinate.R;
-import com.shanewhelan.podcastinate.SearchResult;
+import com.shanewhelan.podcastinate.RecommendResult;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
@@ -28,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RecommendationActivity extends Activity {
+    private RecommendResult[] recommendResults;
+    private Bitmap[] bitmapList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,12 +67,12 @@ public class RecommendationActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class QueryRecommendationAPI extends AsyncTask<String, Void, SearchResult[]> {
+    public class QueryRecommendationAPI extends AsyncTask<String, Void, RecommendResult[]> {
         @Override
-        protected SearchResult[] doInBackground(String... urls) {
+        protected RecommendResult[] doInBackground(String... urls) {
             PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
             pds.openDbForReading();
-            JSONArray titlesJson = pds.getAllPodcastTitles();
+            JSONArray titlesJson = pds.getAllPodcastLinksJson();
             pds.closeDb();
             if(titlesJson != null) {
                 try {
@@ -74,7 +85,6 @@ public class RecommendationActivity extends Activity {
                     // Crucial to set the encoding to UTF-8 as that is the encoding of Play Framework
                     StringEntity se = new StringEntity(jsonToSend.toString(), "UTF-8");
                     getRecommendations.setEntity(se);
-
                     getRecommendations.setHeader("Content-type", "application/json");
 
                     HttpClient httpClient = new DefaultHttpClient();
@@ -85,27 +95,24 @@ public class RecommendationActivity extends Activity {
                     // Convert InputSteam to String and then store the JSon result in an Array
                     JSONObject jsonResult = new JSONObject(Utilities.convertInputStreamToStringV2(jsonInputStream));
                     JSONArray resultArray = jsonResult.getJSONArray("result");
-                    SearchResult[] searchResults = new SearchResult[resultArray.length()];
+                    recommendResults = new RecommendResult[resultArray.length()];
                     for(int i = 0; i < resultArray.length(); i++) {
                         JSONObject currentJsonNode = resultArray.getJSONObject(i);
-                        SearchResult currentSearchNode = new SearchResult();
-                        currentSearchNode.setTitle(currentJsonNode.getString("podcastTitle"));
-                        currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
-                        currentSearchNode.setLink(currentJsonNode.getString("link"));
+                        RecommendResult currentRecommendNode = new RecommendResult();
+                        currentRecommendNode.setTitle(currentJsonNode.getString("podcastTitle"));
+                        currentRecommendNode.setImageLink(currentJsonNode.getString("imageLink"));
+                        currentRecommendNode.setLink(currentJsonNode.getString("link"));
+                        // Now add genres to object
+                        JSONArray genreArray = currentJsonNode.getJSONArray("genres");
+                        List<String> genresToSave = new ArrayList<String>(genreArray.length());
+                        for(int j = 0; j < genreArray.length(); j++) {
+                            genresToSave.add(genreArray.getString(j));
+                        }
+                        currentRecommendNode.setGenres(genresToSave);
 
-                        /*
-                        TODO Sort out this bug
-                            JSONArray genreArray = currentJsonNode.getJSONArray("genres");
-                            List<String> genresToSave = new ArrayList<String>(genreArray.length());
-                            for(int j = 0; j < genreArray.length(); j++) {
-                                genresToSave.add(genreArray.getString(j));
-                            }
-
-                            currentSearchNode.setGenres(genresToSave);
-                        */
-                        searchResults[i] = currentSearchNode;
+                        recommendResults[i] = currentRecommendNode;
                     }
-                    return searchResults;
+                    return recommendResults;
                 } catch (JSONException e) {
                     Utilities.logException(e);
                 } catch (ClientProtocolException e) {
@@ -118,9 +125,80 @@ public class RecommendationActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(SearchResult[] resultsArray) {
-            for (SearchResult aResultsArray : resultsArray) {
-                Log.d("sw9", "Result array " + aResultsArray.getTitle());
+        protected void onPostExecute(RecommendResult[] resultsArray) {
+            if(resultsArray != null) {
+                bitmapList = new Bitmap[resultsArray.length];
+
+                ListView recommendationList = (ListView) findViewById(R.id.listOfRecommendations);
+                RecommendationAdapter searchResultAdapter = new RecommendationAdapter(getApplicationContext(), R.layout.recommendation_item, R.id.recommendationPodcastTitle, resultsArray);
+                recommendationList.setAdapter(searchResultAdapter);
+                if(resultsArray.length > 1) {
+                    setTitle(resultsArray.length + " Podcasts Found");
+                } else {
+                    setTitle(resultsArray.length + " Podcast Found");
+                }
+
+            }
+        }
+    }
+
+    public class RecommendationAdapter extends ArrayAdapter<RecommendResult> implements View.OnClickListener{
+
+        public RecommendationAdapter(Context context, int resource, int textViewResource, RecommendResult[] objects) {
+            super(context, resource, textViewResource, objects);
+        }
+
+        private void bindView(int position, View view) {
+            RecommendResult recommendResult = super.getItem(position);
+            if (recommendResult != null) {
+                // Load image into thumbnail slot asynchronously
+                ImageView thumbNail = (ImageView) view.findViewById(R.id.recommendationImage);
+                thumbNail.setContentDescription("" + position);
+                thumbNail.setOnClickListener(this);
+                // Check if bitmap is stored already
+                if(bitmapList.length > position) {
+                    if(bitmapList[position] == null) {
+                        DownloadImagesAsyncTask downloadImage = new DownloadImagesAsyncTask(thumbNail, position, bitmapList);
+                        downloadImage.execute(recommendResult.getImageLink());
+                    } else {
+                        thumbNail.setImageBitmap(bitmapList[position]);
+                    }
+                } else {
+                    DownloadImagesAsyncTask downloadImage = new DownloadImagesAsyncTask(thumbNail, position, bitmapList);
+                    downloadImage.execute(recommendResult.getImageLink());
+                }
+
+                // Update text view for this result
+                TextView podcastTitle = (TextView) view.findViewById(R.id.recommendationPodcastTitle);
+                podcastTitle.setOnClickListener(this);
+                if(podcastTitle != null) {
+                    podcastTitle.setText(recommendResult.getTitle());
+                    podcastTitle.setContentDescription("" + position);
+                }
+            }
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            //convertView = layoutInflater.inflate(R.layout.activity_search_results, parent, false);
+            // Adapter handles setting up rows
+            View view = super.getView(position, convertView, parent);
+            bindView(position, view);
+            if (view != null) {
+                view.setBackgroundColor(getResources().getColor(android.R.color.background_light));
+            }
+            return view;
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(v.getContentDescription() != null){
+                int position = Integer.parseInt(v.getContentDescription().toString());
+                // Start New Subscribe Activity
+                Intent subscribe = new Intent(getApplicationContext(), MainActivity.class);
+                subscribe.setAction(Utilities.ACTION_SUBSCRIBE);
+                subscribe.putExtra(Utilities.PODCAST_LINK, recommendResults[position].getLink());
+                startActivity(subscribe);
             }
         }
     }

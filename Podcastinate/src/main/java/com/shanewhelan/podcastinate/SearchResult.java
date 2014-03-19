@@ -2,10 +2,6 @@ package com.shanewhelan.podcastinate;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Shane on 09/03/14. Podcastinate.
  */
@@ -25,7 +21,6 @@ public class SearchResult implements Parcelable{
         imageLink = parcel.readString();
         link = parcel.readString();
         description = parcel.readString();
-        //parcel.readStringList(genres);
     }
 
     public String getTitle() {
@@ -52,22 +47,10 @@ public class SearchResult implements Parcelable{
         this.link = link;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
     public void setDescription(String description) {
         this.description = description;
     }
-/*
-    public List<String> getGenres() {
-        return genres;
-    }
 
-    public void setGenres(List<String> genres) {
-        this.genres = genres;
-    }
-*/
     @Override
     public int describeContents() {
         return 0;
@@ -79,7 +62,6 @@ public class SearchResult implements Parcelable{
         parcel.writeString(imageLink);
         parcel.writeString(link);
         parcel.writeString(description);
-        //parcel.writeStringList(genres);
     }
 
     public static final Parcelable.Creator<SearchResult> CREATOR = new Parcelable.Creator<SearchResult>() {

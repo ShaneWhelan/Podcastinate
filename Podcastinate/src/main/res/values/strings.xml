@@ -30,5 +30,6 @@
     <string name="action_recommend">Recommend</string>
     <string name="searchPodcastsHint">Search for Podcasts</string>
     <string name="enterURLHint">Enter (or cut/paste) URL</string>
+    <string name="recommendationImage">recommendationImage</string>
 
 </resources>

@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,18 +34,57 @@ import java.net.URISyntaxException;
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
  */
 public class SubscribeActivity extends Activity {
+    private TextView subscribeUrl;
+    private TextView searchText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.subscribe_activity);
+        setContentView(R.layout.activity_subscribe);
+
+        searchText = (TextView) findViewById(R.id.edit_text_search_arguments);
+        subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
+
+        searchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(EditorInfo.IME_ACTION_SEARCH == actionId){
+                    if(Utilities.testNetwork(getApplicationContext())) {
+                        searchAPI(searchText);
+                    }
+                }
+                return false;
+            }
+        });
+
+        subscribeUrl.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(EditorInfo.IME_ACTION_GO == actionId) {
+                    if(Utilities.testNetwork(getApplicationContext())) {
+                        if(subscribeUrl.getText() != null) {
+                            if(subscribeUrl.getText().length() > 0) {
+                                Intent subscribeIntent = new Intent(getApplicationContext(), MainActivity.class);
+                                subscribeIntent.setAction(Utilities.ACTION_SUBSCRIBE);
+                                subscribeIntent.putExtra(Utilities.PODCAST_LINK, subscribeUrl.getText().toString());
+                                startActivity(subscribeIntent);
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        });
 
         Button searchButton = (Button) findViewById(R.id.button_search);
         searchButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                TextView searchText = (TextView) findViewById(R.id.edit_text_search_arguments);
-                if (Utilities.testNetwork(getApplicationContext())) {
-                    searchAPI(searchText);
+                if(Utilities.testNetwork(getApplicationContext())) {
+                    if(searchText.getText() != null) {
+                        if(searchText.getText().length() > 0) {
+                            searchAPI(searchText);
+                        }
+                    }
                 }
             }
         });
@@ -51,13 +92,14 @@ public class SubscribeActivity extends Activity {
         Button subscribeButton = (Button) findViewById(R.id.button_subscribe);
         subscribeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                TextView subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
-                if (Utilities.testNetwork(getApplicationContext())) {
-                    if (subscribeUrl.getText() != null) {
-                        Intent subscribeIntent = new Intent(getApplicationContext(), MainActivity.class);
-                        subscribeIntent.setAction(Utilities.ACTION_SUBSCRIBE);
-                        subscribeIntent.putExtra(Utilities.PODCAST_LINK, subscribeUrl.getText().toString());
-                        startActivity(subscribeIntent);
+                if(Utilities.testNetwork(getApplicationContext())) {
+                    if(subscribeUrl.getText() != null) {
+                        if(subscribeUrl.getText().length() > 0) {
+                            Intent subscribeIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            subscribeIntent.setAction(Utilities.ACTION_SUBSCRIBE);
+                            subscribeIntent.putExtra(Utilities.PODCAST_LINK, subscribeUrl.getText().toString());
+                            startActivity(subscribeIntent);
+                        }
                     }
                 }
             }
@@ -73,9 +115,11 @@ public class SubscribeActivity extends Activity {
 
     public void searchAPI(TextView searchText) {
         if(searchText.getText() != null) {
-            // Query Podcast API for available podcasts and display them in a list.
-            QueryPodcastAPI queryPodcastAPI = new QueryPodcastAPI();
-            queryPodcastAPI.execute(searchText.getText().toString());
+            if(searchText.getText().length() > 0) {
+                // Query Podcast API for available podcasts and display them in a list.
+                QueryPodcastAPI queryPodcastAPI = new QueryPodcastAPI();
+                queryPodcastAPI.execute(searchText.getText().toString());
+            }
         }
     }
 

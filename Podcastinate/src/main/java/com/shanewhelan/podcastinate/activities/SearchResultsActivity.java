@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,7 +40,7 @@ public class SearchResultsActivity extends Activity {
 
         if (parcelableArray != null) {
             resultArray = Arrays.copyOf(parcelableArray, parcelableArray.length, SearchResult[].class);
-            Log.d("sw9", "Result Array length: " + resultArray.length);
+
             bitmapList = new Bitmap[resultArray.length];
 
             ListView searchList = (ListView) findViewById(R.id.listOfSearchResults);
@@ -136,7 +135,6 @@ public class SearchResultsActivity extends Activity {
                 startActivity(subscribe);
             }
         }
-
     }
 
     private class DownloadImageAsyncTask extends AsyncTask<String, Void, Bitmap> {
