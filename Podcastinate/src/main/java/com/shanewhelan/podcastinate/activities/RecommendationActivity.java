@@ -92,12 +92,17 @@ public class RecommendationActivity extends Activity {
                         currentSearchNode.setTitle(currentJsonNode.getString("podcastTitle"));
                         currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
                         currentSearchNode.setLink(currentJsonNode.getString("link"));
-                        JSONArray genreArray = currentJsonNode.getJSONArray("genres");
-                        List<String> genresToSave = new ArrayList<String>(genreArray.length());
-                        for(int j = 0; j < genreArray.length(); j++) {
-                            genresToSave.add(genreArray.getString(j));
-                        }
-                        currentSearchNode.setGenres(genresToSave);
+
+                        /*
+                        TODO Sort out this bug
+                            JSONArray genreArray = currentJsonNode.getJSONArray("genres");
+                            List<String> genresToSave = new ArrayList<String>(genreArray.length());
+                            for(int j = 0; j < genreArray.length(); j++) {
+                                genresToSave.add(genreArray.getString(j));
+                            }
+
+                            currentSearchNode.setGenres(genresToSave);
+                        */
                         searchResults[i] = currentSearchNode;
                     }
                     return searchResults;

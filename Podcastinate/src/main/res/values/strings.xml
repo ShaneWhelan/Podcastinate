@@ -28,5 +28,7 @@
     <string name="searchResultImage">searchResultImage</string>
     <string name="title_activity_recommendation">RecommendationActivity</string>
     <string name="action_recommend">Recommend</string>
+    <string name="searchPodcastsHint">Search for Podcasts</string>
+    <string name="enterURLHint">Enter (or cut/paste) URL</string>
 
 </resources>

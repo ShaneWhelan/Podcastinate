@@ -17,6 +17,7 @@
         android:id="@+id/edit_text_search_arguments"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:hint="@string/searchPodcastsHint"
         android:inputType="textUri"/>
 
     <Button
@@ -37,6 +38,7 @@
         android:id="@+id/edit_text_feed_url"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:hint="@string/enterURLHint"
         android:inputType="textUri"/>
 
     <Button

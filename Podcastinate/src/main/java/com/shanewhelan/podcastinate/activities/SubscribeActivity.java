@@ -8,6 +8,8 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.SearchResult;
 import com.shanewhelan.podcastinate.Utilities;
@@ -36,26 +38,20 @@ public class SubscribeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.subscribe_activity);
 
-
-
-        final TextView searchText = (TextView) findViewById(R.id.edit_text_search_arguments);
-        searchText.setHint("Search Podcasts");
         Button searchButton = (Button) findViewById(R.id.button_search);
         searchButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                TextView searchText = (TextView) findViewById(R.id.edit_text_search_arguments);
                 if (Utilities.testNetwork(getApplicationContext())) {
                     searchAPI(searchText);
                 }
             }
         });
 
-        final TextView subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
-        // Test Line
-        subscribeUrl.setText("http://www.tested.com/podcast-xml/this-is-only-a-test/");
-
         Button subscribeButton = (Button) findViewById(R.id.button_subscribe);
         subscribeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                TextView subscribeUrl = (TextView) findViewById(R.id.edit_text_feed_url);
                 if (Utilities.testNetwork(getApplicationContext())) {
                     if (subscribeUrl.getText() != null) {
                         Intent subscribeIntent = new Intent(getApplicationContext(), MainActivity.class);
@@ -96,18 +92,24 @@ public class SubscribeActivity extends Activity {
 
                 // Convert InputSteam to String and then store the JSon result in an Array
                 JSONObject jsonResult = new JSONObject(Utilities.convertInputStreamToStringV2(jsonInputStream));
-                JSONArray resultArray = jsonResult.getJSONArray("result");
-                SearchResult[] searchResults = new SearchResult[resultArray.length()];
-                for(int i = 0; i < resultArray.length(); i++) {
-                    JSONObject currentJsonNode = resultArray.getJSONObject(i);
-                    SearchResult currentSearchNode = new SearchResult();
-                    currentSearchNode.setTitle(currentJsonNode.getString("title"));
-                    currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
-                    currentSearchNode.setLink(currentJsonNode.getString("link"));
-                    currentSearchNode.setDescription(currentJsonNode.getString("description"));
-                    searchResults[i] = currentSearchNode;
+
+                // Check for no results first before parsing
+                if(jsonResult.getInt("resultCount") > 0) {
+                    // We have at least one result so parse the JSON
+                    JSONArray resultArray = jsonResult.getJSONArray("result");
+                    SearchResult[] searchResults = new SearchResult[resultArray.length()];
+                    for(int i = 0; i < resultArray.length(); i++) {
+                        JSONObject currentJsonNode = resultArray.getJSONObject(i);
+                        SearchResult currentSearchNode = new SearchResult();
+                        currentSearchNode.setTitle(currentJsonNode.getString("title"));
+                        currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
+                        currentSearchNode.setLink(currentJsonNode.getString("link"));
+                        currentSearchNode.setDescription(currentJsonNode.getString("description"));
+                        searchResults[i] = currentSearchNode;
+                    }
+                    return searchResults;
                 }
-                return searchResults;
+                return null;
             } catch (URISyntaxException e) {
                 Utilities.logException(e);
             } catch (ClientProtocolException e) {
@@ -131,9 +133,15 @@ public class SubscribeActivity extends Activity {
 
         @Override
         protected void onPostExecute(SearchResult[] resultsArray) {
-            Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
-            searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, resultsArray);
-            startActivity(searchResultsIntent);
+            if(resultsArray != null) {
+                Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
+                searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, resultsArray);
+                startActivity(searchResultsIntent);
+            } else {
+                if (getApplicationContext() != null) {
+                    Toast.makeText(getApplicationContext(), "No Results", Toast.LENGTH_LONG).show();
+                }
+            }
         }
     }
 }

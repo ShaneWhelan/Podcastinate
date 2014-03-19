@@ -58,6 +58,9 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 /*
 FEATURES:
 TODO: Control Panel Design
+TODO: Confirmation dialog box on subscribe
+TODO: ProgressBar on all internet activity
+TODO: Lock screen widget
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Persistent notification while episode plays
@@ -69,6 +72,7 @@ TODO: Car Mode
 TODO: Recommendations
 TODO: User Suggested Podcasts
 TODO: User Settings
+TODO: Statistics of user playback
 LOW PRIORITY:
 TODO: Populate isListened DB entry
 TODO: Streaming: Must keep WIFI from sleeping
@@ -76,6 +80,7 @@ TODO: Help Section
 TODO: Add Paging to podcast viewing activity to
 BUGS:
 TODO: Download service, no retry on download fail
+TODO: Refresh Bug
 
 Test Case:
 If you have no subscriptions and you look for recommendations
