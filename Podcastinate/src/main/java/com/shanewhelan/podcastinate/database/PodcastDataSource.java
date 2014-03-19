@@ -12,7 +12,6 @@ import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
