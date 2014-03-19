@@ -3,6 +3,7 @@ package com.shanewhelan.podcastinate.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.graphics.Bitmap;
@@ -10,6 +11,9 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
@@ -22,6 +26,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.AdapterView.*;
+import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -93,6 +98,11 @@ public class MainActivity extends Activity {
     private Cursor podcastCursor;
     private static PodcastAdapter podcastAdapter;
     private static ListView listView;
+    private String[] drawerLisViewArray;
+    private ListView drawerListView;
+
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
@@ -106,6 +116,33 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             Utilities.logException(e);
         }
+
+        // Retrieve items from strings.xml
+        drawerLisViewArray = getResources().getStringArray(R.array.nav_drawer_titles);
+
+        drawerListView = (ListView) findViewById(R.id.left_drawer);
+
+        // Initialise adapter for the drawer
+        drawerListView.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_listview_item, drawerLisViewArray));
+
+
+        // App Icon
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer,
+                R.string.openDrawerText, R.string.closeDrawerText);
+
+        // Set actionBarDrawerToggle as the DrawerListener
+        drawerLayout.setDrawerListener(actionBarDrawerToggle);
+
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        // just styling option add shadow the right edge of the drawer
+        drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
+        drawerListView.setOnItemClickListener(new DrawerListViewClickListener());
+
 
         listView = (ListView) findViewById(R.id.listOfPodcasts);
         initialiseAdapter();
@@ -136,19 +173,31 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        actionBarDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Update drawer icon now that we have created everything
+        actionBarDrawerToggle.syncState();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (actionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.add_feed_action:
-                Intent intent = new Intent(this, SubscribeActivity.class);
+                Intent intent = new Intent(getApplicationContext(), SubscribeActivity.class);
                 startActivity(intent);
                 return true;
             case R.id.action_settings:
 
-                return true;
-            case R.id.action_recommend:
-                Intent recommendIntent = new Intent(getApplicationContext(), RecommendationActivity.class);
-                startActivity(recommendIntent);
                 return true;
             case R.id.action_refresh:
                 refreshAction = item;
@@ -690,6 +739,26 @@ public class MainActivity extends Activity {
 
         protected void onPostExecute(Bitmap result) {
             ImageButton.setImageBitmap(result);
+        }
+    }
+
+    private class DrawerListViewClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long id) {
+            String selectedText = (((TextView)view).getText()).toString();
+            if(selectedText.equals("Podcasts")){
+                drawerLayout.closeDrawer(drawerListView);
+            } else if(selectedText.equals("Find Similar")) {
+                Intent recommendIntent = new Intent(getApplicationContext(), RecommendationActivity.class);
+                startActivity(recommendIntent);
+            } else if(selectedText.equals("Subscribe")) {
+                Intent intent = new Intent(getApplicationContext(), SubscribeActivity.class);
+                startActivity(intent);
+            } else if(selectedText.equals("Player")) {
+                Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
+                startActivity(intent);
+            }
+            drawerLayout.closeDrawer(drawerListView);
         }
     }
 }
