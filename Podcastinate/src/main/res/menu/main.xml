@@ -8,7 +8,7 @@
 
     <item
         android:id="@+id/action_refresh"
-        android:icon="@drawable/refresh_icon_selector"
+        android:icon="@drawable/ic_action_refresh"
         android:title="@string/refresh_feed"
         android:showAsAction="ifRoom"/>
 

@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -62,15 +63,16 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 FEATURES:
+TODO: Count of number of new episodes
 TODO: Control Panel Design
 TODO: Confirmation dialog box on subscribe
-TODO: ProgressBar on all internet activity
 TODO: Lock screen widget
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Persistent notification while episode plays
 TODO: Click RSS link to go to Podcastinate
 TODO: Set back button to go to right activities
+TODO: Sleep Timer
 MAJOR FEATURES:
 TODO: Cloud backup
 TODO: Car Mode
@@ -86,9 +88,11 @@ TODO: Add Paging to podcast viewing activity to
 BUGS:
 TODO: Download service, no retry on download fail
 TODO: Refresh Bug
-
+TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
+TODO: CNET ALL podcasts feed is broken
+TODO: Investigate audio focus between podcastinate and PocketCasts. Live pocket casts switch fail
 Test Case:
-If you have no subscriptions and you look for recommendations
+TODO: If you have no subscriptions and you look for recommendations
 */
 
 public class MainActivity extends Activity {
@@ -358,7 +362,7 @@ public class MainActivity extends Activity {
             src.close();
             dst.close();
 
-            // MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
+            MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
         }
     }
 
@@ -522,11 +526,13 @@ public class MainActivity extends Activity {
                     String enclosure = pds.getMostRecentEpisodeEnclosure(Integer.parseInt(podcastID));
                     String podcastTitle = pds.getPodcastTitle(Integer.parseInt(podcastID));
                     pds.closeDb();
+                    Log.d("sw9", "PodcastTitle " + podcastTitle);
+                    Log.d("sw9", "enclosure " + enclosure);
                     Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
 
                     if (podcast != null) {
                         if (podcast.getEpisodeList().size() > 0) {
-                            Utilities.savePodcastToDb(getApplicationContext(), podcast, false);
+                            Utilities.savePodcastToDb(getApplicationContext(), podcast, url, false);
                             return Utilities.SUCCESS;
                         } else {
                             return Utilities.NO_NEW_EPISODES;
@@ -633,7 +639,7 @@ public class MainActivity extends Activity {
                     Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, url);
 
                     if (podcast != null) {
-                        Utilities.savePodcastToDb(getApplicationContext(), podcast, true);
+                        Utilities.savePodcastToDb(getApplicationContext(), podcast, "", true);
                         return Utilities.SUCCESS;
                     } else {
                         // Won't be false unless parser threw exception, causing podcast to be null
@@ -673,7 +679,7 @@ public class MainActivity extends Activity {
 
             // Load images in background thread
             ImageButton podcastImage = (ImageButton) view.findViewById(R.id.podcastArtImage);
-            podcastImage.setScaleType(ImageButton.ScaleType.CENTER_INSIDE);
+            //podcastImage.setScaleType(ImageButton.ScaleType.CENTER_INSIDE);
             podcastImage.setContentDescription(podcastTitle);
 
             LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
@@ -727,10 +733,10 @@ public class MainActivity extends Activity {
     }
 
     public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
-        private ImageButton ImageButton;
+        private ImageButton imageButton;
 
         public LoadImageFromDisk(ImageButton imageButton) {
-            this.ImageButton = imageButton;
+            this.imageButton = imageButton;
         }
 
         protected Bitmap doInBackground(String... directory) {
@@ -738,7 +744,7 @@ public class MainActivity extends Activity {
         }
 
         protected void onPostExecute(Bitmap result) {
-            ImageButton.setImageBitmap(result);
+            imageButton.setImageBitmap(result);
         }
     }
 

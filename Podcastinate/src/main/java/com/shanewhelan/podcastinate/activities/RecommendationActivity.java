@@ -10,9 +10,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.DownloadImagesAsyncTask;
@@ -36,12 +38,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
+
 public class RecommendationActivity extends Activity {
     private RecommendResult[] recommendResults;
     private Bitmap[] bitmapList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTitle("Loading...");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recommendation);
         QueryRecommendationAPI queryAPI = new QueryRecommendationAPI();
@@ -68,6 +73,16 @@ public class RecommendationActivity extends Activity {
     }
 
     public class QueryRecommendationAPI extends AsyncTask<String, Void, RecommendResult[]> {
+        private ProgressBar progressBar;
+
+        @Override
+        protected void onPreExecute() {
+            progressBar = (ProgressBar) findViewById(R.id.recommendationProgressBar);
+            progressBar.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
+
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
         @Override
         protected RecommendResult[] doInBackground(String... urls) {
             PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
@@ -126,6 +141,8 @@ public class RecommendationActivity extends Activity {
 
         @Override
         protected void onPostExecute(RecommendResult[] resultsArray) {
+            progressBar.setVisibility(View.GONE);
+
             if(resultsArray != null) {
                 bitmapList = new Bitmap[resultsArray.length];
 

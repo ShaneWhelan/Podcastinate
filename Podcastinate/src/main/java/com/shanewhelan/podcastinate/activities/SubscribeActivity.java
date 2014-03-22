@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
 /**
  * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
@@ -124,6 +128,15 @@ public class SubscribeActivity extends Activity {
     }
 
     public class QueryPodcastAPI extends AsyncTask<String, Void, SearchResult[]> {
+        private ProgressBar progressBar;
+
+        @Override
+        protected void onPreExecute() {
+            progressBar = (ProgressBar) findViewById(R.id.searchProgressBar);
+            progressBar.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
         @Override
         protected SearchResult[] doInBackground(String... urls) {
             String apiURL = "http://ec2-54-186-15-6.us-west-2.compute.amazonaws.com/API/search?podcastTitle=" + urls[0].replace(" ", "+");
@@ -177,6 +190,8 @@ public class SubscribeActivity extends Activity {
 
         @Override
         protected void onPostExecute(SearchResult[] resultsArray) {
+            progressBar.setVisibility(View.GONE);
+
             if(resultsArray != null) {
                 Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
                 searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, resultsArray);

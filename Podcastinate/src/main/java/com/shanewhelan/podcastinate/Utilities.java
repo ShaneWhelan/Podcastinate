@@ -72,7 +72,7 @@ public class Utilities {
         return false;
     }
 
-    public static void savePodcastToDb(Context context, Podcast podcast, boolean isNewFeed) {
+    public static void savePodcastToDb(Context context, Podcast podcast, String url, boolean isNewFeed) {
         PodcastDataSource dataSource = new PodcastDataSource(context.getApplicationContext());
         dataSource.openDbForWriting();
         int podcastID;
@@ -81,7 +81,7 @@ public class Utilities {
             podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
                     podcast.getImageDirectory(), podcast.getDirectory(), podcast.getLink());
         } else {
-            podcastID = dataSource.getPodcastIDWithLink(podcast.getLink());
+            podcastID = dataSource.getPodcastIDWithLink(url);
         }
 
         // If podcast inserted correctly now insert episodes too

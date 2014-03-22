@@ -20,8 +20,8 @@
 
         <ImageView
             android:id="@+id/podcastImage"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="360dp"
+            android:layout_height="360dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_centerVertical="true"
@@ -68,6 +68,7 @@
             android:id="@+id/rewind"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:scaleType="fitXY"
             android:background="@drawable/rewind_icon_selector"
             android:contentDescription="@string/rewindButton"/>
 
@@ -75,6 +76,7 @@
             android:id="@+id/mainPlayButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:scaleType="fitXY"
             android:background="@drawable/play_icon_selector"
             android:contentDescription="@string/mainPlayButton"/>
 
@@ -82,6 +84,7 @@
             android:id="@+id/mainPauseButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:scaleType="fitXY"
             android:background="@drawable/pause_icon_selector"
             android:visibility="gone"
             android:contentDescription="@string/ic_pause" />
@@ -90,6 +93,7 @@
             android:id="@+id/fastForward"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:scaleType="fitXY"
             android:background="@drawable/fast_forward_icon_selector"
             android:contentDescription="@string/fastForward"/>
     </LinearLayout>

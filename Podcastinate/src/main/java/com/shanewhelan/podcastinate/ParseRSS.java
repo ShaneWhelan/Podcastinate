@@ -217,7 +217,6 @@ public class ParseRSS {
             while (xmlPullParser.next() != XmlPullParser.END_DOCUMENT) {
                 String nodeName = xmlPullParser.getName();
                 if (xmlPullParser.getEventType() == XmlPullParser.START_TAG) {
-
                     if (nodeName.equals("item")) {
                         hasParentNodeItem = true;
                         episode = new Episode();
@@ -236,10 +235,14 @@ public class ParseRSS {
                             saveDuration(xmlPullParser, episode);
                         } else if (nodeName.equals("enclosure")) {
                             // Check if already exists in database and quit if it does.
-                            if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
-                                saveEnclosure(xmlPullParser, episode);
-                            } else {
-                                break;
+                            try {
+                                if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
+                                    saveEnclosure(xmlPullParser, episode);
+                                } else {
+                                    break;
+                                }
+                            } catch (Exception e) {
+
                             }
                         }
                     }

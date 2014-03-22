@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;
@@ -94,14 +95,20 @@ public class PodcastDataSource {
 
     // Used to verify if podcast exists already or not
     public int getPodcastIDWithLink(String podcastLink) {
-        int podcastId = 0;
+        Log.d("sw9", "Link " + podcastLink);
+        int podcastId = -1;
         String[] columns = {PodcastEntry.PODCAST_ID};
         Cursor cursor = database.query(PodcastEntry.TABLE_NAME, columns,
                 PodcastEntry.LINK + " = \"" + podcastLink + "\"", null, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            podcastId = cursor.getInt(cursor.getColumnIndex(PodcastEntry.PODCAST_ID));
-            cursor.close();
+        try {
+            if (cursor != null) {
+                cursor.moveToFirst();
+                podcastId = cursor.getInt(cursor.getColumnIndex(PodcastEntry.PODCAST_ID));
+                Log.d("sw9", "ID " + podcastId);
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Utilities.logException(e);
         }
         return podcastId;
     }

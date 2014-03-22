@@ -8,11 +8,11 @@
 
     <ImageButton
         android:id="@+id/podcastArtImage"
-        android:layout_width="0dp"
+        android:layout_width="65dp"
         android:layout_height="65dp"
-        android:layout_weight="0.2"
         android:contentDescription="@string/searchResultImage"
         android:background="@drawable/on_click_selector"
+        android:scaleType="fitXY"
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"/>
@@ -20,11 +20,24 @@
         android:id="@+id/podcastName"
         android:layout_width="0dp"
         android:layout_height="65dp"
-        android:layout_weight="0.8"
         android:paddingLeft="5dp"
         android:gravity="center_vertical"
         android:textColor="#4c4a4a"
         android:background="@drawable/on_click_selector"
         android:focusable="false"
-        android:focusableInTouchMode="false"/>
+        android:focusableInTouchMode="false"
+        android:layout_weight="0.9"/>
+
+    <TextView
+        android:id="@+id/numberOfNewEpisodesTextView"
+        android:layout_width="0dp"
+        android:layout_height="65dp"
+        android:paddingLeft="5dp"
+        android:gravity="center_vertical"
+        android:textColor="#4c4a4a"
+        android:background="@drawable/on_click_selector"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:text="10"
+        android:layout_weight="0.1" />
 </LinearLayout>
