@@ -439,8 +439,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-
     public class PodcastAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
         private SparseBooleanArray sparseBArray = new SparseBooleanArray();

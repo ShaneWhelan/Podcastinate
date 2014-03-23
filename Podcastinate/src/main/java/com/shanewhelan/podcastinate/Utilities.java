@@ -61,7 +61,8 @@ public class Utilities {
                         duration).show();
 
                 return false;
-            } else if (!networkInfo.isConnected()) {
+            } else //noinspection ConstantConditions
+                if (!networkInfo.isConnected()) {
                 // Alert the user that network is not available.
                 Log.i("sw9", "Connected but no internet access");
                 int duration = Toast.LENGTH_LONG;

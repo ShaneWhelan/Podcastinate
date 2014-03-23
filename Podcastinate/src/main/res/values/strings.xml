@@ -9,7 +9,6 @@
     <string name="title_activity_download">Downloads</string>
     <string name="action_add_feed">Add Feed</string>
     <string name="title_subscribe">Subscribe</string>
-    <string name="title_podcast_viewer">Podcast Viewer</string>
     <string name="title_podcasts">Podcasts</string>
     <string name="ic_play">PlayButton</string>
     <string name="ic_pause">PauseButton</string>
@@ -27,13 +26,13 @@
     <string name="title_activity_search_results">No Results</string>
     <string name="searchResultImage">searchResultImage</string>
     <string name="title_activity_recommendation">RecommendationActivity</string>
-    <string name="action_recommend">Recommend</string>
     <string name="searchPodcastsHint">Search for Podcasts</string>
     <string name="enterURLHint">Enter (or cut/paste) URL</string>
     <string name="recommendationImage">recommendationImage</string>
     <string name="openDrawerText">Menu</string>
     <string name="closeDrawerText">Podcasts</string>
     <string name="demo_refresh">Demo Refresh</string>
+    <string name="title_podcast_viewer">...</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

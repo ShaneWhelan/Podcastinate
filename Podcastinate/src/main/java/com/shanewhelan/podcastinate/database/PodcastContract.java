@@ -7,9 +7,6 @@ import android.provider.BaseColumns;
  */
 public final class PodcastContract {
 
-    public PodcastContract() {
-    }
-
     public static abstract class PodcastEntry implements BaseColumns {
         public static final String TABLE_NAME = "podcast";
         public static final String PODCAST_ID = "podcast_id";

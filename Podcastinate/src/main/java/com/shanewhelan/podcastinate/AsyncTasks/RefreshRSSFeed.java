@@ -2,7 +2,6 @@ package com.shanewhelan.podcastinate.asynctasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -53,7 +52,8 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
             int result;
             for (Object anEntrySet : entrySet) {
                 Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                result = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
+                result = refreshRSSFeed(mapEntry.getValue().toString(),
+                        Integer.parseInt(mapEntry.getKey().toString()));
                 resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
             }
             return resultMap;
@@ -102,7 +102,7 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
         }
     }
 
-    private int refreshRSSFeed(String url, String podcastID) throws IOException {
+    private int refreshRSSFeed(String url, int podcastID) throws IOException {
         InputStream inputStream = null;
         int response;
         try {
@@ -128,12 +128,12 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
             if (xmlPullParser != null) {
                 PodcastDataSource pds = new PodcastDataSource(context.getApplicationContext());
                 pds.openDbForReading();
-                String enclosure = pds.getMostRecentEpisodeEnclosure(Integer.parseInt(podcastID));
-                String podcastTitle = pds.getPodcastTitle(Integer.parseInt(podcastID));
+                String enclosure = pds.getMostRecentEpisodeEnclosure(podcastID);
+                String podcastTitle = pds.getPodcastTitle(podcastID);
+                int currentCountNew = pds.getCountNew(podcastID);
                 pds.closeDb();
-                Log.d("sw9", "PodcastTitle " + podcastTitle);
-                Log.d("sw9", "enclosure " + enclosure);
                 Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
+                podcast.setCountNew(currentCountNew + podcast.getCountNew());
 
                 if (podcast != null) {
                     if (podcast.getEpisodeList().size() > 0) {

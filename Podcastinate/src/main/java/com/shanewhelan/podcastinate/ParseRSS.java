@@ -62,7 +62,7 @@ public class ParseRSS {
         return null;
     }
 
-    public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String feedLink) throws DuplicatePodcastException {
+    public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String feedLink) {
         ArrayList<Episode> episodeList = new ArrayList<Episode>();
         try {
             podcast.setLink(feedLink);
@@ -179,8 +179,7 @@ public class ParseRSS {
         podcast.setImageDirectory(xmlPullParser.nextText());
     }
 
-    public void savePodcastItunesImage(XmlPullParser xmlPullParser) throws IOException,
-            XmlPullParserException {
+    public void savePodcastItunesImage(XmlPullParser xmlPullParser) throws XmlPullParserException {
         podcast.setImageDirectory(xmlPullParser.getAttributeValue(null, "href"));
     }
 
@@ -221,6 +220,7 @@ public class ParseRSS {
             boolean hasParentNodeItem = false;
             Episode episode = null;
             podcast.setTitle(podcastTitle);
+            int countNew = 0;
             // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
             xmlPullParser.require(XmlPullParser.START_TAG, null, "rss");
             while (xmlPullParser.next() != XmlPullParser.END_DOCUMENT) {
@@ -245,10 +245,14 @@ public class ParseRSS {
                         } else if (nodeName.equals("enclosure")) {
                             // Check if already exists in database and quit if it does.
                             try {
-                                if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
-                                    saveEnclosure(xmlPullParser, episode);
+                                if(mostRecentEpisodeEnclosure != null) {
+                                    if (!mostRecentEpisodeEnclosure.equals(xmlPullParser.getAttributeValue(null, "url"))) {
+                                        saveEnclosure(xmlPullParser, episode);
+                                    } else {
+                                        break;
+                                    }
                                 } else {
-                                    break;
+                                    saveEnclosure(xmlPullParser, episode);
                                 }
                             } catch (Exception e) {
                                 Log.d("sw9", "Updated episodes");
@@ -260,11 +264,12 @@ public class ParseRSS {
                         hasParentNodeItem = false;
                         //noinspection ConstantConditions
                         episode.setNew(true);
+                        countNew++;
                         episodeList.add(episode);
                     }
                 }
             }
-
+            podcast.setCountNew(countNew);
             podcast.setEpisodeList(episodeList);
             return podcast;
         } catch (XmlPullParserException e) {

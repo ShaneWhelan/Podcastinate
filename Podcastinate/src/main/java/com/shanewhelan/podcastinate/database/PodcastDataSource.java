@@ -265,8 +265,10 @@ public class PodcastDataSource {
                 EpisodeEntry.PODCAST_ID + " = \"" + podcastID + "\"",
                 null, null, null, EpisodeEntry.PUB_DATE + " DESC", "1");
         if (cursor != null) {
-            cursor.moveToFirst();
-            return cursor.getString(cursor.getColumnIndex(EpisodeEntry.ENCLOSURE));
+            if(cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                return cursor.getString(cursor.getColumnIndex(EpisodeEntry.ENCLOSURE));
+            }
         }
         return null;
     }

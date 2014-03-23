@@ -9,6 +9,7 @@ public class RecommendResult {
     private String title;
     private String imageLink;
     private String link;
+    @SuppressWarnings("UnusedDeclaration")
     private String description;
     private List<String> genres;
 
@@ -39,6 +40,7 @@ public class RecommendResult {
         this.link = link;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public List<String> getGenres() {
         return genres;
     }
