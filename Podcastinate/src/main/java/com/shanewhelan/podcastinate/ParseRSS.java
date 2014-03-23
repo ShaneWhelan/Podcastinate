@@ -62,6 +62,7 @@ public class ParseRSS {
         return null;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public Podcast parseRSSFeed(XmlPullParser xmlPullParser, String feedLink) {
         ArrayList<Episode> episodeList = new ArrayList<Episode>();
         try {

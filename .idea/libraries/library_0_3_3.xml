@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="library-0.3.3">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/Podcastinate/build/exploded-bundles/ComGithubCastorflexSmoothprogressbarLibrary033.aar/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/Podcastinate/build/exploded-bundles/ComGithubCastorflexSmoothprogressbarLibrary033.aar/res" />
+      <root url="jar://$PROJECT_DIR$/Podcastinate/build/exploded-aar/com.github.castorflex.smoothprogressbar/library/0.3.3/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/Podcastinate/build/exploded-aar/com.github.castorflex.smoothprogressbar/library/0.3.3/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

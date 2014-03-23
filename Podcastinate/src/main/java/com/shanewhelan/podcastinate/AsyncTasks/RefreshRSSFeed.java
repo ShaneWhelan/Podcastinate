@@ -1,6 +1,7 @@
 package com.shanewhelan.podcastinate.asynctasks;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,7 +73,6 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
     protected void onPostExecute(HashMap<String, String> resultMap) {
         progressBar.setVisibility(View.GONE);
 
-
         // Replace the progress bar with the refresh button again
         refreshAction.collapseActionView();
         refreshAction.setActionView(null);
@@ -100,6 +100,8 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
                 Toast.makeText(context.getApplicationContext(), error, Toast.LENGTH_LONG).show();
             }
         }
+
+        context.sendBroadcast(new Intent(Utilities.ACTION_UPDATE_LIST));
     }
 
     private int refreshRSSFeed(String url, int podcastID) throws IOException {

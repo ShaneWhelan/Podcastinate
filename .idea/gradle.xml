@@ -7,8 +7,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/Podcastinate" />
+            <option value="C:\Users\Shane\AndroidStudioProjects\PodcastinateProject" />
+            <option value="C:\Users\Shane\AndroidStudioProjects\PodcastinateProject\Podcastinate" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -352,7 +352,6 @@ public class MainActivity extends Activity {
         }
     };
 
-
     public void wipeDb() {
         // Only to be left in developer version - wipes db and external storage directory
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
