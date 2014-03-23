@@ -1,15 +1,14 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -33,26 +32,18 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.shanewhelan.podcastinate.DuplicatePodcastException;
-import com.shanewhelan.podcastinate.ParseRSS;
-import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.asynctasks.DownloadRSSFeed;
+import com.shanewhelan.podcastinate.asynctasks.LoadImageFromDisk;
 import com.shanewhelan.podcastinate.asynctasks.RefreshRSSFeed;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
-import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
-import org.xmlpull.v1.XmlPullParser;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 
@@ -68,7 +59,6 @@ TODO: Control Panel Design
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Confirmation dialog box on subscribe
-TODO: Set back button to go to right activities
 TODO: Lock screen widget
 TODO: Click RSS link to go to Podcastinate
 TODO: Sleep Timer
@@ -89,6 +79,9 @@ TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer w
 TODO: CNET ALL podcasts feed is broken
 TODO: Refresh Bug
 TODO: Investigate audio focus between podcastinate and PocketCasts. Live pocket casts switch fail
+TODO: Access the player from drawer
+TODO: Number of feeds refreshed
+TODO: The server side gives back the same podcasts already subscribed to
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
 */
@@ -109,12 +102,12 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setTitle("Podcasts");
         setContentView(R.layout.activity_main);
-
+/*
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDbForWriting();
         pds.upgradeDB();
         pds.closeDb();
-
+*/
         // TODO: Dev only, take out for release
         try {
             copyAppDbToDownloadFolder();
@@ -163,7 +156,7 @@ public class MainActivity extends Activity {
                 if(incomingIntent.getAction().equals(Utilities.ACTION_SUBSCRIBE)) {
                     // Received URL to subscribe to now process it
                     if(Utilities.testNetwork(getApplicationContext())) {
-                        DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed();
+                        DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
                         downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
                     }
                 }
@@ -203,7 +196,13 @@ public class MainActivity extends Activity {
                 startActivity(intent);
                 return true;
             case R.id.action_settings:
-
+                return true;
+            case R.id.action_remove_2_podcasts:
+                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                pds.openDbForWriting();
+                pds.removeTwoEpisodesFromEach();
+                pds.closeDb();
+                updateListOfPodcasts();
                 return true;
             case R.id.action_refresh:
                 if (Utilities.testNetwork(getApplicationContext())) {
@@ -226,6 +225,26 @@ public class MainActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mainActivityReceiver, new IntentFilter(Utilities.ACTION_UPDATE_LIST));
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(mainActivityReceiver);
     }
 
     public void initialiseAdapter() {
@@ -324,6 +343,16 @@ public class MainActivity extends Activity {
         dataSource.closeDb();
     }
 
+    BroadcastReceiver mainActivityReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Utilities.ACTION_UPDATE_LIST.equals(intent.getAction())) {
+                updateListOfPodcasts();
+            }
+        }
+    };
+
+
     public void wipeDb() {
         // Only to be left in developer version - wipes db and external storage directory
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
@@ -362,27 +391,8 @@ public class MainActivity extends Activity {
             dst.transferFrom(src, 0, src.size());
             src.close();
             dst.close();
-
             MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
         }
-    }
-
-    public String[] getPodcastLinks() {
-        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-        dataSource.openDbForReading();
-        String[] listOfLinks = dataSource.getAllPodcastLinks();
-        dataSource.closeDb();
-        return listOfLinks;
-    }
-
-    public boolean isLinkUnique(String[] listOfLinks, String link) {
-        boolean linkUnique = true;
-        for (String currentLink : listOfLinks) {
-            if (link.equals(currentLink)) {
-                linkUnique = false;
-            }
-        }
-        return linkUnique;
     }
 
     private void deleteSelectedItems() {
@@ -429,109 +439,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
 
-        @Override
-        protected void onPreExecute() {
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                int result = downloadRSSFeed(urls[0]);
-                if (result == Utilities.SUCCESS) {
-                    return "subscribed";
-                } else if (result == Utilities.INVALID_URL) {
-                    return "URL Invalid";
-                } else if (result == Utilities.FAILURE_TO_PARSE) {
-                    return "Not Valid Podcast Feed";
-                }
-            } catch (DuplicatePodcastException e) {
-                return "Already subscribed to podcast";
-            } catch (HTTPConnectionException e) {
-                Utilities.logException(e);
-                return "Connection Error " + e.getResponseCode();
-            } catch (IOException e) {
-                Utilities.logException(e);
-                return "Exception: " + e.getClass();
-            }
-            return "Error";
-        }
-
-        @Override
-        protected void onPostExecute(String subscribed) {
-            progressBar.setVisibility(View.GONE);
-
-            int duration = Toast.LENGTH_LONG;
-            if (subscribed.equals("subscribed")) {
-                // Send out a toast displaying success
-                // May be able to get this toast to the user faster
-                if (getApplicationContext() != null) {
-                    Toast.makeText(getApplicationContext(), "Subscribed", duration).show();
-                }
-                updateListOfPodcasts();
-            } else {
-                if (getApplicationContext() != null) {
-                    Toast.makeText(getApplicationContext(), subscribed, duration).show();
-                }
-            }
-        }
-
-        private int downloadRSSFeed(String url) throws DuplicatePodcastException, IOException {
-            // Check for existing podcast
-            String[] listOfLinks = getPodcastLinks();
-            if (!isLinkUnique(listOfLinks, url)) {
-                throw new DuplicatePodcastException("Podcast Already in Database");
-            }
-
-            InputStream inputStream = null;
-            int response;
-            try {
-                URL feedURL = new URL(url);
-                HttpURLConnection httpCon = (HttpURLConnection) feedURL.openConnection();
-                httpCon.setReadTimeout(100000);
-                httpCon.setConnectTimeout(150000);
-                httpCon.setRequestMethod("GET");
-                httpCon.setUseCaches(true);
-                httpCon.addRequestProperty("Content-Type", "text/xml; charset=utf-8");
-                httpCon.setDoInput(true);
-                httpCon.connect();
-                response = httpCon.getResponseCode();
-
-                if (response == 200) {
-                    inputStream = httpCon.getInputStream();
-                } else {
-                    throw new HTTPConnectionException(response);
-                }
-
-                ParseRSS parseRSS = new ParseRSS();
-                XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
-                if (xmlPullParser != null) {
-
-                    Podcast podcast = parseRSS.parseRSSFeed(xmlPullParser, url);
-
-                    if (podcast != null) {
-                        Utilities.savePodcastToDb(getApplicationContext(), podcast, "", true);
-                        return Utilities.SUCCESS;
-                    } else {
-                        // Won't be false unless parser threw exception, causing podcast to be null
-                        return Utilities.FAILURE_TO_PARSE;
-                    }
-                }
-
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        Utilities.logException(e);
-                    }
-                }
-            }
-            return Utilities.INVALID_URL;
-        }
-    }
 
     public class PodcastAdapter extends CursorAdapter implements View.OnClickListener {
         private final LayoutInflater layoutInflater;
@@ -548,7 +456,7 @@ public class MainActivity extends Activity {
             int podcastID = cursor.getInt(cursor.getColumnIndex("_id"));
             TextView podcastTitleView = (TextView) view.findViewById(R.id.podcastName);
             podcastTitleView.setText(podcastTitle);
-            podcastTitleView.setContentDescription("" + podcastID);
+            podcastTitleView.setContentDescription(Integer.toString(podcastID));
 
             // Load images in background thread
             ImageButton podcastImage = (ImageButton) view.findViewById(R.id.podcastArtImage);
@@ -557,6 +465,9 @@ public class MainActivity extends Activity {
 
             LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
             loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
+
+            TextView numNewEpisodesText = (TextView) view.findViewById(R.id.numberOfNewEpisodesTextView);
+            numNewEpisodesText.setText(Integer.toString(cursor.getInt(cursor.getColumnIndex(PodcastEntry.COUNT_NEW))));
         }
 
         @Override
@@ -602,22 +513,6 @@ public class MainActivity extends Activity {
                 }
             }
             */
-        }
-    }
-
-    public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
-        private ImageButton imageButton;
-
-        public LoadImageFromDisk(ImageButton imageButton) {
-            this.imageButton = imageButton;
-        }
-
-        protected Bitmap doInBackground(String... directory) {
-            return BitmapFactory.decodeFile(directory[0]);
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            imageButton.setImageBitmap(result);
         }
     }
 

@@ -33,6 +33,7 @@
     <string name="recommendationImage">recommendationImage</string>
     <string name="openDrawerText">Menu</string>
     <string name="closeDrawerText">Podcasts</string>
+    <string name="demo_refresh">Demo Refresh</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

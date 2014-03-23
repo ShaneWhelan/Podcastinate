@@ -19,14 +19,14 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name="com.shanewhelan.podcastinate.activities.SubscribeActivity"
             android:label="@string/title_subscribe"
-            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity" >
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity"
+            android:noHistory="true">
 
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
@@ -73,6 +73,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.shanewhelan.podcastinate.activities.SubscribeActivity" />
         </activity>
+        <activity
+            android:name="com.shanewhelan.podcastinate.activities.RecommendationActivity"
+            android:label="@string/title_activity_recommendation"
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity" >
+
+            <!-- The meta-data element is needed for versions lower than 4.1 -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.shanewhelan.podcastinate.activities.MainActivity" />
+        </activity>
 
         <service
             android:name="com.shanewhelan.podcastinate.services.DownloadService"
@@ -90,11 +100,6 @@
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
             </intent-filter>
         </receiver>
-
-        <activity
-            android:name="com.shanewhelan.podcastinate.activities.RecommendationActivity"
-            android:label="@string/title_activity_recommendation" >
-        </activity>
     </application>
 
 </manifest>

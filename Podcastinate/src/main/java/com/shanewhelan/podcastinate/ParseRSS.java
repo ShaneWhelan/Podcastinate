@@ -70,6 +70,7 @@ public class ParseRSS {
             boolean hasParentNodeChannel = false;
             boolean hasParentNodeItem = false;
             boolean hasParentNodeImage = false;
+            int newCount = 0;
 
             Episode episode = null;
             // If you want latest episode Loop should run till END_TAG if you want Whole feed then END_DOCUMENT
@@ -126,7 +127,15 @@ public class ParseRSS {
                 } else if (xmlPullParser.getEventType() == XmlPullParser.END_TAG) {
                     if (nodeName.equals("item")) {
                         hasParentNodeItem = false;
+                        if(newCount < 2) {
+                            //noinspection ConstantConditions
+                            episode.setNew(true);
+                        } else {
+                            //noinspection ConstantConditions
+                            episode.setNew(false);
+                        }
                         episodeList.add(episode);
+                        newCount++;
                     } else if (nodeName.equals("image")) {
                         hasParentNodeImage = false;
                     }
@@ -242,13 +251,15 @@ public class ParseRSS {
                                     break;
                                 }
                             } catch (Exception e) {
-
+                                Log.d("sw9", "Updated episodes");
                             }
                         }
                     }
                 } else if (xmlPullParser.getEventType() == XmlPullParser.END_TAG) {
                     if (nodeName.equals("item")) {
                         hasParentNodeItem = false;
+                        //noinspection ConstantConditions
+                        episode.setNew(true);
                         episodeList.add(episode);
                     }
                 }

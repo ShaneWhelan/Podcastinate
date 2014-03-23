@@ -15,6 +15,8 @@ import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import org.json.JSONArray;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Shane on 11/01/14. Podcastinate.
@@ -45,7 +47,7 @@ public class PodcastDataSource {
         databaseHelper.close();
     }
 
-    public long insertPodcast(String title, String description, String imageDirectory, String directory, String link) {
+    public long insertPodcast(String title, String description, String imageDirectory, String directory, String link, int countNew) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(PodcastEntry.TITLE, title);
@@ -53,6 +55,7 @@ public class PodcastDataSource {
         contentValues.put(PodcastEntry.IMAGE_DIRECTORY, imageDirectory);
         contentValues.put(PodcastEntry.DIRECTORY, directory);
         contentValues.put(PodcastEntry.LINK, link);
+        contentValues.put(PodcastEntry.COUNT_NEW, countNew);
 
         long result = 0;
         try {
@@ -65,7 +68,7 @@ public class PodcastDataSource {
     }
 
     public long insertEpisode(int podcastId, String episodeTitle, String description, String date,
-                              String guid, String duration, String enclosure) {
+                              String guid, String duration, String enclosure, boolean isNew) {
         // Create ContentValues Key-Value pair
         ContentValues contentValues = new ContentValues();
         contentValues.put(EpisodeEntry.PODCAST_ID, podcastId);
@@ -75,6 +78,11 @@ public class PodcastDataSource {
         contentValues.put(EpisodeEntry.GUID, guid);
         contentValues.put(EpisodeEntry.DURATION, duration);
         contentValues.put(EpisodeEntry.ENCLOSURE, enclosure);
+        if(isNew) {
+            contentValues.put(EpisodeEntry.NEW_EPISODE, 1);
+        } else {
+            contentValues.put(EpisodeEntry.NEW_EPISODE, 0);
+        }
         return database.insert(EpisodeEntry.TABLE_NAME, EpisodeEntry.TITLE,
                 contentValues);
     }
@@ -299,4 +307,62 @@ public class PodcastDataSource {
         }
         return podcastDirectory;
     }
+
+    public int getCountNew(int podcastID) {
+        Cursor cursor =  database.rawQuery("SELECT " + PodcastEntry.COUNT_NEW + " FROM " +
+                PodcastEntry.TABLE_NAME + " WHERE " + PodcastEntry.PODCAST_ID + " = " + podcastID
+                , null);
+        int countNew = 0;
+        if(cursor != null) {
+            cursor.moveToFirst();
+            countNew = cursor.getInt(cursor.getColumnIndex(PodcastEntry.COUNT_NEW));
+        }
+        return countNew;
+    }
+
+    public long updateCountNew(int podcastID, int countNew) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(PodcastEntry.COUNT_NEW, countNew);
+        return database.update(PodcastEntry.TABLE_NAME, contentValues,
+                PodcastEntry.PODCAST_ID + " = \"" + podcastID + "\"", null);
+    }
+
+    public void removeTwoEpisodesFromEach() {
+        HashMap<String, String> listOfIds = getAllPodcastIDsLinks();
+        Set entrySet = listOfIds.entrySet();
+        for (Object anEntrySet : entrySet) {
+            Map.Entry mapEntry = (Map.Entry) anEntrySet;
+            Log.d("sw9", "" + database.delete(EpisodeEntry.TABLE_NAME, EpisodeEntry.EPISODE_ID + " IN (" + "SELECT " +
+                    EpisodeEntry.EPISODE_ID + " FROM " + EpisodeEntry.TABLE_NAME + " WHERE "
+                    + PodcastEntry.PODCAST_ID + " = \"" + Integer.parseInt(mapEntry.getKey().toString()) + "\"" +
+                    " ORDER BY " + EpisodeEntry.PUB_DATE + " DESC LIMIT 2)", null));
+        }
+        synchroniseNewCount();
+    }
+
+    public void synchroniseNewCount() {
+        Cursor cursor = database.rawQuery("SELECT " + EpisodeEntry.PODCAST_ID + ", count(" +
+                EpisodeEntry.NEW_EPISODE + ") FROM " + EpisodeEntry.TABLE_NAME +
+                " WHERE " + EpisodeEntry.NEW_EPISODE + " = 1" +
+                " GROUP BY " + EpisodeEntry.PODCAST_ID, null);
+
+        if(cursor != null) {
+            if(cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    int id = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.PODCAST_ID));
+                    int count = cursor.getInt(cursor.getColumnIndex("count(" + EpisodeEntry.NEW_EPISODE + ")"));
+
+                    updateCountNew(id, count);
+                }
+            } else {
+                HashMap<String, String> listOfIds = getAllPodcastIDsLinks();
+                Set entrySet = listOfIds.entrySet();
+                for (Object anEntrySet : entrySet) {
+                    Map.Entry mapEntry = (Map.Entry) anEntrySet;
+                    updateCountNew(Integer.parseInt(mapEntry.getKey().toString()), 0);
+                }
+            }
+            cursor.close();
+        }
+     }
 }

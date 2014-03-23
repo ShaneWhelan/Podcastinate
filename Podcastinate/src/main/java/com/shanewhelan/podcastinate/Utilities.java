@@ -37,6 +37,7 @@ public class Utilities {
     public static final String SEARCH_RESULT = "result";
     public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
     public static final String PODCAST_LINK = "link";
+    public static final String ACTION_UPDATE_LIST = "update_list";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
 
@@ -73,24 +74,26 @@ public class Utilities {
     }
 
     public static void savePodcastToDb(Context context, Podcast podcast, String url, boolean isNewFeed) {
-        PodcastDataSource dataSource = new PodcastDataSource(context.getApplicationContext());
-        dataSource.openDbForWriting();
+        PodcastDataSource pds = new PodcastDataSource(context.getApplicationContext());
+        pds.openDbForWriting();
         int podcastID;
 
         if (isNewFeed) {
-            podcastID = (int) dataSource.insertPodcast(podcast.getTitle(), podcast.getDescription(),
-                    podcast.getImageDirectory(), podcast.getDirectory(), podcast.getLink());
+            podcastID = (int) pds.insertPodcast(podcast.getTitle(), podcast.getDescription(),
+                    podcast.getImageDirectory(), podcast.getDirectory(), podcast.getLink(), podcast.getCountNew());
         } else {
-            podcastID = dataSource.getPodcastIDWithLink(url);
+            podcastID = pds.getPodcastIDWithLink(url);
+            pds.updateCountNew(podcastID, podcast.getCountNew());
         }
 
         // If podcast inserted correctly now insert episodes too
         if (podcastID != -1) {
             ArrayList<Episode> listOfEpisodes = podcast.getEpisodeList();
             for (Episode episode : listOfEpisodes) {
-                dataSource.insertEpisode(podcastID, episode.getTitle(), episode.getDescription(),
+                pds.insertEpisode(podcastID, episode.getTitle(), episode.getDescription(),
                         episode.getPubDate(), episode.getGuid(), episode.getDuration(),
-                        episode.getEnclosure());
+                        episode.getEnclosure(), episode.isNew());
+
             }
         } else {
             int duration = Toast.LENGTH_LONG;
@@ -98,7 +101,7 @@ public class Utilities {
                 Toast.makeText(context.getApplicationContext(), "Already subscribed to podcast.", duration).show();
             }
         }
-        dataSource.closeDb();
+        pds.closeDb();
     }
 
     public static class DisconnectHeadphonesReceiver extends BroadcastReceiver {

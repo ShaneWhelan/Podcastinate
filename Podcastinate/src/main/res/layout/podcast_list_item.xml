@@ -38,6 +38,5 @@
         android:background="@drawable/on_click_selector"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:text="10"
         android:layout_weight="0.1" />
 </LinearLayout>

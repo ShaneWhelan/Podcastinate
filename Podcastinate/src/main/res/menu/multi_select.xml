@@ -3,7 +3,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/delete_selection_action"
-        android:icon="@drawable/discard_icon_selector"
+        android:icon="@drawable/ic_action_discard"
         android:title="@string/action_discard"
         android:showAsAction="ifRoom"/>
 </menu>
