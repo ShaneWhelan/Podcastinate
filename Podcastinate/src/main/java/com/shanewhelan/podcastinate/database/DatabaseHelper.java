@@ -22,7 +22,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     PodcastEntry.DESCRIPTION + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.IMAGE_DIRECTORY + TEXT_TYPE + COMMA_SEP +
                     PodcastEntry.DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    PodcastEntry.LINK + TEXT_TYPE + " UNIQUE" +
+                    PodcastEntry.LINK + TEXT_TYPE + " UNIQUE" + COMMA_SEP +
+                    PodcastEntry.COUNT_NEW + " INTEGER" +
                     " );";
     private static final String SQL_CREATE_EPISODE =
             "CREATE TABLE " + EpisodeEntry.TABLE_NAME + " (" +
@@ -35,7 +36,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     EpisodeEntry.DURATION + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.GUID + TEXT_TYPE + COMMA_SEP +
                     EpisodeEntry.DIRECTORY + TEXT_TYPE + COMMA_SEP +
-                    EpisodeEntry.LISTENED + " INTEGER" + COMMA_SEP +
+                    EpisodeEntry.NEW_EPISODE + " INTEGER" + COMMA_SEP + // 1 for true, 0 for false
                     EpisodeEntry.CURRENT_TIME + " INTEGER" + COMMA_SEP +
                     "FOREIGN KEY(" + EpisodeEntry.PODCAST_ID + ") REFERENCES " +
                     PodcastEntry.TABLE_NAME + "(" + PodcastEntry.PODCAST_ID + ") " +

@@ -13,7 +13,6 @@ public class SearchResult implements Parcelable{
     //private List<String> genres;
 
     public SearchResult() {
-
     }
 
     public SearchResult(Parcel parcel) {

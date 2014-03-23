@@ -17,7 +17,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.shanewhelan.podcastinate.DownloadImagesAsyncTask;
+import com.shanewhelan.podcastinate.asynctasks.DownloadImagesAsyncTask;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.RecommendResult;
 import com.shanewhelan.podcastinate.Utilities;

@@ -4,23 +4,17 @@
         android:id="@+id/add_feed_action"
         android:icon="@drawable/ic_action_add_feed"
         android:title="@string/action_add_feed"
-        android:showAsAction="ifRoom"/>
+        android:showAsAction="always"/>
 
     <item
         android:id="@+id/action_refresh"
         android:icon="@drawable/ic_action_refresh"
         android:title="@string/refresh_feed"
-        android:showAsAction="ifRoom"/>
+        android:showAsAction="always"/>
 
     <item
         android:id="@+id/action_wipe_db"
         android:title="@string/action_wipe_db"
-        android:orderInCategory="100"
-        android:showAsAction="never"/>
-
-    <item
-        android:id="@+id/action_recommend"
-        android:title="@string/action_recommend"
         android:orderInCategory="100"
         android:showAsAction="never"/>
 

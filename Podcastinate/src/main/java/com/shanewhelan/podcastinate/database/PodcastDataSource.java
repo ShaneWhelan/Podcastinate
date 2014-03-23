@@ -113,10 +113,11 @@ public class PodcastDataSource {
         return podcastId;
     }
 
-    public Cursor getAllPodcastTitlesImages() {
+    public Cursor getPodcastInfoForAdapter() {
         return database.rawQuery("SELECT " + PodcastEntry.PODCAST_ID + " as _id, " +
                 PodcastEntry.TITLE + ", " + PodcastEntry.IMAGE_DIRECTORY + ", " +
-                PodcastEntry.DIRECTORY + " FROM " + PodcastEntry.TABLE_NAME, null);
+                PodcastEntry.DIRECTORY + ", " + PodcastEntry.COUNT_NEW +
+                " FROM " + PodcastEntry.TABLE_NAME, null);
     }
 
     public String[] getAllPodcastLinks() {
@@ -187,7 +188,7 @@ public class PodcastDataSource {
         return database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID +
                 " as _id, " + EpisodeEntry.TITLE + ", " +
                 EpisodeEntry.DIRECTORY + ", " +
-                EpisodeEntry.LISTENED + ", " +
+                EpisodeEntry.NEW_EPISODE + ", " +
                 EpisodeEntry.CURRENT_TIME + ", " +
                 EpisodeEntry.DURATION + ", " +
                 EpisodeEntry.ENCLOSURE + " FROM " + EpisodeEntry.TABLE_NAME +
@@ -218,11 +219,11 @@ public class PodcastDataSource {
         if (cursor != null) {
             cursor.moveToFirst();
             Episode episode = new Episode();
-            int listened = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.LISTENED));
-            if (listened == 1) {
-                episode.setListened(true);
+            // Check is new episode
+            if (cursor.getInt(cursor.getColumnIndex(EpisodeEntry.NEW_EPISODE)) == 1) {
+                episode.setNew(true);
             } else {
-                episode.setListened(false);
+                episode.setNew(false);
             }
 
             episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(

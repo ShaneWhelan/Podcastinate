@@ -1,4 +1,4 @@
-package com.shanewhelan.podcastinate;
+package com.shanewhelan.podcastinate.asynctasks;
 
 /**
  * Created by Shane on 19/03/14. Podcastinate.
@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.view.View;
 import android.widget.ImageView;
+
+import com.shanewhelan.podcastinate.Utilities;
 
 import java.io.InputStream;
 

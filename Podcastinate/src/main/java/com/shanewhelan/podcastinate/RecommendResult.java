@@ -13,7 +13,6 @@ public class RecommendResult {
     private List<String> genres;
 
     public RecommendResult() {
-
     }
 
     public String getTitle() {

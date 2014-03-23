@@ -39,6 +39,7 @@ import com.shanewhelan.podcastinate.DuplicatePodcastException;
 import com.shanewhelan.podcastinate.ParseRSS;
 import com.shanewhelan.podcastinate.Podcast;
 import com.shanewhelan.podcastinate.R;
+import com.shanewhelan.podcastinate.asynctasks.RefreshRSSFeed;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
@@ -54,8 +55,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
@@ -64,14 +63,14 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 /*
 FEATURES:
 TODO: Count of number of new episodes
+TODO: Persistent notification while episode plays
 TODO: Control Panel Design
-TODO: Confirmation dialog box on subscribe
-TODO: Lock screen widget
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
-TODO: Persistent notification while episode plays
-TODO: Click RSS link to go to Podcastinate
+TODO: Confirmation dialog box on subscribe
 TODO: Set back button to go to right activities
+TODO: Lock screen widget
+TODO: Click RSS link to go to Podcastinate
 TODO: Sleep Timer
 MAJOR FEATURES:
 TODO: Cloud backup
@@ -81,15 +80,14 @@ TODO: User Suggested Podcasts
 TODO: User Settings
 TODO: Statistics of user playback
 LOW PRIORITY:
-TODO: Populate isListened DB entry
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
-TODO: Add Paging to podcast viewing activity to
+TODO: Add Paging to podcast viewing activity
 BUGS:
 TODO: Download service, no retry on download fail
-TODO: Refresh Bug
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
+TODO: Refresh Bug
 TODO: Investigate audio focus between podcastinate and PocketCasts. Live pocket casts switch fail
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
@@ -97,12 +95,10 @@ TODO: If you have no subscriptions and you look for recommendations
 
 public class MainActivity extends Activity {
     private PodcastDataSource dataSource;
-    private MenuItem refreshAction;
-    private ProgressBar mProgressBar1;
+    private ProgressBar progressBar;
     private Cursor podcastCursor;
     private static PodcastAdapter podcastAdapter;
     private static ListView listView;
-    private String[] drawerLisViewArray;
     private ListView drawerListView;
 
     private DrawerLayout drawerLayout;
@@ -114,6 +110,11 @@ public class MainActivity extends Activity {
         setTitle("Podcasts");
         setContentView(R.layout.activity_main);
 
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDbForWriting();
+        pds.upgradeDB();
+        pds.closeDb();
+
         // TODO: Dev only, take out for release
         try {
             copyAppDbToDownloadFolder();
@@ -121,26 +122,27 @@ public class MainActivity extends Activity {
             Utilities.logException(e);
         }
 
-        // Retrieve items from strings.xml
-        drawerLisViewArray = getResources().getStringArray(R.array.nav_drawer_titles);
+        // Retrieve items from strings.xml - names of the drawer selections
+        String[] drawerLisViewArray = getResources().getStringArray(R.array.nav_drawer_titles);
 
         drawerListView = (ListView) findViewById(R.id.left_drawer);
 
         // Initialise adapter for the drawer
-        drawerListView.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_listview_item, drawerLisViewArray));
+        drawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_listview_item,
+                drawerLisViewArray));
 
 
-        // App Icon
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-
+        // Set drawer icon
         actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer,
                 R.string.openDrawerText, R.string.closeDrawerText);
 
         // Set actionBarDrawerToggle as the DrawerListener
         drawerLayout.setDrawerListener(actionBarDrawerToggle);
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if(getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         // just styling option add shadow the right edge of the drawer
         drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
@@ -152,8 +154,8 @@ public class MainActivity extends Activity {
         initialiseAdapter();
         initialiseSelectionListeners();
 
-        mProgressBar1 = (ProgressBar) findViewById(R.id.smoothProgressBar);
-        mProgressBar1.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
+        progressBar = (ProgressBar) findViewById(R.id.smoothProgressBar);
+        progressBar.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
 
         Intent incomingIntent = getIntent();
         if(incomingIntent != null) {
@@ -204,13 +206,12 @@ public class MainActivity extends Activity {
 
                 return true;
             case R.id.action_refresh:
-                refreshAction = item;
                 if (Utilities.testNetwork(getApplicationContext())) {
                     PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
                     dataSource.openDbForReading();
                     HashMap<String, String> podcastInfo = dataSource.getAllPodcastIDsLinks();
                     dataSource.closeDb();
-                    RefreshRSSFeed refreshFeed = new RefreshRSSFeed();
+                    RefreshRSSFeed refreshFeed = new RefreshRSSFeed(getApplicationContext(), item, progressBar);
                     if (podcastInfo != null) {
                         //noinspection unchecked
                         refreshFeed.execute(podcastInfo);
@@ -231,7 +232,7 @@ public class MainActivity extends Activity {
         dataSource = new PodcastDataSource(getApplicationContext());
         dataSource.openDbForReading();
         // Get Podcast ID so we can get all episode names from DB
-        podcastCursor = dataSource.getAllPodcastTitlesImages();
+        podcastCursor = dataSource.getPodcastInfoForAdapter();
         podcastAdapter = new PodcastAdapter(getApplicationContext(), podcastCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
         listView.setAdapter(podcastAdapter);
@@ -317,7 +318,7 @@ public class MainActivity extends Activity {
 
     public void updateListOfPodcasts() {
         dataSource.openDbForReading();
-        podcastCursor = dataSource.getAllPodcastTitlesImages();
+        podcastCursor = dataSource.getPodcastInfoForAdapter();
         podcastAdapter.swapCursor(podcastCursor);
         podcastAdapter.notifyDataSetChanged();
         dataSource.closeDb();
@@ -428,139 +429,11 @@ public class MainActivity extends Activity {
         }
     }
 
-
-    public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
-
-        @Override
-        protected void onPreExecute() {
-            // Set Refresh icon to progress bar
-            refreshAction.setActionView(R.layout.actionbar_indeterminate_progress);
-            refreshAction.expandActionView();
-
-            mProgressBar1.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected HashMap<String, String> doInBackground(HashMap<String, String>... urlList) {
-            HashMap<String, String> resultMap = new HashMap<String, String>(urlList[0].size());
-            try {
-                Set entrySet = urlList[0].entrySet();
-                int result;
-                for (Object anEntrySet : entrySet) {
-                    Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                    result = refreshRSSFeed(mapEntry.getValue().toString(), mapEntry.getKey().toString());
-                    resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
-                }
-                return resultMap;
-            } catch (HTTPConnectionException e) {
-                Utilities.logException(e);
-                resultMap.put("error", "Connection Error " + e.getResponseCode());
-                return resultMap;
-            } catch (IOException e) {
-                Utilities.logException(e);
-                resultMap.put("error", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
-                return resultMap;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(HashMap<String, String> resultMap) {
-            mProgressBar1.setVisibility(View.GONE);
-
-
-            // Replace the progress bar with the refresh button again
-            refreshAction.collapseActionView();
-            refreshAction.setActionView(null);
-
-            Set entrySet = resultMap.entrySet();
-            int numNewEpisodes = 0;
-            String error = null;
-            for (Object anEntrySet : entrySet) {
-                Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                if (mapEntry.getValue() == String.valueOf(Utilities.SUCCESS)) {
-                    numNewEpisodes++;
-                } else if (mapEntry.getKey().toString().equals("error")) {
-                    error = mapEntry.getValue().toString();
-                }
-            }
-
-            if (getApplicationContext() != null) {
-                if (numNewEpisodes > 1) {
-                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episodes.", Toast.LENGTH_LONG).show();
-                } else if (numNewEpisodes == 1) {
-                    Toast.makeText(getApplicationContext(), numNewEpisodes + " new episode.", Toast.LENGTH_LONG).show();
-                } else if (numNewEpisodes == 0) {
-                    Toast.makeText(getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
-                } else if (error != null) {
-                    Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-
-        private int refreshRSSFeed(String url, String podcastID) throws IOException {
-            InputStream inputStream = null;
-            int response;
-            try {
-                URL feedURL = new URL(url);
-                HttpURLConnection httpCon = (HttpURLConnection) feedURL.openConnection();
-                httpCon.setReadTimeout(100000);
-                httpCon.setConnectTimeout(150000);
-                httpCon.setRequestMethod("GET");
-                httpCon.setUseCaches(true);
-                httpCon.addRequestProperty("Content-Type", "text/xml; charset=utf-8");
-                httpCon.setDoInput(true);
-                httpCon.connect();
-                response = httpCon.getResponseCode();
-
-                if (response == 200) {
-                    inputStream = httpCon.getInputStream();
-                } else {
-                    throw new HTTPConnectionException(response);
-                }
-
-                ParseRSS parseRSS = new ParseRSS();
-                XmlPullParser xmlPullParser = parseRSS.inputStreamToPullParser(inputStream);
-                if (xmlPullParser != null) {
-                    PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                    pds.openDbForReading();
-                    String enclosure = pds.getMostRecentEpisodeEnclosure(Integer.parseInt(podcastID));
-                    String podcastTitle = pds.getPodcastTitle(Integer.parseInt(podcastID));
-                    pds.closeDb();
-                    Log.d("sw9", "PodcastTitle " + podcastTitle);
-                    Log.d("sw9", "enclosure " + enclosure);
-                    Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
-
-                    if (podcast != null) {
-                        if (podcast.getEpisodeList().size() > 0) {
-                            Utilities.savePodcastToDb(getApplicationContext(), podcast, url, false);
-                            return Utilities.SUCCESS;
-                        } else {
-                            return Utilities.NO_NEW_EPISODES;
-                        }
-                    } else {
-                        // Won't be false unless parser threw exception, causing podcast to be null
-                        return Utilities.FAILURE_TO_PARSE;
-                    }
-                }
-
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        Utilities.logException(e);
-                    }
-                }
-            }
-            return Utilities.INVALID_URL;
-        }
-    }
-
     public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
 
         @Override
         protected void onPreExecute() {
-            mProgressBar1.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -588,7 +461,7 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(String subscribed) {
-            mProgressBar1.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE);
 
             int duration = Toast.LENGTH_LONG;
             if (subscribed.equals("subscribed")) {
@@ -751,6 +624,7 @@ public class MainActivity extends Activity {
     private class DrawerListViewClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
+            @SuppressWarnings("ConstantConditions")
             String selectedText = (((TextView)view).getText()).toString();
             if(selectedText.equals("Podcasts")){
                 drawerLayout.closeDrawer(drawerListView);

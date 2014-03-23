@@ -5,7 +5,7 @@ package com.shanewhelan.podcastinate;
  */
 public class Episode {
     private int episodeID;
-    private boolean listened;
+    private boolean isNew;
     private int currentTime;
     private int podcastID;
     private String title;
@@ -63,12 +63,12 @@ public class Episode {
         this.enclosure = enclosure;
     }
 
-    public boolean isListened() {
-        return listened;
+    public boolean isNew() {
+        return isNew;
     }
 
-    public void setListened(boolean listened) {
-        this.listened = listened;
+    public void setNew(boolean aNew) {
+        this.isNew = aNew;
     }
 
     public int getCurrentTime() {

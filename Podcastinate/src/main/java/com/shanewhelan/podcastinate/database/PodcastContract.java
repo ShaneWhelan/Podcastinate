@@ -18,6 +18,8 @@ public final class PodcastContract {
         public static final String IMAGE_DIRECTORY = "image_directory";
         public static final String DIRECTORY = "directory";
         public static final String LINK = "link";
+        public static final String COUNT_NEW = "count_new";
+
     }
 
     public static abstract class EpisodeEntry implements BaseColumns {
@@ -31,7 +33,7 @@ public final class PodcastContract {
         public static final String DURATION = "duration";
         public static final String GUID = "guid";
         public static final String DIRECTORY = "directory";
-        public static final String LISTENED = "listened";
+        public static final String NEW_EPISODE = "new_episode";
         public static final String CURRENT_TIME = "current_time";
     }
 

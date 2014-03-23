@@ -11,6 +11,7 @@ public class Podcast {
     private String imageDirectory;
     private String directory;
     private String link;
+    private int countNew;
     private ArrayList<Episode> episodeList = new ArrayList<Episode>();
 
     public String getTitle() {
@@ -59,5 +60,13 @@ public class Podcast {
 
     public void setDirectory(String directory) {
         this.directory = directory;
+    }
+
+    public int getCountNew() {
+        return countNew;
+    }
+
+    public void setCountNew(int countNew) {
+        this.countNew = countNew;
     }
 }
