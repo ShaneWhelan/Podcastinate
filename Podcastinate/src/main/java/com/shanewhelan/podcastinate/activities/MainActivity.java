@@ -114,33 +114,7 @@ public class MainActivity extends Activity {
             Utilities.logException(e);
         }
 
-        // Retrieve items from strings.xml - names of the drawer selections
-        String[] drawerLisViewArray = getResources().getStringArray(R.array.nav_drawer_titles);
-
-        drawerListView = (ListView) findViewById(R.id.left_drawer);
-
-        // Initialise adapter for the drawer
-        drawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_listview_item,
-                drawerLisViewArray));
-
-
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        // Set drawer icon
-        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer,
-                R.string.openDrawerText, R.string.closeDrawerText);
-
-        // Set actionBarDrawerToggle as the DrawerListener
-        drawerLayout.setDrawerListener(actionBarDrawerToggle);
-
-        if(getActionBar() != null) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
-        // just styling option add shadow the right edge of the drawer
-        drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        drawerListView.setOnItemClickListener(new DrawerListViewClickListener());
-
+        initialiseDrawer();
 
         listView = (ListView) findViewById(R.id.listOfPodcasts);
         initialiseAdapter();
@@ -317,6 +291,35 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void initialiseDrawer() {
+        // Retrieve items from strings.xml - names of the drawer selections
+        String[] drawerLisViewArray = getResources().getStringArray(R.array.nav_drawer_titles);
+
+        drawerListView = (ListView) findViewById(R.id.left_drawer);
+
+        // Initialise adapter for the drawer
+        drawerListView.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_listview_item,
+                drawerLisViewArray));
+
+
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        // Set drawer icon
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer,
+                R.string.openDrawerText, R.string.closeDrawerText);
+
+        // Set actionBarDrawerToggle as the DrawerListener
+        drawerLayout.setDrawerListener(actionBarDrawerToggle);
+
+        if(getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        // just styling option add shadow the right edge of the drawer
+        drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
+        drawerListView.setOnItemClickListener(new DrawerListViewClickListener());
+    }
+
     public void initialiseSelectionListeners() {
         OnItemClickListener itemCLickHandler = new OnItemClickListener() {
             @Override
@@ -330,7 +333,6 @@ public class MainActivity extends Activity {
             }
         };
         listView.setOnItemClickListener(itemCLickHandler);
-
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new MultiChoiceModeListener());
     }
@@ -352,6 +354,15 @@ public class MainActivity extends Activity {
         }
     };
 
+    public void viewPodcast(String podcastTitle, int podcastID) {
+        Intent intent = new Intent(this, PodcastViewerActivity.class);
+        intent.setAction(Utilities.VIEW_PODCAST);
+        intent.putExtra(Utilities.PODCAST_ID, podcastID);
+        intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+        startActivity(intent);
+    }
+
+    // Following two methods are debug only methods
     public void wipeDb() {
         // Only to be left in developer version - wipes db and external storage directory
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
@@ -373,23 +384,15 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void viewPodcast(String podcastChosen, int podcastID) {
-        Intent intent = new Intent(this, PodcastViewerActivity.class);
-        intent.setAction(Utilities.VIEW_PODCAST);
-        intent.putExtra(Utilities.PODCAST_ID, podcastID);
-        intent.putExtra(Utilities.PODCAST_TITLE, podcastChosen);
-        startActivity(intent);
-    }
-
     public void copyAppDbToDownloadFolder() throws IOException {
         File backupDB = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "backup.db"); // for example "my_data_backup.db"
         File currentDB = this.getDatabasePath("Podcastinate.db"); //databaseName=your current application database name, for example "my_data.db"
-        if (currentDB.exists()) {
-            FileChannel src = new FileInputStream(currentDB).getChannel();
-            FileChannel dst = new FileOutputStream(backupDB).getChannel();
-            dst.transferFrom(src, 0, src.size());
-            src.close();
-            dst.close();
+        if(currentDB.exists()) {
+            FileChannel source = new FileInputStream(currentDB).getChannel();
+            FileChannel destination = new FileOutputStream(backupDB).getChannel();
+            destination.transferFrom(source, 0, source.size());
+            source.close();
+            destination.close();
             MediaScannerConnection.scanFile(this, new String[]{Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/backup.db"}, null, null);
         }
     }
@@ -449,19 +452,21 @@ public class MainActivity extends Activity {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            // Get Title and ID for identification purposes
             String podcastTitle = cursor.getString(cursor.getColumnIndex(PodcastEntry.TITLE));
-            int podcastID = cursor.getInt(cursor.getColumnIndex("_id"));
-            TextView podcastTitleView = (TextView) view.findViewById(R.id.podcastName);
-            podcastTitleView.setText(podcastTitle);
-            podcastTitleView.setContentDescription(Integer.toString(podcastID));
+            String podcastID = Integer.toString(cursor.getInt(cursor.getColumnIndex("_id")));
 
             // Load images in background thread
             ImageButton podcastImage = (ImageButton) view.findViewById(R.id.podcastArtImage);
-            //podcastImage.setScaleType(ImageButton.ScaleType.CENTER_INSIDE);
-            podcastImage.setContentDescription(podcastTitle);
+            podcastImage.setContentDescription(podcastID);
 
             LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
             loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
+
+            // Load in Podcast Titles
+            TextView podcastTitleView = (TextView) view.findViewById(R.id.podcastName);
+            podcastTitleView.setText(podcastTitle);
+            podcastTitleView.setContentDescription(podcastID);
 
             TextView numNewEpisodesText = (TextView) view.findViewById(R.id.numberOfNewEpisodesTextView);
             numNewEpisodesText.setText(Integer.toString(cursor.getInt(cursor.getColumnIndex(PodcastEntry.COUNT_NEW))));
@@ -502,14 +507,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onClick(View view) {
-            /*
-            if(view.getId() == R.id.podcastArtImage) {
-                ImageButton imageButton = (ImageButton) view.findViewById(R.id.podcastArtImage);
-                if (imageButton.getContentDescription() != null) {
-                    //viewPodcast(imageButton.getContentDescription().toString());
-                }
-            }
-            */
+            // Leave empty because whole row is clickable
         }
     }
 

@@ -191,38 +191,27 @@ public class PodcastDataSource {
         return null;
     }
 
-
-    public Cursor getAllEpisodeNames(int podcastID) {
-        return database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID +
-                " as _id, " + EpisodeEntry.TITLE + ", " +
+    // Gets all the relevant info for the PodcastViewerActivity adapter
+    public Cursor getAllEpisodeInfoForAdapter(int podcastID) {
+        return database.rawQuery("SELECT " + EpisodeEntry.EPISODE_ID + " as _id, " +
+                EpisodeEntry.TITLE + ", " +
+                EpisodeEntry.DESCRIPTION + ", " +
+                EpisodeEntry.ENCLOSURE + ", " +
+                EpisodeEntry.PUB_DATE + ", " +
+                EpisodeEntry.DURATION + ", " +
                 EpisodeEntry.DIRECTORY + ", " +
                 EpisodeEntry.NEW_EPISODE + ", " +
-                EpisodeEntry.CURRENT_TIME + ", " +
-                EpisodeEntry.DURATION + ", " +
-                EpisodeEntry.ENCLOSURE + " FROM " + EpisodeEntry.TABLE_NAME +
+                EpisodeEntry.CURRENT_TIME +
+                " FROM " + EpisodeEntry.TABLE_NAME +
                 " WHERE " + EpisodeEntry.PODCAST_ID
                 + " = " + podcastID + " ORDER BY " + EpisodeEntry.PUB_DATE + " DESC", null);
     }
 
-    public String getEpisodeEnclosure(int podcastId, String episodeTitle) {
-        String enclosure = "";
-        String[] columns = {EpisodeEntry.ENCLOSURE};
-        Cursor cursor = database.query(EpisodeEntry.TABLE_NAME, columns,
-                EpisodeEntry.TITLE + " = \"" + episodeTitle + "\" AND " +
-                        EpisodeEntry.PODCAST_ID + " = " + podcastId,
-                null, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            enclosure = cursor.getString(cursor.getColumnIndex(EpisodeEntry.ENCLOSURE));
-            cursor.close();
-        }
-        return enclosure;
-    }
+    public Episode getEpisodeMetaDataForDownload(String episodeID) {
+        int episodeIDasInt = Integer.parseInt(episodeID);
 
-    // Called by the AudioService to get all info it needs about podcast
-    public Episode getEpisodeMetaData(String directory) {
-        Cursor cursor = database.rawQuery("SELECT * FROM episode WHERE directory = \""
-                + directory + "\"", null);
+        Cursor cursor = database.rawQuery("SELECT * FROM " + EpisodeEntry.TABLE_NAME +
+                " WHERE " + EpisodeEntry.EPISODE_ID + " = " + episodeIDasInt, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
@@ -234,6 +223,7 @@ public class PodcastDataSource {
                 episode.setNew(false);
             }
 
+            episode.setEpisodeID(episodeIDasInt);
             episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.PODCAST_ID)));
             episode.setTitle(cursor.getString(cursor.getColumnIndex(
@@ -244,10 +234,45 @@ public class PodcastDataSource {
                     EpisodeEntry.ENCLOSURE)));
             episode.setPubDate(cursor.getString(cursor.getColumnIndex(
                     EpisodeEntry.PUB_DATE)));
-            episode.setDuration(cursor.getString(cursor.getColumnIndex(
-                    EpisodeEntry.DURATION)));
+
+            cursor.close();
+            return episode;
+        }
+        return null;
+    }
+
+
+    // Called by the AudioService to get all info it needs about podcast
+    public Episode getEpisodeMetaDataForPlay(String episodeID) {
+        int episodeIDasInt = Integer.parseInt(episodeID);
+
+        Cursor cursor = database.rawQuery("SELECT * FROM " + EpisodeEntry.TABLE_NAME +
+                " WHERE " + EpisodeEntry.EPISODE_ID + " = " + episodeIDasInt, null);
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+            Episode episode = new Episode();
+            // Check is new episode
+            if (cursor.getInt(cursor.getColumnIndex(EpisodeEntry.NEW_EPISODE)) == 1) {
+                episode.setNew(true);
+            } else {
+                episode.setNew(false);
+            }
+
             episode.setEpisodeID(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.EPISODE_ID)));
+            episode.setPodcastID(cursor.getInt(cursor.getColumnIndex(
+                    EpisodeEntry.PODCAST_ID)));
+            episode.setTitle(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.TITLE)));
+            episode.setDescription(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.DESCRIPTION)));
+            episode.setEnclosure(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.ENCLOSURE)));
+            episode.setPubDate(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.PUB_DATE)));
+            episode.setDirectory(cursor.getString(cursor.getColumnIndex(
+                    EpisodeEntry.DIRECTORY)));
             episode.setCurrentTime(cursor.getInt(cursor.getColumnIndex(
                     EpisodeEntry.CURRENT_TIME)));
 

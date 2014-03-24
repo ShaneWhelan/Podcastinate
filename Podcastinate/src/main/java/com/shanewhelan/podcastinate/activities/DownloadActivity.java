@@ -9,12 +9,11 @@ import android.view.MenuItem;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.DownloadService;
 
 public class DownloadActivity extends Activity {
-    private String podcastTitle;
-    private int podcastID;
+    private String mostRecentPodcastTitle;
+    private int mostRecentPodcastID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,20 +23,15 @@ public class DownloadActivity extends Activity {
     }
 
     private void addToDownloadQueue() {
-        podcastTitle = getIntent().getStringExtra(Utilities.PODCAST_TITLE);
-        String episodeTitle = getIntent().getStringExtra(Utilities.EPISODE_TITLE);
-        podcastID = getIntent().getIntExtra(Utilities.PODCAST_ID, -1);
+        String episodeID = getIntent().getStringExtra(Utilities.EPISODE_ID);
+        mostRecentPodcastID = getIntent().getIntExtra(Utilities.PODCAST_ID, -1);
+        mostRecentPodcastTitle = getIntent().getStringExtra(Utilities.PODCAST_TITLE);
 
-        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-        dataSource.openDbForReading();
-        String enclosure = dataSource.getEpisodeEnclosure(podcastID, episodeTitle);
         Intent intent = new Intent(getApplicationContext(), DownloadService.class);
-        intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-        intent.putExtra(Utilities.EPISODE_TITLE, episodeTitle);
-        intent.putExtra(Utilities.PODCAST_ID, podcastID);
-        intent.putExtra(Utilities.ENCLOSURE, enclosure);
+        intent.putExtra(Utilities.EPISODE_ID, episodeID);
+        intent.putExtra(Utilities.PODCAST_ID, mostRecentPodcastID);
+        intent.putExtra(Utilities.PODCAST_TITLE, mostRecentPodcastTitle);
         startService(intent);
-        dataSource.closeDb();
     }
 
     @Override
@@ -50,8 +44,8 @@ public class DownloadActivity extends Activity {
             case android.R.id.home:
                 Intent upIntent = new Intent(getApplicationContext(), PodcastViewerActivity.class);
                 upIntent.setAction(Utilities.VIEW_PODCAST);
-                upIntent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                upIntent.putExtra(Utilities.PODCAST_ID, podcastID);
+                upIntent.putExtra(Utilities.PODCAST_TITLE, mostRecentPodcastTitle);
+                upIntent.putExtra(Utilities.PODCAST_ID, mostRecentPodcastID);
                 if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
                     TaskStackBuilder.create(this)
                             // Add all of this activity's parents to the back stack

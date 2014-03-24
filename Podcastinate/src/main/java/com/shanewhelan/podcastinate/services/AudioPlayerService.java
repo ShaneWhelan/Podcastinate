@@ -30,9 +30,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
     public static final String DIRECTORY = "directory";
     public static final String ACTION_DISCONNECT = "1";
+
     // Episode info - essential that it is updated
-    private static String directory;
     private static String podcastTitle;
+    private static String episodeID;
     private static Episode episode;
     private static int lastPausedPosition;
 
@@ -93,9 +94,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (ACTION_PLAY.equals(intent.getAction())) {
-            directory = intent.getStringExtra(DIRECTORY);
+            episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
             podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
-            playNewEpisode(directory, false, podcastTitle);
+            playNewEpisode(episodeID, false, podcastTitle);
         } else if (ACTION_DISCONNECT.equals(intent.getAction())) {
             if (player != null) {
                 if (player.isPlaying()) {
@@ -108,7 +109,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         return START_STICKY;
     }
 
-    public void playNewEpisode(String directory, boolean isDifferentEpisode, String podcastTitle) {
+    public void playNewEpisode(String episodeID, boolean isDifferentEpisode, String podcastTitle) {
         try {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
@@ -117,7 +118,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 if (isDifferentEpisode) {
                     saveEpisodeTimer(false);
-                    AudioPlayerService.directory = directory;
                     AudioPlayerService.podcastTitle = podcastTitle;
                 } else {
                     player = new MediaPlayer();
@@ -125,14 +125,14 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // Retrieve episode information from database
                 PodcastDataSource pds = new PodcastDataSource(this);
                 pds.openDbForWriting();
-                episode = pds.getEpisodeMetaData(directory);
+                episode = pds.getEpisodeMetaDataForPlay(episodeID);
                 // While we are at it update the isNew fields in DB, DB instance is only opened once this way
                 pds.updateEpisodeIsNew(episode.getEpisodeID(), 0);
                 pds.updatePodcastCountNew(episode.getPodcastID(), pds.getCountNew(episode.getPodcastID())-1);
                 pds.closeDb();
 
                 player.reset();
-                player.setDataSource(directory);
+                player.setDataSource(episode.getDirectory());
                 player.setLooping(false);
                 player.setOnPreparedListener(this);
                 player.setOnErrorListener(this);
@@ -197,7 +197,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
         episode = null;
         iBinder = null;
-        directory = null;
+        episodeID = null;
 
         super.onDestroy();
     }
@@ -288,10 +288,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public Episode getEpisode() {
         return episode;
-    }
-
-    public String getDirectory() {
-        return directory;
     }
 
     public String getPodcastTitle() {

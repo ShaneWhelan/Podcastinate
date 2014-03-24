@@ -32,8 +32,9 @@
     <string name="openDrawerText">Menu</string>
     <string name="closeDrawerText">Podcasts</string>
     <string name="demo_refresh">Demo Refresh</string>
-    <string name="title_podcast_viewer">...</string>
-    <string name="mark_played">Mark As Played</string>
+    <string name="title_podcast_viewer">…</string>
+    <string name="mark_played">Mark as played</string>
+    <string name="mark_as_new">Mark as new</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

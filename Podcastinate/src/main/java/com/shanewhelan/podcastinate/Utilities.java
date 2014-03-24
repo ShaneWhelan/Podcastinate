@@ -27,8 +27,6 @@ public class Utilities {
     public static final String ACTION_DOWNLOADED = "com.shanewhelan.podcastinate.DOWNLOADED";
     public static final String ACTION_FINISHED = "com.shanewhelan.podcastinate.FINISHED";
     public static final String PODCAST_TITLE = "e_title";
-    public static final String EPISODE_TITLE = "p_title";
-    public static final String ENCLOSURE = "enclosure";
     public static final String DIRECTORY = "/Podcastinate";
     public static final int INVALID_URL = -1;
     public static final int FAILURE_TO_PARSE = 0;
@@ -40,6 +38,7 @@ public class Utilities {
     public static final String ACTION_UPDATE_LIST = "update_list";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
+    public static String EPISODE_ID = "episode_id";
 
     public Utilities() {
 

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
@@ -30,6 +31,8 @@ import java.net.URISyntaxException;
 import java.util.Random;
 
 public class DownloadService extends IntentService {
+    //private ArrayList<Episode> episodeList;
+
     private NotificationManager notifyManager;
     private Builder builder;
     private double dlProgress;
@@ -41,13 +44,19 @@ public class DownloadService extends IntentService {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onHandleIntent(Intent intent) {
-        String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
-        String episodeTitle = intent.getStringExtra(Utilities.EPISODE_TITLE);
+        String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
-        String enclosure = intent.getStringExtra(Utilities.ENCLOSURE);
+        String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
+
+        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
+        dataSource.openDbForReading();
+        Episode episode = dataSource.getEpisodeMetaDataForDownload(episodeID);
+        dataSource.closeDb();
+
+        String episodeTitle = episode.getTitle();
+        String enclosure = episode.getEnclosure();
 
         String directory = null;
-
         try {
             // Download podcast file
             HttpGet httpGet = new HttpGet(new URI(enclosure));
@@ -163,12 +172,12 @@ public class DownloadService extends IntentService {
                 if (downloadedSize == contentLength) {
                     directory = podcastFile.getAbsolutePath();
                 }
-
-
+                // Set Episode directory
                 pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
                 // Update count new while we are at it
-                int countNew = pds.getCountNew(podcastID);
+                pds.updatePodcastCountNew(podcastID, pds.getCountNew(podcastID) + 1);
+                pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
                 pds.closeDb();
 
                 Intent iComplete = new Intent();

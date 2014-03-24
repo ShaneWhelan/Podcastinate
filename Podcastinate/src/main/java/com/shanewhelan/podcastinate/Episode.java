@@ -5,15 +5,17 @@ package com.shanewhelan.podcastinate;
  */
 public class Episode {
     private int episodeID;
-    private boolean isNew;
-    private int currentTime;
     private int podcastID;
     private String title;
     private String description;
-    private String pubDate;
-    private String guid;
-    private String duration;
     private String enclosure;
+    private String pubDate;
+    private String duration;
+    private String guid;
+    private String directory;
+    private boolean isNew;
+    private int currentTime;
+
 
     public String getTitle() {
         return title;
@@ -93,5 +95,13 @@ public class Episode {
 
     public void setEpisodeID(int episodeID) {
         this.episodeID = episodeID;
+    }
+
+    public String getDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(String directory) {
+        this.directory = directory;
     }
 }

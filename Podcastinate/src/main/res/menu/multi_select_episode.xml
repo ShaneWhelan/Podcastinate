@@ -11,4 +11,9 @@
         android:id="@+id/mark_as_played"
         android:title="@string/mark_played"
         android:showAsAction="never"/>
+
+    <item
+        android:id="@+id/mark_as_new"
+        android:title="@string/mark_as_new"
+        android:showAsAction="never"/>
 </menu>
