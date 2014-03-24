@@ -124,7 +124,7 @@ public class DownloadService extends IntentService {
                 notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder = new Builder(this);
                 builder.setContentTitle(episodeTitle).setContentText("Download in progress")
-                        .setSmallIcon(R.drawable.ic_action_download_pressed);
+                        .setSmallIcon(R.drawable.ic_action_download_notification);
 
                 // Use count to make sure we only update the progress bar 50 times in total
                 double count = 0;
@@ -167,6 +167,8 @@ public class DownloadService extends IntentService {
 
                 pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
+                // Update count new while we are at it
+                int countNew = pds.getCountNew(podcastID);
                 pds.closeDb();
 
                 Intent iComplete = new Intent();

@@ -322,11 +322,18 @@ public class PodcastDataSource {
         return countNew;
     }
 
-    public long updateCountNew(int podcastID, int countNew) {
+    public long updatePodcastCountNew(int podcastID, int countNew) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(PodcastEntry.COUNT_NEW, countNew);
         return database.update(PodcastEntry.TABLE_NAME, contentValues,
                 PodcastEntry.PODCAST_ID + " = \"" + podcastID + "\"", null);
+    }
+
+    public long updateEpisodeIsNew(int episodeID, int isNew) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(EpisodeEntry.NEW_EPISODE, isNew);
+        return database.update(EpisodeEntry.TABLE_NAME, contentValues,
+                EpisodeEntry.EPISODE_ID + " = \"" + episodeID + "\"", null);
     }
 
     public void removeTwoEpisodesFromEach() {
@@ -354,14 +361,14 @@ public class PodcastDataSource {
                     int id = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.PODCAST_ID));
                     int count = cursor.getInt(cursor.getColumnIndex("count(" + EpisodeEntry.NEW_EPISODE + ")"));
 
-                    updateCountNew(id, count);
+                    updatePodcastCountNew(id, count);
                 }
             } else {
                 HashMap<String, String> listOfIds = getAllPodcastIDsLinks();
                 Set entrySet = listOfIds.entrySet();
                 for (Object anEntrySet : entrySet) {
                     Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                    updateCountNew(Integer.parseInt(mapEntry.getKey().toString()), 0);
+                    updatePodcastCountNew(Integer.parseInt(mapEntry.getKey().toString()), 0);
                 }
             }
             cursor.close();

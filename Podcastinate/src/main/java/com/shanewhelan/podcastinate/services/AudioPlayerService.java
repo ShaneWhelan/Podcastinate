@@ -108,14 +108,14 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         return START_STICKY;
     }
 
-    public void playNewEpisode(String directory, boolean isNewPodcast, String podcastTitle) {
+    public void playNewEpisode(String directory, boolean isDifferentEpisode, String podcastTitle) {
         try {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
                     AudioManager.AUDIOFOCUS_GAIN);
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                if (isNewPodcast) {
+                if (isDifferentEpisode) {
                     saveEpisodeTimer(false);
                     AudioPlayerService.directory = directory;
                     AudioPlayerService.podcastTitle = podcastTitle;
@@ -124,8 +124,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 }
                 // Retrieve episode information from database
                 PodcastDataSource pds = new PodcastDataSource(this);
-                pds.openDbForReading();
+                pds.openDbForWriting();
                 episode = pds.getEpisodeMetaData(directory);
+                // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                pds.updateEpisodeIsNew(episode.getEpisodeID(), 0);
+                pds.updatePodcastCountNew(episode.getPodcastID(), pds.getCountNew(episode.getPodcastID())-1);
                 pds.closeDb();
 
                 player.reset();

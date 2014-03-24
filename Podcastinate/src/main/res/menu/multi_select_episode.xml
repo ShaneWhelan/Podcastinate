@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/delete_selection_action"
+        android:icon="@drawable/ic_action_discard"
+        android:title="@string/action_discard"
+        android:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/mark_as_played"
+        android:title="@string/mark_played"
+        android:showAsAction="never"/>
+</menu>

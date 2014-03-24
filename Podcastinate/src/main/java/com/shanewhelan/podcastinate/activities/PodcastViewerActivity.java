@@ -35,6 +35,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
@@ -194,6 +195,13 @@ public class PodcastViewerActivity extends Activity {
                         episodeAdapter.clearSelection();
                         mode.finish(); // Action picked, so close the CAB
                         return true;
+                    case R.id.mark_as_played:
+                        markSelectedItemsAsPlayed();
+                        updateListOfPodcasts();
+                        nr = 0;
+                        episodeAdapter.clearSelection();
+                        mode.finish(); // Action picked, so close the CAB
+                        return true;
                     default:
                         return false;
                 }
@@ -204,7 +212,7 @@ public class PodcastViewerActivity extends Activity {
                 // Inflate the menu for the CAB
                 MenuInflater inflater = mode.getMenuInflater();
                 if (inflater != null) {
-                    inflater.inflate(R.menu.multi_select, menu);
+                    inflater.inflate(R.menu.multi_select_episode, menu);
                 }
                 return true;
             }
@@ -309,6 +317,35 @@ public class PodcastViewerActivity extends Activity {
         }
     }
 
+    private void markSelectedItemsAsPlayed() {
+        SQLiteCursor cursor;
+        SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
+        if (booleanArray != null) {
+            // Open connection to DB
+            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+            pds.openDbForWriting();
+            // Loop through the SparseBooleanArray and delete directory from db and file from disk
+            for (int i = 0; i < booleanArray.size(); i++) {
+                if (booleanArray.valueAt(i)) {
+                    cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
+                    if (cursor != null) {
+                        int episode_id = cursor.getInt(cursor.getColumnIndex("_id"));
+                        try {
+                            int currentCountNew = pds.getCountNew(podcastID);
+                            if(currentCountNew != 0) {
+                                pds.updatePodcastCountNew(podcastID, currentCountNew - 1);
+                            }
+                            pds.updateEpisodeIsNew(episode_id, 0);
+                        } catch(Exception e) {
+                            Utilities.logException(e);
+                        }
+                    }
+                }
+            }
+            pds.closeDb();
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -388,9 +425,16 @@ public class PodcastViewerActivity extends Activity {
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            if(cursor.getInt(cursor.getColumnIndex(EpisodeEntry.NEW_EPISODE)) == 1 ) {
+                view.setBackgroundColor(getResources().getColor(R.color.background_color_new));
+            } else {
+                view.setBackgroundColor(getResources().getColor(R.color.background_color_old));
+            }
+
             String episodeTitle = cursor.getString(cursor.getColumnIndex(EpisodeEntry.TITLE));
             TextView episodeNameView = (TextView) view.findViewById(R.id.episodeName);
             episodeNameView.setText(episodeTitle);
+
 
             ImageButton downloadButton = (ImageButton) view.findViewById(R.id.download_icon);
             ImageButton playButton = (ImageButton) view.findViewById(R.id.play_icon);
@@ -401,6 +445,7 @@ public class PodcastViewerActivity extends Activity {
             downloadButton.setOnClickListener(this);
             playButton.setOnClickListener(this);
             pauseButton.setOnClickListener(this);
+
 
             String directory = cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY));
 
@@ -460,7 +505,6 @@ public class PodcastViewerActivity extends Activity {
             // Adapter handles setting up rows
             View v = super.getView(position, convertView, parent);
             if (v != null) {
-                v.setBackgroundColor(getResources().getColor(android.R.color.background_light));
                 if (sparseBArray.get(position)) {
                     v.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
                 }

@@ -33,6 +33,7 @@
     <string name="closeDrawerText">Podcasts</string>
     <string name="demo_refresh">Demo Refresh</string>
     <string name="title_podcast_viewer">...</string>
+    <string name="mark_played">Mark As Played</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

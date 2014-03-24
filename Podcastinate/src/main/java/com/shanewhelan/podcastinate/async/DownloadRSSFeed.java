@@ -72,7 +72,6 @@ public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
             if (context.getApplicationContext() != null) {
                 Toast.makeText(context.getApplicationContext(), "Subscribed", duration).show();
             }
-
             context.sendBroadcast(new Intent(Utilities.ACTION_UPDATE_LIST));
         } else {
             if (context.getApplicationContext() != null) {

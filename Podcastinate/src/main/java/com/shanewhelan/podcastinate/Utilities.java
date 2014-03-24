@@ -84,7 +84,7 @@ public class Utilities {
                     podcast.getImageDirectory(), podcast.getDirectory(), podcast.getLink(), podcast.getCountNew());
         } else {
             podcastID = pds.getPodcastIDWithLink(url);
-            pds.updateCountNew(podcastID, podcast.getCountNew());
+            pds.updatePodcastCountNew(podcastID, podcast.getCountNew());
         }
 
         // If podcast inserted correctly now insert episodes too

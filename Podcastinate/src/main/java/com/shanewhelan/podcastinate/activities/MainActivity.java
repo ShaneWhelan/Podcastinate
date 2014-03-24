@@ -53,7 +53,6 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 FEATURES:
-TODO: Count of number of new episodes
 TODO: Persistent notification while episode plays
 TODO: Control Panel Design
 TODO: Create Download Queue (Cancel, pause and start downloads)
@@ -239,6 +238,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mainActivityReceiver, new IntentFilter(Utilities.ACTION_UPDATE_LIST));
+        updateListOfPodcasts();
     }
 
     @Override
