@@ -176,8 +176,15 @@ public class DownloadService extends IntentService {
                 pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
                 // Update count new while we are at it
-                pds.updatePodcastCountNew(podcastID, pds.getCountNew(podcastID) + 1);
-                pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
+                if(!episode.isNew()) {
+                    // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                    pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
+                    int countNew = pds.getCountNew(episode.getPodcastID());
+                    if (countNew > 0) {
+                        pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
+                    }
+                }
+
                 pds.closeDb();
 
                 Intent iComplete = new Intent();

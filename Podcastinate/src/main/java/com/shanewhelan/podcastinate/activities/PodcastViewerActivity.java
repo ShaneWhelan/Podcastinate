@@ -344,7 +344,7 @@ public class PodcastViewerActivity extends Activity {
                                 // 0 new episodes in the database
                                 int currentCountNew = pds.getCountNew(podcastID);
                                 if (newState == 0) {
-                                    if (currentCountNew != 0) {
+                                    if (currentCountNew > 0) {
                                         pds.updatePodcastCountNew(podcastID, currentCountNew - 1);
                                     }
                                 } else {

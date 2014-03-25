@@ -1,8 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:orientation="vertical"
-              android:layout_weight="6">
+              android:orientation="vertical">
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:orientation="vertical"
@@ -62,13 +61,17 @@
         android:layout_height="match_parent"
         android:layout_weight="6"
         android:gravity="center"
-        android:id="@+id/controlPanel">
+        android:id="@+id/controlPanel"
+        android:divider="?android:listDivider"
+        android:dividerPadding="5dip"
+        android:showDividers="middle"
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/rewind"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="fitXY"
+            android:scaleType="center"
             android:background="@drawable/rewind_icon_selector"
             android:contentDescription="@string/rewindButton"/>
 
@@ -76,7 +79,7 @@
             android:id="@+id/mainPlayButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="fitXY"
+            android:scaleType="center"
             android:background="@drawable/play_icon_selector"
             android:contentDescription="@string/mainPlayButton"/>
 
@@ -84,7 +87,7 @@
             android:id="@+id/mainPauseButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="fitXY"
+            android:scaleType="center"
             android:background="@drawable/pause_icon_selector"
             android:visibility="gone"
             android:contentDescription="@string/ic_pause" />
@@ -93,7 +96,7 @@
             android:id="@+id/fastForward"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="fitXY"
+            android:scaleType="fitCenter"
             android:background="@drawable/fast_forward_icon_selector"
             android:contentDescription="@string/fastForward"/>
     </LinearLayout>

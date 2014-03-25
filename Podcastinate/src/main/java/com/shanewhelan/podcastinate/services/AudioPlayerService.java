@@ -1,19 +1,27 @@
 package com.shanewhelan.podcastinate.services;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.shanewhelan.podcastinate.Episode;
+import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.activities.PlayerActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import java.io.IOException;
@@ -33,6 +41,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     // Episode info - essential that it is updated
     private static String podcastTitle;
+    private static String podcastImage;
     private static String episodeID;
     private static Episode episode;
     private static int lastPausedPosition;
@@ -126,9 +135,15 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 PodcastDataSource pds = new PodcastDataSource(this);
                 pds.openDbForWriting();
                 episode = pds.getEpisodeMetaDataForPlay(episodeID);
-                // While we are at it update the isNew fields in DB, DB instance is only opened once this way
-                pds.updateEpisodeIsNew(episode.getEpisodeID(), 0);
-                pds.updatePodcastCountNew(episode.getPodcastID(), pds.getCountNew(episode.getPodcastID())-1);
+                if(episode.isNew()) {
+                    // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                    pds.updateEpisodeIsNew(episode.getEpisodeID(), 0);
+                    int countNew = pds.getCountNew(episode.getPodcastID());
+                    if (countNew > 0) {
+                        pds.updatePodcastCountNew(episode.getPodcastID(), countNew - 1);
+                    }
+                }
+                podcastImage = pds.getPodcastImage(episode.getPodcastID());
                 pds.closeDb();
 
                 player.reset();
@@ -156,6 +171,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         }
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
         sendBroadcast(new Intent (Utilities.ACTION_PLAY));
+        buildNotification();
     }
 
     @Override
@@ -214,6 +230,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void pauseMedia(boolean isTransient) {
+
         lastPausedPosition = player.getCurrentPosition();
         player.pause();
         saveEpisodeTimer(false);
@@ -240,6 +257,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
         sendBroadcast(new Intent(Utilities.ACTION_PLAY));
+        buildNotification();
     }
 
     public void setProgress(int progress) {
@@ -296,5 +314,39 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public int getLastPausedPosition() {
         return lastPausedPosition;
+    }
+
+    public void buildNotification() {
+        Intent intent = new Intent(this, PlayerActivity.class);
+        // Start PlayerActivity in the future
+        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        BitmapDrawable podcastImageDrawable = (BitmapDrawable) BitmapDrawable.createFromPath(podcastImage);
+        Bitmap podcastBitmap = podcastImageDrawable.getBitmap();
+
+        Resources resources = this.getResources();
+        int height = (int) resources.getDimension(android.R.dimen.notification_large_icon_height);
+        int width = (int) resources.getDimension(android.R.dimen.notification_large_icon_width);
+
+        podcastBitmap = Bitmap.createScaledBitmap(podcastBitmap, width, height, false);
+
+        // Create Notification using Notification Compatibility
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setLargeIcon(podcastBitmap)
+                .setContentTitle(episode.getTitle())
+                .setContentText(podcastTitle)
+                .addAction(R.drawable.ic_notification_skip_back, "-30", pIntent)
+                .addAction(R.drawable.ic_notification_play, "", pIntent)
+                .addAction(R.drawable.ic_notification_skip_forward, "+30", pIntent)
+                .setContentIntent(pIntent)
+                .setAutoCancel(true);
+
+        // Create Notification Manager
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Build Notification with Notification Manager
+        notificationManager.notify(0, builder.build());
+
     }
 }

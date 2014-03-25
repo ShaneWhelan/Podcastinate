@@ -16,7 +16,6 @@ public final class PodcastContract {
         public static final String DIRECTORY = "directory";
         public static final String LINK = "link";
         public static final String COUNT_NEW = "count_new";
-
     }
 
     public static abstract class EpisodeEntry implements BaseColumns {

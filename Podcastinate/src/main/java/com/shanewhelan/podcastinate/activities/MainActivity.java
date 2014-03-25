@@ -81,6 +81,7 @@ TODO: Investigate audio focus between podcastinate and PocketCasts. Live pocket 
 TODO: Access the player from drawer
 TODO: Number of feeds refreshed
 TODO: The server side gives back the same podcasts already subscribed to
+TODO: Check DOWNLOAD SERVICE TO MAKE SURE WE ARE NOT INCREMENTING EPISODE NEW COUNT
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
 */
