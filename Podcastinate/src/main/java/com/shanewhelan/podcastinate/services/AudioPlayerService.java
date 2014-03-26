@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -25,10 +24,6 @@ import com.shanewhelan.podcastinate.activities.PlayerActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import java.io.IOException;
-
-/**
- * Created by Shane on 03/02/14. Podcastinate.
- */
 
 public class AudioPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
@@ -96,10 +91,13 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (player.isPlaying()) {
                     saveEpisodeTimer(false);
+                    pauseMedia(false);
+                    /*
                     player.stop();
                     player.release();
                     player = null;
-                    sendBroadcast(new Intent (Utilities.ACTION_PAUSE));
+                    */
+                    //sendBroadcast(new Intent (Utilities.ACTION_PAUSE));
                 }
                 break;
 
@@ -188,22 +186,21 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         player.start();
         // Resume podcast if partially listened
         if(episode.getCurrentTime() > 0) {
-            Log.d("sw9", "Current time: " + episode.getCurrentTime());
             player.seekTo(episode.getCurrentTime());
         }
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+        sendBroadcast(new Intent (Utilities.ACTION_PLAY));
+
+        // The rest of this method is concerned with scaffolding for the notification
         registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PAUSE_NOTIFY));
         registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PLAY_NOTIFY));
         registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_BACK_NOTIFY));
         registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
-        sendBroadcast(new Intent (Utilities.ACTION_PLAY));
 
         BitmapDrawable podcastImageDrawable = (BitmapDrawable) BitmapDrawable.createFromPath(podcastImage);
         podcastBitmap = podcastImageDrawable.getBitmap();
-
-        Resources resources = this.getResources();
-        int height = (int) resources.getDimension(android.R.dimen.notification_large_icon_height);
-        int width = (int) resources.getDimension(android.R.dimen.notification_large_icon_width);
+        int height = (int) getResources().getDimension(android.R.dimen.notification_large_icon_height);
+        int width = (int) getResources().getDimension(android.R.dimen.notification_large_icon_width);
 
         podcastBitmap = Bitmap.createScaledBitmap(podcastBitmap, width, height, false);
 
@@ -246,10 +243,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         if(disconnectJackR != null && player != null) {
             if(player.isPlaying()) {
                 unregisterReceiver(disconnectJackR);
-                unregisterReceiver(notificationBrodRec);
                 disconnectJackR = null;
             }
         }
+
+        unregisterReceiver(notificationBrodRec);
         if (player != null) {
             player.release();
             player = null;
@@ -275,6 +273,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     public void pauseMedia(boolean isTransient) {
         lastPausedPosition = player.getCurrentPosition();
         player.pause();
+        // Tell Application about pause
+        sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
         saveEpisodeTimer(false);
 
         if(!isTransient) {
@@ -282,31 +282,35 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             audioManager.abandonAudioFocus(this);
         }
 
-        // Tell Application about pause
-        sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
-
-        buildNotification();
-
-
-        // Sometimes receiver is not registered fixed most causes of this
+        // Sometimes receiver is not registered this try/catch fixes that
         try {
             unregisterReceiver(disconnectJackR);
         } catch (Exception e) {
             Utilities.logException(e);
         }
+        buildNotification();
     }
 
     public void resumeMedia() {
-        player.start();
+        // Get audio focus form the system
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
-        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_PAUSE_NOTIFY));
-        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_PLAY_NOTIFY));
-        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_SKIP_BACK_NOTIFY));
-        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
-        sendBroadcast(new Intent(Utilities.ACTION_PLAY));
-        buildNotification();
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
+
+        // If we received audio focus then resume the episode
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            player.start();
+            // Register the headphone jack receiver
+            registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+            sendBroadcast(new Intent(Utilities.ACTION_PLAY));
+
+            registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PAUSE_NOTIFY));
+            registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PLAY_NOTIFY));
+            registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_BACK_NOTIFY));
+            registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
+
+            buildNotification();
+        }
     }
 
     public void skipBack(int millisToSkip) {
@@ -362,7 +366,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             episode.setCurrentTime(0);
             pds.updateCurrentTime(episode.getEpisodeID(), 0);
         } else {
-            Log.d("sw9", "Saved Current time: " + player.getCurrentPosition());
             episode.setCurrentTime(player.getCurrentPosition());
             pds.updateCurrentTime(episode.getEpisodeID(), player.getCurrentPosition());
         }

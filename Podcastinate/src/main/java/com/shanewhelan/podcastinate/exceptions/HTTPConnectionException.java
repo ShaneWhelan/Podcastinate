@@ -2,9 +2,6 @@ package com.shanewhelan.podcastinate.exceptions;
 
 import java.io.IOException;
 
-/**
- * Created by Shane on 31/01/14. Podcastinate.
- */
 public class HTTPConnectionException extends IOException {
     private int responseCode;
 

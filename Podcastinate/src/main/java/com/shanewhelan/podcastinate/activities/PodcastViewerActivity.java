@@ -1,6 +1,5 @@
 package com.shanewhelan.podcastinate.activities;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -10,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NavUtils;
@@ -45,9 +43,6 @@ import java.io.File;
 
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
-/**
- * Created by Shane on 29/10/13. Podcastinate.
- */
 public class PodcastViewerActivity extends Activity {
     private static EpisodeAdapter episodeAdapter;
     private static PodcastDataSource dataSource;
@@ -73,8 +68,8 @@ public class PodcastViewerActivity extends Activity {
                 // and the control panel doesn't appear because the service is already up.
                 syncControlPanel();
             } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
-                playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
+                playButton.setVisibility(View.VISIBLE);
                 updateListOfPodcasts();
                 syncControlPanel();
             } else if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
@@ -272,7 +267,9 @@ public class PodcastViewerActivity extends Activity {
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
-                audioService.pauseMedia(false);
+                if(audioService.getPlayer().isPlaying()) {
+                    audioService.pauseMedia(false);
+                }
             }
         });
 
@@ -370,7 +367,6 @@ public class PodcastViewerActivity extends Activity {
         unregisterReceiver(audioReceiver);
     }
 
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     protected void onResume() {
         super.onResume();
@@ -539,7 +535,6 @@ public class PodcastViewerActivity extends Activity {
             return v;
         }
 
-        @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         @Override
         public void onClick(View v) {
             int viewId = v.getId();
@@ -589,7 +584,9 @@ public class PodcastViewerActivity extends Activity {
                     }
                 } else if (viewId == R.id.pause_icon) {
                     // Pause podcast in background service
-                    audioService.pauseMedia(false);
+                    if(audioService.getPlayer().isPlaying()) {
+                        audioService.pauseMedia(false);
+                    }
                 }
             }
         }

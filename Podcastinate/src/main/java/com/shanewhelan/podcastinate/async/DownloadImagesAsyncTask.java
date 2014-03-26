@@ -1,9 +1,5 @@
 package com.shanewhelan.podcastinate.async;
 
-/**
- * Created by Shane on 19/03/14. Podcastinate.
- */
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;

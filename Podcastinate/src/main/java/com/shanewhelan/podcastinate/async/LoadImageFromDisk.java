@@ -5,9 +5,6 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.widget.ImageButton;
 
-/**
- * Created by Shane on 23/03/14. Podcastinate.
- */
 public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
     private ImageButton imageButton;
 

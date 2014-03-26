@@ -8,10 +8,6 @@ import com.shanewhelan.podcastinate.database.PodcastContract.CategoryEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.EpisodeEntry;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 
-/**
- * Created by Shane on 29/10/13. Podcastinate.
- */
-
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TEXT_TYPE = " TEXT";
     private static final String COMMA_SEP = ", ";

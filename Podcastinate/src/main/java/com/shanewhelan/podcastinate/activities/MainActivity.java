@@ -53,8 +53,8 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 FEATURES:
-TODO: Finalise Control Panel Design
-TODO: Create Download Queue (Cancel, pause and start downloads)
+TODO: Finalise Control Panel Design and put on every page
+TODO: Create Download Queue (Cancel, pause and start downloads, retry on loose connection)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
 TODO: Confirmation dialog box on subscribe
 TODO: Lock screen widget
@@ -64,7 +64,6 @@ TODO: Mark new on resume podcast
 MAJOR FEATURES:
 TODO: Cloud backup
 TODO: Car Mode
-TODO: Recommendations
 TODO: User Suggested Podcasts
 TODO: User Settings
 TODO: Statistics of user playback
@@ -72,18 +71,19 @@ LOW PRIORITY:
 TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
 TODO: Add Paging to podcast viewing activity
+
 BUGS:
-TODO: Download service: no retry on download fail
 TODO: Download service: Sometimes fails to download and jumps straight to download complete notification
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
-TODO: Refresh Bug
-TODO: Investigate audio focus between podcastinate and PocketCasts. Live pocket casts switch fail
-TODO: Access the player from drawer
+TODO: Restrict access to the player from the drawer
 TODO: Number of feeds refreshed
+TODO: Fix for one feed a week/removing old feeds
+TODO: Player Activity: Enter quickly and the buttons screw up
+
+Server Bugs:
 TODO: The server side gives back the same podcasts already subscribed to
-TODO: Check DOWNLOAD SERVICE TO MAKE SURE WE ARE NOT INCREMENTING EPISODE NEW COUNT
-TODO: Fix for one feed a week
+
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
 */

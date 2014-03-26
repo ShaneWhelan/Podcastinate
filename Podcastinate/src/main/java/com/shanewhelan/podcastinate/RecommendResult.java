@@ -2,9 +2,6 @@ package com.shanewhelan.podcastinate;
 
 import java.util.List;
 
-/**
- * Created by Shane on 19/03/14. Podcastinate.
- */
 public class RecommendResult {
     private String title;
     private String imageLink;

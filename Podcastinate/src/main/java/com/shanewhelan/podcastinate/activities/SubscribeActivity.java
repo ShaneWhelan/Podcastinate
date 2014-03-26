@@ -37,9 +37,6 @@ import java.net.URISyntaxException;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
-/**
- * Created by Shane on 29/10/13. Podcastinate. Class to add a subscription.
- */
 public class SubscribeActivity extends Activity {
     private TextView subscribeUrl;
     private TextView searchText;

@@ -27,10 +27,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * Created by Shane on 29/10/13. Podcastinate.
- */
-
 public class ParseRSS {
     private Podcast podcast = new Podcast();
     private DateFormat rssDateFormatter;

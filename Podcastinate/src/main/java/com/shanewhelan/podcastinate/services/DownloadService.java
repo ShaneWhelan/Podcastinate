@@ -1,13 +1,11 @@
 package com.shanewhelan.podcastinate.services;
 
-import android.annotation.TargetApi;
 import android.app.IntentService;
-import android.app.Notification.Builder;
+import android.support.v4.app.NotificationCompat.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,17 +41,17 @@ public class DownloadService extends IntentService {
         super("Download service");
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onHandleIntent(Intent intent) {
         String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
         String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
 
-        PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-        dataSource.openDbForReading();
-        Episode episode = dataSource.getEpisodeMetaDataForDownload(episodeID);
-        dataSource.closeDb();
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDbForReading();
+        Episode episode = pds.getEpisodeMetaDataForDownload(episodeID);
+        String podcastDirectory = pds.getPodcastDirectory(podcastID);
+        pds.closeDb();
 
         String episodeTitle = episode.getTitle();
         String enclosure = episode.getEnclosure();
@@ -77,11 +75,6 @@ public class DownloadService extends IntentService {
                 throw new HTTPConnectionException(responseCode);
             }
 
-            String podcastDirectory;
-            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-            pds.openDbForReading();
-            podcastDirectory = pds.getPodcastDirectory(podcastID);
-            pds.closeDb();
             // Check if default directory exists and create it if not.
             File externalStorage = new File(podcastDirectory);
             if (!externalStorage.isDirectory()) {
@@ -181,6 +174,9 @@ public class DownloadService extends IntentService {
                 // Set Episode directory
                 pds.openDbForWriting();
                 pds.updateEpisodeDirectory(enclosure, directory);
+
+                // Recheck if episode new status changed
+                episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
                 // Update count new while we are at it
                 if(!episode.isNew()) {
                     // While we are at it update the isNew fields in DB, DB instance is only opened once this way

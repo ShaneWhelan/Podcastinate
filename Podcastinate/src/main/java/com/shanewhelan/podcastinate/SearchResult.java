@@ -2,9 +2,7 @@ package com.shanewhelan.podcastinate;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-/**
- * Created by Shane on 09/03/14. Podcastinate.
- */
+
 public class SearchResult implements Parcelable{
     private String title;
     private String imageLink;

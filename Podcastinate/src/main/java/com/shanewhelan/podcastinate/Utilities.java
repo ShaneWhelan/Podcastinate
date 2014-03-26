@@ -18,9 +18,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-/**
- * Created by Shane on 04/02/14. Podcastinate.
- */
 public class Utilities {
     public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
     public static final String ACTION_PAUSE = "com.shanewhelan.podcastinate.PAUSE";
@@ -136,29 +133,6 @@ public class Utilities {
     public static void logException(Exception e) {
         Log.e(e.getClass().getName(), e.getMessage(), e);
     }
-
-    /*
-    public static int safeLongToInt(long l) {
-        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
-        }
-        return (int) l;
-    }
-
-    public static String convertInputStreamToString(InputStream inputStream, long contentLength) {
-        // Broken method
-        try {
-            Reader reader = new InputStreamReader(inputStream, "UTF-8");
-            char[] buffer = new char[Utilities.safeLongToInt(contentLength)];
-            reader.read(buffer);
-            return new String(buffer);
-        } catch (UnsupportedEncodingException e) {
-            Utilities.logException(e);
-        } catch (IOException e) {
-            Utilities.logException(e);
-        }
-        return "";
-    }*/
 
     public static String convertInputStreamToStringV2(InputStream inputStream) {
         try {

@@ -21,9 +21,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * Created by Shane on 23/03/14. Podcastinate.
- */
 public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
     private Context context;
     private ProgressBar progressBar;

@@ -18,9 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by Shane on 11/01/14. Podcastinate.
- */
 public class PodcastDataSource {
     private DatabaseHelper databaseHelper;
     private SQLiteDatabase database;
@@ -359,6 +356,17 @@ public class PodcastDataSource {
         contentValues.put(EpisodeEntry.NEW_EPISODE, isNew);
         return database.update(EpisodeEntry.TABLE_NAME, contentValues,
                 EpisodeEntry.EPISODE_ID + " = \"" + episodeID + "\"", null);
+    }
+
+    public boolean getEpisodeIsNew(int episodeID) {
+        Cursor cursor =  database.rawQuery("SELECT " + EpisodeEntry.NEW_EPISODE + " FROM " +
+                EpisodeEntry.TABLE_NAME + " WHERE " + EpisodeEntry.EPISODE_ID + " = " + episodeID
+                , null);
+        if(cursor != null) {
+            cursor.moveToFirst();
+            return cursor.getInt(cursor.getColumnIndex(EpisodeEntry.NEW_EPISODE)) == 1;
+        }
+        return false;
     }
 
     public void removeTwoEpisodesFromEach() {

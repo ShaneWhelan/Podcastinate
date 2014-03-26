@@ -2,9 +2,6 @@ package com.shanewhelan.podcastinate.database;
 
 import android.provider.BaseColumns;
 
-/**
- * Created by Shane on 29/10/13. Podcastinate.
- */
 public final class PodcastContract {
 
     public static abstract class PodcastEntry implements BaseColumns {
