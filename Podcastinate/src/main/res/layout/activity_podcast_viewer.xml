@@ -7,7 +7,7 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:orientation="vertical"
                   android:layout_width="match_parent"
-                  android:layout_height="match_parent"
+                  android:layout_height="0dp"
                   android:layout_weight="1">
 
         <ListView
@@ -31,10 +31,10 @@
             android:gravity="center_vertical"
             android:background="@drawable/button_selector"
             android:textColor="@android:color/white"
-            android:layout_toLeftOf="@+id/mainPauseButton"/>
+            android:layout_toLeftOf="@+id/cpPauseButton"/>
 
         <ImageButton
-            android:id="@+id/mainPlayButton"
+            android:id="@+id/cpPlayButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_alignParentRight="true"
@@ -42,13 +42,13 @@
             android:contentDescription="@string/mainPlayButton"/>
 
         <ImageButton
-            android:id="@+id/mainPauseButton"
+            android:id="@id/cpPauseButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:background="@drawable/pause_icon_selector"
             android:layout_alignParentRight="true"
             android:contentDescription="@string/ic_pause"
-            android:layout_toLeftOf="@+id/mainPlayButton"
+            android:layout_toLeftOf="@id/cpPlayButton"
             android:visibility="gone"/>
 
     </RelativeLayout>

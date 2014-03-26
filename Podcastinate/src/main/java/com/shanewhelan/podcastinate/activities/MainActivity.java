@@ -52,25 +52,27 @@ import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
-FEATURES:
-TODO: Finalise Control Panel Design and put on every page
-TODO: Create Download Queue (Cancel, pause and start downloads, retry on loose connection)
+High Priority FEATURES:
+TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
-TODO: Confirmation dialog box on subscribe
-TODO: Lock screen widget
-TODO: Click RSS link to go to Podcastinate
-TODO: Sleep Timer
-TODO: Mark new on resume podcast
+TODO: Click RSS link in browser to go to Podcastinate
+TODO: Set back button to go to right activities
+
 MAJOR FEATURES:
+TODO: Integrate other APIs - EMAIL FEEDLY
 TODO: Cloud backup
 TODO: Car Mode
 TODO: User Suggested Podcasts
 TODO: User Settings
 TODO: Statistics of user playback
-LOW PRIORITY:
-TODO: Streaming: Must keep WIFI from sleeping
-TODO: Help Section
-TODO: Add Paging to podcast viewing activity
+
+Low Priority FEATURES:
+TODO: Check Rotation on all feeds
+TODO: Finalise Control Panel Design and put on every page (Podcast beside epsisode name)
+TODO: Confirmation dialog box on subscribe
+TODO: Lock screen widget
+TODO: Sleep Timer
+TODO: Mark new on resume podcast if manually made new
 
 BUGS:
 TODO: Download service: Sometimes fails to download and jumps straight to download complete notification
@@ -83,6 +85,11 @@ TODO: Player Activity: Enter quickly and the buttons screw up
 
 Server Bugs:
 TODO: The server side gives back the same podcasts already subscribed to
+
+LOW PRIORITY:
+TODO: Streaming: Must keep WIFI from sleeping
+TODO: Help Section
+TODO: Add Paging to podcast viewing activity
 
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations

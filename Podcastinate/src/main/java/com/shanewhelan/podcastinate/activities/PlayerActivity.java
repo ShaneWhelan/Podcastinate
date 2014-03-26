@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,13 +19,11 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 public class PlayerActivity extends Activity {
@@ -47,8 +44,8 @@ public class PlayerActivity extends Activity {
                 pauseButton.setVisibility(View.VISIBLE);
                 updatePlayerTimers();
             } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
-                playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
+                playButton.setVisibility(View.VISIBLE);
                 timerHandler.removeCallbacks(updateTimers);
             } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
                 timerHandler.removeCallbacks(updateTimers);
@@ -113,14 +110,13 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_player);
-
-        initialiseButtons();
     }
 
-    private void initialiseButtons() {
-        playButton = (ImageButton) findViewById(R.id.mainPlayButton);
-        pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
+    private void initialiseLayout() {
+        setContentView(R.layout.activity_player);
+
+        playButton = (ImageButton) findViewById(R.id.playerPlayButton);
+        pauseButton = (ImageButton) findViewById(R.id.playerPauseButton);
         seekBar = (SeekBar) findViewById(R.id.seekBarPlayer);
         elapsedText = (TextView) findViewById(R.id.timeElapsed);
         remainingText = (TextView) findViewById(R.id.timeRemaining);
@@ -131,18 +127,7 @@ public class PlayerActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
-                if (audioService == null) {
-                    // Play podcast in a background service
-                    Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
-                    intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
-                    //intent.putExtra(DownloadActivity.PODCAST_TITLE, podcastTitle);
-                    intent.setAction(AudioPlayerService.ACTION_PLAY);
-                    // Investigate Correct flag and compatibility
-                    if (getApplicationContext() != null) {
-                        getApplicationContext().startService(intent);
-                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
-                    }
-                } else {
+                if (audioService != null) {
                     audioService.resumeMedia();
                 }
             }
@@ -233,6 +218,7 @@ public class PlayerActivity extends Activity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
                 audioService = b.getService();
+                initialiseLayout();
                 syncUserInterface();
             }
 
@@ -244,7 +230,7 @@ public class PlayerActivity extends Activity {
         };
 
         Intent intent = new Intent(this, AudioPlayerService.class);
-        intent.setAction(AudioPlayerService.ACTION_PLAY);
+        intent.setAction(Utilities.ACTION_NEW_EPISODE);
         bindService(intent, serviceConnection, 0);
 
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
@@ -260,34 +246,18 @@ public class PlayerActivity extends Activity {
     }
 
     public void syncUserInterface() {
-        LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
+        LinearLayout controlPanel = (LinearLayout) findViewById(R.id.playerControls);
         if (audioService != null) {
             if (audioService.getPlayer() != null) {
+                // Set up ImageView for the Player
+                ImageView podcastImage = (ImageView) findViewById(R.id.podcastImage);
+                podcastImage.setImageBitmap(audioService.getPodcastBitmapLarge());
+
                 // Change title of activity
                 setTitle(audioService.getPodcastTitle());
                 TextView playerEpisodeTitle = (TextView) findViewById(R.id.playerEpisodeTitle);
                 playerEpisodeTitle.setText(audioService.getEpisode().getTitle());
                 controlPanel.setVisibility(View.VISIBLE);
-                new Thread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                // Set up image for podcast
-                                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                                pds.openDbForReading();
-                                final String imageDirectory = pds.getPodcastImage(audioService.getEpisode().getPodcastID());
-                                pds.closeDb();
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ImageView podcastImage = (ImageView) findViewById(R.id.podcastImage);
-                                        podcastImage.setImageBitmap(BitmapFactory.decodeFile(imageDirectory));
-                                    }
-                                });
-                            }
-                        }
-                ).start();
 
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
@@ -295,7 +265,6 @@ public class PlayerActivity extends Activity {
                     seekBar.setProgress(audioService.getPlayer().getCurrentPosition());
                     seekBar.setMax(audioService.getPlayer().getDuration());
                     seekBar.setVisibility(View.VISIBLE);
-
                 } else {
                     playButton.setVisibility(View.VISIBLE);
                     pauseButton.setVisibility(View.GONE);
@@ -309,9 +278,8 @@ public class PlayerActivity extends Activity {
                 returnToPodcastViewer(audioService.getPodcastTitle());
             }
         } else {
-            RelativeLayout playerWindow = (RelativeLayout) findViewById(R.id.playerWindow);
-            playerWindow.setVisibility(View.GONE);
-            controlPanel.setVisibility(View.GONE);
+            Intent mainIntent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(mainIntent);
         }
     }
 

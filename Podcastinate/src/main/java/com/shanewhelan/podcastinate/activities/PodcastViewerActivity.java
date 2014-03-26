@@ -48,9 +48,9 @@ public class PodcastViewerActivity extends Activity {
     private static PodcastDataSource dataSource;
     private Cursor episodeCursor;
     private int podcastID;
-    private ImageButton playButton;
-    private ImageButton pauseButton;
-    private Button startPlayer;
+    private ImageButton cpPlayButton;
+    private ImageButton cpPauseButton;
+    private Button cpStartPlayer;
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
     private ListView listView;
@@ -60,16 +60,16 @@ public class PodcastViewerActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Utilities.ACTION_PLAY.equals(intent.getAction())) {
-                playButton.setVisibility(View.GONE);
-                pauseButton.setVisibility(View.VISIBLE);
+                cpPlayButton.setVisibility(View.GONE);
+                cpPauseButton.setVisibility(View.VISIBLE);
                 updateListOfPodcasts();
 
                 // This call fixes an issue where we are overriding the audio from third party app
                 // and the control panel doesn't appear because the service is already up.
                 syncControlPanel();
             } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
-                pauseButton.setVisibility(View.GONE);
-                playButton.setVisibility(View.VISIBLE);
+                cpPauseButton.setVisibility(View.GONE);
+                cpPlayButton.setVisibility(View.VISIBLE);
                 updateListOfPodcasts();
                 syncControlPanel();
             } else if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
@@ -237,20 +237,20 @@ public class PodcastViewerActivity extends Activity {
     }
 
     private void initialiseButtons() {
-        playButton = (ImageButton) findViewById(R.id.mainPlayButton);
-        pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
-        startPlayer = (Button) findViewById(R.id.startPlayer);
+        cpPlayButton = (ImageButton) findViewById(R.id.cpPlayButton);
+        cpPauseButton = (ImageButton) findViewById(R.id.cpPauseButton);
+        cpStartPlayer = (Button) findViewById(R.id.startPlayer);
 
-        playButton.setOnClickListener(new OnClickListener() {
+        cpPlayButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 if (audioService == null) {
                     // Play podcast in a background service
                     Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
-                    intent.putExtra(AudioPlayerService.DIRECTORY, v.getContentDescription());
+                    intent.putExtra(Utilities.EPISODE_ID, v.getContentDescription());
                     intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                    intent.setAction(AudioPlayerService.ACTION_PLAY);
+                    intent.setAction(Utilities.ACTION_NEW_EPISODE);
                     // Investigate Correct flag and compatibility
                     if (getApplicationContext() != null) {
                         getApplicationContext().startService(intent);
@@ -262,18 +262,18 @@ public class PodcastViewerActivity extends Activity {
             }
         });
 
-        pauseButton.setOnClickListener(new OnClickListener() {
+        cpPauseButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
                 // Pause podcast in background service
-                if(audioService.getPlayer().isPlaying()) {
+                if (audioService.getPlayer().isPlaying()) {
                     audioService.pauseMedia(false);
                 }
             }
         });
 
-        startPlayer.setOnClickListener(new View.OnClickListener() {
+        cpStartPlayer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent playerIntent = new Intent(getApplicationContext(), PlayerActivity.class);
@@ -386,7 +386,7 @@ public class PodcastViewerActivity extends Activity {
         };
 
         Intent intent = new Intent(this, AudioPlayerService.class);
-        intent.setAction(AudioPlayerService.ACTION_PLAY);
+        intent.setAction(Utilities.ACTION_NEW_EPISODE);
         bindService(intent, serviceConnection, 0);
 
         registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
@@ -404,13 +404,13 @@ public class PodcastViewerActivity extends Activity {
         if (audioService != null) {
             if (audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
-                startPlayer.setText(audioService.getEpisode().getTitle());
+                cpStartPlayer.setText(audioService.getEpisode().getTitle());
                 if (audioService.getPlayer().isPlaying()) {
-                    playButton.setVisibility(View.GONE);
-                    pauseButton.setVisibility(View.VISIBLE);
+                    cpPlayButton.setVisibility(View.GONE);
+                    cpPauseButton.setVisibility(View.VISIBLE);
                 } else {
-                    pauseButton.setVisibility(View.GONE);
-                    playButton.setVisibility(View.VISIBLE);
+                    cpPauseButton.setVisibility(View.GONE);
+                    cpPlayButton.setVisibility(View.VISIBLE);
                 }
             } else {
                 controlPanel.setVisibility(View.GONE);
@@ -538,7 +538,6 @@ public class PodcastViewerActivity extends Activity {
         @Override
         public void onClick(View v) {
             int viewId = v.getId();
-            // TODO CONTEXT
             if(getApplicationContext() != null) {
                 if (viewId == R.id.download_icon) {
                     // Download the podcast
@@ -556,7 +555,7 @@ public class PodcastViewerActivity extends Activity {
                         Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                         intent.putExtra(Utilities.EPISODE_ID, v.getContentDescription());
                         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                        intent.setAction(AudioPlayerService.ACTION_PLAY);
+                        intent.setAction(Utilities.ACTION_NEW_EPISODE);
                         // Investigate Correct flag and compatibility
                         startService(intent);
                         bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
@@ -574,7 +573,7 @@ public class PodcastViewerActivity extends Activity {
                                 Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
                                 intent.putExtra(Utilities.EPISODE_ID, v.getContentDescription());
                                 intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                                intent.setAction(AudioPlayerService.ACTION_PLAY);
+                                intent.setAction(Utilities.ACTION_NEW_EPISODE);
                                 // Investigate Correct flag and compatibility
                                 startService(intent);
                                 bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);

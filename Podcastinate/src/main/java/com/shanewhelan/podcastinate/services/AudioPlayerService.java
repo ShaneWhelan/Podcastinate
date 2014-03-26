@@ -30,10 +30,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     private IBinder iBinder = new AudioPlayerBinder();
     private static MediaPlayer player;
-    public static final String ACTION_PLAY = "com.shanewhelan.podcastinate.PLAY";
-    public static final String DIRECTORY = "directory";
     public static final String ACTION_DISCONNECT = "1";
-
     // Episode info - essential that it is updated
     private static String podcastTitle;
     private static String podcastImage;
@@ -41,6 +38,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     private static Episode episode;
     private static int lastPausedPosition;
     private static Bitmap podcastBitmap;
+    private static Bitmap podcastBitmapLarge;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
         @Override
@@ -122,7 +120,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (ACTION_PLAY.equals(intent.getAction())) {
+        if (Utilities.ACTION_NEW_EPISODE.equals(intent.getAction())) {
             episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
             podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
             playNewEpisode(episodeID, false, podcastTitle);
@@ -198,11 +196,11 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
 
         BitmapDrawable podcastImageDrawable = (BitmapDrawable) BitmapDrawable.createFromPath(podcastImage);
-        podcastBitmap = podcastImageDrawable.getBitmap();
+        podcastBitmapLarge = podcastImageDrawable.getBitmap();
         int height = (int) getResources().getDimension(android.R.dimen.notification_large_icon_height);
         int width = (int) getResources().getDimension(android.R.dimen.notification_large_icon_width);
 
-        podcastBitmap = Bitmap.createScaledBitmap(podcastBitmap, width, height, false);
+        podcastBitmap = Bitmap.createScaledBitmap(podcastBitmapLarge, width, height, false);
 
         buildNotification();
     }
@@ -386,6 +384,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
     public int getLastPausedPosition() {
         return lastPausedPosition;
+    }
+
+    public Bitmap getPodcastBitmapLarge() {
+        return podcastBitmapLarge;
     }
 
     public void buildNotification() {

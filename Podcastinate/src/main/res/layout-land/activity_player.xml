@@ -1,6 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:id="@+id/playerWindow"
@@ -29,7 +29,7 @@
             android:scaleType="fitCenter"
             android:contentDescription="@string/podcastImage"
             android:layout_above="@+id/seekBarPlayer"
-            android:layout_below="@id/playerEpisodeTitle"/>
+            android:layout_below="@id/playerEpisodeTitle" />
 
         <TextView
             android:id="@+id/timeElapsed"
