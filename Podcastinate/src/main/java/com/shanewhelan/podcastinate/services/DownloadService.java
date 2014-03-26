@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
 
@@ -129,11 +131,16 @@ public class DownloadService extends IntentService {
                 // Start timer for download
                 long start = System.nanoTime();
 
+                PendingIntent pendIntent = PendingIntent.getActivity(this, 1,
+                        new Intent(getApplicationContext(), DownloadActivity.class), 0);
+
                 // Initialise Notification and Builder
                 notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 builder = new Builder(this);
-                builder.setContentTitle(episodeTitle).setContentText("Download in progress")
-                        .setSmallIcon(R.drawable.ic_action_download_notification);
+                builder.setContentTitle(episodeTitle)
+                        .setContentText("Download in progress")
+                        .setSmallIcon(R.drawable.ic_action_download_notification)
+                        .setContentIntent(pendIntent);
 
                 // Use count to make sure we only update the progress bar 50 times in total
                 double count = 0;
@@ -152,7 +159,7 @@ public class DownloadService extends IntentService {
                                     @Override
                                     public void run() {
                                         builder.setProgress(100, (int) dlProgress, false);
-                                        notifyManager.notify(0, builder.build());
+                                        notifyManager.notify(1, builder.build());
                                     }
                                 }
                         ).start();
@@ -162,8 +169,7 @@ public class DownloadService extends IntentService {
                 long timeTaken = end - start;
                 Log.d("sw9", "End - Start " + timeTaken);
 
-                builder.setContentText("Download Complete").setProgress(0, 0, false);
-                notifyManager.notify(0, builder.build());
+                notifyManager.cancel(1);
 
                 // Tidy up and close streams
                 inputStream.close();

@@ -31,8 +31,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.R;
@@ -55,6 +55,7 @@ public class PodcastViewerActivity extends Activity {
     private int podcastID;
     private ImageButton playButton;
     private ImageButton pauseButton;
+    private Button startPlayer;
     private AudioPlayerService audioService;
     private ServiceConnection serviceConnection;
     private ListView listView;
@@ -243,7 +244,7 @@ public class PodcastViewerActivity extends Activity {
     private void initialiseButtons() {
         playButton = (ImageButton) findViewById(R.id.mainPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.mainPauseButton);
-        Button startPlayer = (Button) findViewById(R.id.startPlayer);
+        startPlayer = (Button) findViewById(R.id.startPlayer);
 
         playButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -402,11 +403,12 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void syncControlPanel() {
-        LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controlPanel);
+        RelativeLayout controlPanel = (RelativeLayout) findViewById(R.id.controlPanel);
 
         if (audioService != null) {
             if (audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
+                startPlayer.setText(audioService.getEpisode().getTitle());
                 if (audioService.getPlayer().isPlaying()) {
                     playButton.setVisibility(View.GONE);
                     pauseButton.setVisibility(View.VISIBLE);
@@ -547,6 +549,7 @@ public class PodcastViewerActivity extends Activity {
                     // Download the podcast
                     if(Utilities.testNetwork(getApplicationContext())) {
                         Intent intent = new Intent(getApplicationContext(), DownloadActivity.class);
+                        intent.setAction(Utilities.ACTION_DOWNLOAD);
                         intent.putExtra(Utilities.EPISODE_ID, v.getContentDescription());
                         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
                         intent.putExtra(Utilities.PODCAST_ID, podcastID);

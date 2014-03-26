@@ -68,7 +68,7 @@
         android:orientation="horizontal">
 
         <ImageButton
-            android:id="@+id/rewind"
+            android:id="@+id/skipBack"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="center"
@@ -93,7 +93,7 @@
             android:contentDescription="@string/ic_pause" />
 
         <ImageButton
-            android:id="@+id/fastForward"
+            android:id="@+id/skipForward"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="fitCenter"

@@ -19,7 +19,13 @@ public class DownloadActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download);
-        addToDownloadQueue();
+        if (getIntent() != null) {
+            if (getIntent().getAction() != null) {
+                if(getIntent().getAction().equals(Utilities.ACTION_DOWNLOAD)) {
+                    addToDownloadQueue();
+                }
+            }
+        }
     }
 
     private void addToDownloadQueue() {

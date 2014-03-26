@@ -43,6 +43,8 @@
         android:text="@string/searchButton"
         android:layout_gravity="bottom"
         android:fontFamily="sans-serif"
+        android:background="@drawable/button_selector"
+        android:textColor="@android:color/white"
         android:freezesText="false"/>
 
     <TextView
@@ -73,5 +75,7 @@
         android:text="@string/button_subscribe"
         android:layout_gravity="bottom"
         android:fontFamily="sans-serif"
+        android:background="@drawable/button_selector"
+        android:textColor="@android:color/white"
         android:freezesText="false"/>
 </LinearLayout>

@@ -46,7 +46,8 @@
         <activity
             android:name="com.shanewhelan.podcastinate.activities.DownloadActivity"
             android:label="@string/title_activity_download"
-            android:parentActivityName="com.shanewhelan.podcastinate.activities.PodcastViewerActivity" >
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.PodcastViewerActivity"
+            android:launchMode="singleInstance" >
 
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
@@ -56,6 +57,7 @@
         <activity
             android:name="com.shanewhelan.podcastinate.activities.PlayerActivity"
             android:label="@string/title_activity_player"
+            android:launchMode="singleInstance"
             android:parentActivityName="com.shanewhelan.podcastinate.activities.PodcastViewerActivity" >
 
             <!-- The meta-data element is needed for versions lower than 4.1 -->

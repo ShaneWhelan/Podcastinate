@@ -26,6 +26,14 @@ public class Utilities {
     public static final String ACTION_PAUSE = "com.shanewhelan.podcastinate.PAUSE";
     public static final String ACTION_DOWNLOADED = "com.shanewhelan.podcastinate.DOWNLOADED";
     public static final String ACTION_FINISHED = "com.shanewhelan.podcastinate.FINISHED";
+    public static final String ACTION_UPDATE_LIST = "update_list";
+    public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
+    // Actions for notification
+    public static final String ACTION_PLAY_NOTIFY = "com.shanewhelan.podcastinate.PLAY_N";
+    public static final String ACTION_PAUSE_NOTIFY = "com.shanewhelan.podcastinate.PAUSE_N";
+    public static final String ACTION_SKIP_BACK_NOTIFY = "com.shanewhelan.podcastinate.SKIP_BACK_NOTIFY";
+    public static final String ACTION_SKIP_FORWARD_NOTIFY = "com.shanewhelan.podcastinate.SKIP_FORWARD_NOTIFY";
+
     public static final String PODCAST_TITLE = "e_title";
     public static final String DIRECTORY = "/Podcastinate";
     public static final int INVALID_URL = -1;
@@ -33,9 +41,8 @@ public class Utilities {
     public static final int SUCCESS = 1;
     public static final int NO_NEW_EPISODES = 2;
     public static final String SEARCH_RESULT = "result";
-    public static final String ACTION_SUBSCRIBE = "com.shanewhelan.podcastinate.SUBSCRIBE";
     public static final String PODCAST_LINK = "link";
-    public static final String ACTION_UPDATE_LIST = "update_list";
+    public static final String ACTION_DOWNLOAD = "com.shanewhelan.podcastinate.DOWNLOAD";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";
@@ -116,6 +123,11 @@ public class Utilities {
                     Intent pauseIntent = new Intent(context, AudioPlayerService.class);
                     pauseIntent.setAction(AudioPlayerService.ACTION_DISCONNECT);
                     context.startService(pauseIntent);
+                } else if(intent.getAction().equals(Utilities.ACTION_PAUSE)) {
+                    Intent pauseIntent = new Intent(context, AudioPlayerService.class);
+                    pauseIntent.setAction(Utilities.ACTION_PAUSE);
+                    context.startService(pauseIntent);
+
                 }
             }
         }

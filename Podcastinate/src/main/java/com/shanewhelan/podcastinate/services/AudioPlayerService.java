@@ -45,6 +45,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     private static String episodeID;
     private static Episode episode;
     private static int lastPausedPosition;
+    private static Bitmap podcastBitmap;
 
     private BroadcastReceiver disconnectJackR = new BroadcastReceiver() {
         @Override
@@ -52,6 +53,27 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             if (ACTION_DISCONNECT.equals(intent.getAction())) {
                 if (player != null) {
                     pauseMedia(false);
+                }
+            }
+        }
+    };
+
+    private BroadcastReceiver notificationBrodRec = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Utilities.ACTION_PAUSE_NOTIFY.equals(intent.getAction())) {
+                if(player.isPlaying()) {
+                    pauseMedia(false);
+                }
+            } else if (Utilities.ACTION_PLAY_NOTIFY.equals(intent.getAction())) {
+                resumeMedia();
+            } else if (Utilities.ACTION_SKIP_BACK_NOTIFY.equals(intent.getAction())) {
+                if(player.isPlaying()) {
+                    skipBack(30000);
+                }
+            } else if (Utilities.ACTION_SKIP_FORWARD_NOTIFY.equals(intent.getAction())) {
+                if(player.isPlaying()) {
+                    skipForward(30000);
                 }
             }
         }
@@ -170,7 +192,21 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             player.seekTo(episode.getCurrentTime());
         }
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+        registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PAUSE_NOTIFY));
+        registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_PLAY_NOTIFY));
+        registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_BACK_NOTIFY));
+        registerReceiver(notificationBrodRec, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
         sendBroadcast(new Intent (Utilities.ACTION_PLAY));
+
+        BitmapDrawable podcastImageDrawable = (BitmapDrawable) BitmapDrawable.createFromPath(podcastImage);
+        podcastBitmap = podcastImageDrawable.getBitmap();
+
+        Resources resources = this.getResources();
+        int height = (int) resources.getDimension(android.R.dimen.notification_large_icon_height);
+        int width = (int) resources.getDimension(android.R.dimen.notification_large_icon_width);
+
+        podcastBitmap = Bitmap.createScaledBitmap(podcastBitmap, width, height, false);
+
         buildNotification();
     }
 
@@ -180,6 +216,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
         unregisterReceiver(disconnectJackR);
+        unregisterReceiver(notificationBrodRec);
 
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
         finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
@@ -201,9 +238,15 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         // So that we don't keep listening for audio changes
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Build Notification with Notification Manager
+        notificationManager.cancel("sw9", 0);
+
         if(disconnectJackR != null && player != null) {
             if(player.isPlaying()) {
                 unregisterReceiver(disconnectJackR);
+                unregisterReceiver(notificationBrodRec);
                 disconnectJackR = null;
             }
         }
@@ -230,7 +273,6 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void pauseMedia(boolean isTransient) {
-
         lastPausedPosition = player.getCurrentPosition();
         player.pause();
         saveEpisodeTimer(false);
@@ -242,6 +284,9 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
         // Tell Application about pause
         sendBroadcast(new Intent(Utilities.ACTION_PAUSE));
+
+        buildNotification();
+
 
         // Sometimes receiver is not registered fixed most causes of this
         try {
@@ -256,8 +301,32 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         registerReceiver(disconnectJackR, new IntentFilter(ACTION_DISCONNECT));
+        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_PAUSE_NOTIFY));
+        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_PLAY_NOTIFY));
+        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_SKIP_BACK_NOTIFY));
+        registerReceiver(disconnectJackR, new IntentFilter(Utilities.ACTION_SKIP_FORWARD_NOTIFY));
         sendBroadcast(new Intent(Utilities.ACTION_PLAY));
         buildNotification();
+    }
+
+    public void skipBack(int millisToSkip) {
+        if((player.getCurrentPosition() - millisToSkip) > 0) {
+            player.seekTo(player.getCurrentPosition() - millisToSkip);
+        } else {
+            player.seekTo(0);
+        }
+    }
+
+    public void skipForward(int millisToSkip) {
+        if((player.getCurrentPosition() + millisToSkip) < player.getDuration()) {
+            player.seekTo(player.getCurrentPosition() + millisToSkip);
+        } else {
+            Intent finished = new Intent(Utilities.ACTION_FINISHED);
+            finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
+            sendBroadcast(finished);
+            saveEpisodeTimer(true);
+            stopSelf();
+        }
     }
 
     public void setProgress(int progress) {
@@ -317,36 +386,54 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void buildNotification() {
-        Intent intent = new Intent(this, PlayerActivity.class);
+        Intent viewPodcastIntent = new Intent(this, PlayerActivity.class);
         // Start PlayerActivity in the future
-        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent,
+        PendingIntent viewPodcastPendIntent = PendingIntent.getActivity(this, 0, viewPodcastIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        BitmapDrawable podcastImageDrawable = (BitmapDrawable) BitmapDrawable.createFromPath(podcastImage);
-        Bitmap podcastBitmap = podcastImageDrawable.getBitmap();
+        PendingIntent skipBackPendIntent = PendingIntent.getBroadcast(this, 1,
+                new Intent(Utilities.ACTION_SKIP_BACK_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Resources resources = this.getResources();
-        int height = (int) resources.getDimension(android.R.dimen.notification_large_icon_height);
-        int width = (int) resources.getDimension(android.R.dimen.notification_large_icon_width);
+        PendingIntent skipForwardPendIntent = PendingIntent.getBroadcast(this, 3,
+                new Intent(Utilities.ACTION_SKIP_FORWARD_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        podcastBitmap = Bitmap.createScaledBitmap(podcastBitmap, width, height, false);
+        NotificationCompat.Builder builder;
 
-        // Create Notification using Notification Compatibility
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setLargeIcon(podcastBitmap)
-                .setContentTitle(episode.getTitle())
-                .setContentText(podcastTitle)
-                .addAction(R.drawable.ic_notification_skip_back, "-30", pIntent)
-                .addAction(R.drawable.ic_notification_play, "", pIntent)
-                .addAction(R.drawable.ic_notification_skip_forward, "+30", pIntent)
-                .setContentIntent(pIntent)
-                .setAutoCancel(true);
+        if(player.isPlaying()) {
+            PendingIntent pausePendIntent = PendingIntent.getBroadcast(this, 2,
+                    new Intent(Utilities.ACTION_PAUSE_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
+            // Create Notification using Notification Compatibility
+            builder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setLargeIcon(podcastBitmap)
+                    .setContentTitle(episode.getTitle())
+                    .setContentText(podcastTitle)
+                    .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
+                    .addAction(R.drawable.ic_notification_pause, "", pausePendIntent)
+                    .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
+                    .setContentIntent(viewPodcastPendIntent)
+                    .setAutoCancel(false)
+                    .setOngoing(true);
+        } else {
+            PendingIntent playPendIntent = PendingIntent.getBroadcast(this, 2,
+                    new Intent(Utilities.ACTION_PLAY_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+
+            // Create Notification using Notification Compatibility
+            builder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setLargeIcon(podcastBitmap)
+                    .setContentTitle(episode.getTitle())
+                    .setContentText(podcastTitle)
+                    .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
+                    .addAction(R.drawable.ic_notification_play, "", playPendIntent)
+                    .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
+                    .setContentIntent(viewPodcastPendIntent)
+                    .setAutoCancel(false);
+        }
         // Create Notification Manager
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         // Build Notification with Notification Manager
-        notificationManager.notify(0, builder.build());
-
+        notificationManager.notify("sw9", 0, builder.build());
     }
 }

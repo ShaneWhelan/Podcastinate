@@ -2,4 +2,6 @@
 <resources>
     <color name="background_color_new">#FFFFFF</color>
     <color name="background_color_old">#E4E4E4</color>
+    <color name="button_background_color">#292C2E</color>
+    <color name="button_background_color_pressed">#484A4B</color>
 </resources>

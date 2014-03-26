@@ -18,6 +18,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -125,8 +126,10 @@ public class PlayerActivity extends Activity {
         seekBar = (SeekBar) findViewById(R.id.seekBarPlayer);
         elapsedText = (TextView) findViewById(R.id.timeElapsed);
         remainingText = (TextView) findViewById(R.id.timeRemaining);
+        ImageButton skipBack = (ImageButton) findViewById(R.id.skipBack);
+        ImageButton skipForward = (ImageButton) findViewById(R.id.skipForward);
 
-        playButton.setOnClickListener(new View.OnClickListener() {
+        playButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
@@ -147,11 +150,25 @@ public class PlayerActivity extends Activity {
             }
         });
 
-        pauseButton.setOnClickListener(new View.OnClickListener() {
+        pauseButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Pause podcast in background service
                 audioService.pauseMedia(false);
+            }
+        });
+
+        skipBack.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioService.skipBack(30000);
+            }
+        });
+
+        skipForward.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioService.skipForward(30000);
             }
         });
 
