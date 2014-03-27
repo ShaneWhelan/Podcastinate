@@ -299,8 +299,9 @@ public class PodcastViewerActivity extends Activity {
                             File fileToDelete = new File(cursor.getString(cursor.getColumnIndex(EpisodeEntry.DIRECTORY)));
                             boolean isFileDeleted = fileToDelete.delete();
                             if (isFileDeleted) {
-                                pds.updateEpisodeDirectory(enclosure, null);
-                                pds.updateCurrentTime(cursor.getInt(cursor.getColumnIndex("_id")), 0);
+                                int episodeId = cursor.getInt(cursor.getColumnIndex("_id"));
+                                pds.updateEpisodeDirectory(episodeId, null);
+                                pds.updateCurrentTime(episodeId, 0);
                                 if(audioService != null) {
                                     if(audioService.getEpisode() != null) {
                                         if(audioService.getEpisode().getEnclosure().equals(enclosure)) {

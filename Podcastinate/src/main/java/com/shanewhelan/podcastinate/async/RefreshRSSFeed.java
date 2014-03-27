@@ -20,20 +20,23 @@ import org.xmlpull.v1.XmlPullParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, HashMap<String, String>> {
+public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, String> {
     public Context context;
     private MenuItem refreshAction;
     private ProgressBar progressBar;
+    private int newEpisodeCount;
 
     public RefreshRSSFeed(Context context, MenuItem refreshAction, ProgressBar progressBar) {
         this.context = context;
         this.refreshAction = refreshAction;
         this.progressBar = progressBar;
+        newEpisodeCount = 0;
     }
 
     @Override
@@ -46,65 +49,52 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
     }
 
     @Override
-    protected HashMap<String, String> doInBackground(HashMap<String, String>... urlList) {
-        HashMap<String, String> resultMap = new HashMap<String, String>(urlList[0].size());
+    protected String doInBackground(HashMap<String, String>... urlList) {
         try {
             Set entrySet = urlList[0].entrySet();
-            int result;
             for (Object anEntrySet : entrySet) {
                 Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                result = refreshRSSFeed(mapEntry.getValue().toString(),
+                refreshRSSFeed(mapEntry.getValue().toString(),
                         Integer.parseInt(mapEntry.getKey().toString()));
-                resultMap.put(mapEntry.getValue().toString(), String.valueOf(result));
             }
-            return resultMap;
+            return Integer.toString(Utilities.SUCCESS);
         } catch (HTTPConnectionException e) {
             Utilities.logException(e);
-            resultMap.put("error", "Connection Error " + e.getResponseCode());
-            return resultMap;
+            return "Connection Error " + e.getResponseCode();
+        } catch (MalformedURLException e) {
+            Utilities.logException(e);
+            return "URL is malformed";
         } catch (IOException e) {
             Utilities.logException(e);
-            resultMap.put("error", "Fail on ic_download RSS Feed, ERROR DUMP: " + e.getMessage() + " " + e.getClass());
-            return resultMap;
+            return "Connection Error";
         }
     }
 
     @Override
-    protected void onPostExecute(HashMap<String, String> resultMap) {
+    protected void onPostExecute(String result) {
         progressBar.setVisibility(View.GONE);
 
         // Replace the progress bar with the refresh button again
         refreshAction.collapseActionView();
         refreshAction.setActionView(null);
 
-        Set entrySet = resultMap.entrySet();
-        int numNewEpisodes = 0;
-        String error = null;
-        for (Object anEntrySet : entrySet) {
-            Map.Entry mapEntry = (Map.Entry) anEntrySet;
-            if (mapEntry.getValue() == String.valueOf(Utilities.SUCCESS)) {
-                numNewEpisodes++;
-            } else if (mapEntry.getKey().toString().equals("error")) {
-                error = mapEntry.getValue().toString();
-            }
-        }
-
         if (context.getApplicationContext() != null) {
-            if (numNewEpisodes > 1) {
-                Toast.makeText(context.getApplicationContext(), numNewEpisodes + " new episodes.", Toast.LENGTH_LONG).show();
-            } else if (numNewEpisodes == 1) {
-                Toast.makeText(context.getApplicationContext(), numNewEpisodes + " new episode.", Toast.LENGTH_LONG).show();
-            } else if (numNewEpisodes == 0) {
+            if (newEpisodeCount > 1) {
+                Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episodes", Toast.LENGTH_LONG).show();
+            } else if (newEpisodeCount == 1) {
+                Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episode", Toast.LENGTH_LONG).show();
+            } else if (newEpisodeCount == 0) {
                 Toast.makeText(context.getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
-            } else if (error != null) {
-                Toast.makeText(context.getApplicationContext(), error, Toast.LENGTH_LONG).show();
+            } else if (result != null) {
+                Toast.makeText(context.getApplicationContext(), result, Toast.LENGTH_LONG).show();
             }
         }
 
         context.sendBroadcast(new Intent(Utilities.ACTION_UPDATE_LIST));
     }
 
-    private int refreshRSSFeed(String url, int podcastID) throws IOException {
+    @SuppressWarnings("DuplicateThrows")
+    private int refreshRSSFeed(String url, int podcastID) throws IOException, HTTPConnectionException, MalformedURLException {
         InputStream inputStream = null;
         int response;
         try {
@@ -135,6 +125,8 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Has
                 int currentCountNew = pds.getCountNew(podcastID);
                 pds.closeDb();
                 Podcast podcast = parseRSS.checkForNewEntries(xmlPullParser, enclosure, podcastTitle);
+                // Number of new episodes for the notification
+                newEpisodeCount = newEpisodeCount + podcast.getCountNew();
                 podcast.setCountNew(currentCountNew + podcast.getCountNew());
 
                 if (podcast != null) {

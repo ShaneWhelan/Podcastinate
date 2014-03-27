@@ -37,6 +37,7 @@ public class DownloadActivity extends Activity {
         intent.putExtra(Utilities.EPISODE_ID, episodeID);
         intent.putExtra(Utilities.PODCAST_ID, mostRecentPodcastID);
         intent.putExtra(Utilities.PODCAST_TITLE, mostRecentPodcastTitle);
+        intent.setAction(Utilities.ACTION_DOWNLOAD);
         startService(intent);
     }
 

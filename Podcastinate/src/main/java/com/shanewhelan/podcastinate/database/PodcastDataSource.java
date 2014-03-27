@@ -84,11 +84,11 @@ public class PodcastDataSource {
                 contentValues);
     }
 
-    public long updateEpisodeDirectory(String enclosure, String directory) {
+    public long updateEpisodeDirectory(int episodeId, String directory) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(EpisodeEntry.DIRECTORY, directory);
         return database.update(EpisodeEntry.TABLE_NAME, contentValues,
-                EpisodeEntry.ENCLOSURE + " = \"" + enclosure + "\"", null);
+                EpisodeEntry.EPISODE_ID + " = " + episodeId, null);
     }
 
     public long updateCurrentTime(int episodeID, int currentTime) {

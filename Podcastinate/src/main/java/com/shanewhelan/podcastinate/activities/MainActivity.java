@@ -54,7 +54,7 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 /*
 High Priority FEATURES:
 TODO: Create Download Queue (Cancel, pause and start downloads)
-TODO: Add long press options (Maybe refresh individual feeds, mark done/new, add to playlist, sort options, force update of thumnail)
+TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 TODO: Click RSS link in browser to go to Podcastinate
 TODO: Set back button to go to right activities
 
@@ -63,7 +63,7 @@ TODO: Integrate other APIs - EMAIL FEEDLY
 TODO: Cloud backup
 TODO: Car Mode
 TODO: User Suggested Podcasts
-TODO: User Settings
+TODO: User Settings - refresh interval
 TODO: Statistics of user playback
 
 Low Priority FEATURES:
@@ -79,12 +79,15 @@ TODO: Download service: Sometimes fails to download and jumps straight to downlo
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
 TODO: Restrict access to the player from the drawer
-TODO: Number of feeds refreshed
 TODO: Fix for one feed a week/removing old feeds
-TODO: Player Activity: Enter quickly and the buttons screw up
+TODO: On subscribe pictures dont load
+
+TODO: Delete a subscription while player is playing
+TODO: Demo refresh with player activity
+TODO: DELETE while ANYTHING, or downloading
 
 Server Bugs:
-TODO: The server side gives back the same podcasts already subscribed to
+TODO: The server side gives back the same podcasts already subscribed to - limit searches and results
 
 LOW PRIORITY:
 TODO: Streaming: Must keep WIFI from sleeping

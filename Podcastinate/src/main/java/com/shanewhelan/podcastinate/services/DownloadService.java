@@ -1,48 +1,191 @@
 package com.shanewhelan.podcastinate.services;
 
-import android.app.IntentService;
-import android.support.v4.app.NotificationCompat.Builder;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.app.DownloadManager;
+import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Binder;
+import android.os.IBinder;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
+import android.support.v4.util.LongSparseArray;
 
 import com.shanewhelan.podcastinate.Episode;
-import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
-import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
-import com.shanewhelan.podcastinate.exceptions.HTTPConnectionException;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Random;
 
-public class DownloadService extends IntentService {
-    //private ArrayList<Episode> episodeList;
+public class DownloadService extends Service {
+    private static LongSparseArray<Episode> downloadList;
+    private IBinder binder = new DownloadBinder();
+    private long queueID;
+    private DownloadManager downloadManager;
 
-    private NotificationManager notifyManager;
-    private Builder builder;
-    private double dlProgress;
-
-    public DownloadService() {
-        super("Download service");
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent.getAction() != null) {
+            if (intent.getAction().equals(Utilities.ACTION_DOWNLOAD)) {
+                registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                downloadFile(intent);
+            }
+        }
+        return START_STICKY;
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(receiver);
+    }
+
+    public class DownloadBinder extends Binder {
+        public DownloadService getService() {
+            return DownloadService.this;
+        }
+    }
+
+    private void downloadFile(Intent intent) {
+        String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
+        int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
+        String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
+
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDbForReading();
+        Episode episode = pds.getEpisodeMetaDataForDownload(episodeID);
+        String podcastDirectory = pds.getPodcastDirectory(podcastID);
+        pds.closeDb();
+        // Format the file name so it looks and works ok
+        String filename = formatFileName(podcastTitle, episode.getTitle(), episode.getEnclosure());
+
+        try {
+            // Check if default directory exists and create it if not
+            File externalStorage = new File(podcastDirectory);
+            if (!externalStorage.isDirectory()) {
+                if (!externalStorage.mkdir()) {
+                    throw new IOException("Could not create directory");
+                }
+            }
+            // Get a file ready for podcast to be fired into
+            File podcastFile = new File(externalStorage, filename);
+
+            downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            DownloadManager.Request request = new DownloadManager.Request(
+                    Uri.parse(episode.getEnclosure()));
+            request.setTitle(episode.getTitle());
+            request.setDescription(podcastTitle);
+            request.setDestinationUri(Uri.fromFile(podcastFile));
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setVisibleInDownloadsUi(false);
+            queueID = downloadManager.enqueue(request);
+
+            episode.setDirectory(podcastFile.getAbsolutePath());
+
+            if(downloadList == null) {
+                downloadList = new LongSparseArray<Episode>();
+            }
+            downloadList.put(queueID, episode);
+
+        } catch (IOException e) {
+            Utilities.logException(e);
+        }
+    }
+
+    public String formatFileName(String podcastTitle, String episodeTitle, String enclosure) {
+        // Create a custom filename in case feeds have the same episode name, I must read up
+        // on the performance cost of regular expressions.
+
+        // Firstly remove special characters from Episode title so filename will be valid
+        String fileNameTemp;
+        if (episodeTitle != null) {
+            fileNameTemp = episodeTitle.replaceAll("[^A-Za-z0-9-]", "");
+        } else {
+            Random rand = new Random();
+            fileNameTemp = "R" + rand.nextInt(10000000);
+        }
+
+        String filename;
+        if (podcastTitle != null) {
+            podcastTitle = podcastTitle.replaceAll("[^A-Za-z0-9-]", "");
+            // Now take the first and last characters of cleaned up podcast title and prepend them to file name
+            filename = String.valueOf(podcastTitle.charAt(0)) +
+                    String.valueOf(podcastTitle.charAt(podcastTitle.length() - 1)) + "-" + fileNameTemp;
+        } else {
+            filename = "RP" + "-" + fileNameTemp;
+        }
+
+        // Get podcast file extension
+        // TODO handle all extension types
+        if (enclosure != null) {
+            int indexOfExtension = enclosure.lastIndexOf(".");
+            filename = filename + enclosure.substring(indexOfExtension, indexOfExtension + 4);
+        }
+
+        Log.d("sw9", filename);
+        return filename;
+    }
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) {
+                // Get downloadId from extras of intent
+                long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+                // Get the episode object that is associated with the downloadId
+                Episode episode = downloadList.get(downloadId);
+
+                DownloadManager.Query query = new DownloadManager.Query();
+                query.setFilterById(queueID);
+                Cursor cursor = downloadManager.query(query);
+                if (cursor != null) {
+                    if (cursor.moveToFirst()) {
+                        if (DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(
+                                cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+
+                            //String directoryStored = cursor.getString(
+                              //      cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+
+                            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                            // Set Episode directory
+                            pds.openDbForWriting();
+                            pds.updateEpisodeDirectory(episode.getEpisodeID(), episode.getDirectory());
+
+                            // Recheck if episode new status changed
+                            episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
+                            // Update count new while we are at it
+                            if(!episode.isNew()) {
+                                // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                                pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
+                                int countNew = pds.getCountNew(episode.getPodcastID());
+                                if (countNew > 0) {
+                                    pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
+                                }
+                            }
+                            pds.closeDb();
+
+                            Intent iComplete = new Intent();
+                            iComplete.setAction(Utilities.ACTION_DOWNLOADED);
+                            sendBroadcast(iComplete);
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void oldMethodOfDownload(Intent intent) {
+        /*
         String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
         String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
@@ -200,5 +343,6 @@ public class DownloadService extends IntentService {
         } catch (URISyntaxException e) {
             Utilities.logException(e);
         }
+        */
     }
 }
