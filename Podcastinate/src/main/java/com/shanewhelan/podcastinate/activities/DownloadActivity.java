@@ -21,7 +21,7 @@ public class DownloadActivity extends Activity {
         setContentView(R.layout.activity_download);
         if (getIntent() != null) {
             if (getIntent().getAction() != null) {
-                if(getIntent().getAction().equals(Utilities.ACTION_DOWNLOAD)) {
+                if (getIntent().getAction().equals(Utilities.ACTION_DOWNLOAD)) {
                     addToDownloadQueue();
                 }
             }

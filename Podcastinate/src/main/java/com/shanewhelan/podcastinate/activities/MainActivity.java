@@ -55,7 +55,6 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 High Priority FEATURES:
 TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
-TODO: Click RSS link in browser to go to Podcastinate
 TODO: Set back button to go to right activities
 
 MAJOR FEATURES:
@@ -144,6 +143,17 @@ public class MainActivity extends Activity {
                     if(Utilities.testNetwork(getApplicationContext())) {
                         DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
                         downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
+                    }
+                } else {
+                    if (getIntent().getAction() != null) {
+                        if(Utilities.testNetwork(getApplicationContext())) {
+                            if (getIntent().getAction().equals(Intent.ACTION_VIEW)) {
+                                if(getIntent().getData() != null) {
+                                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
+                                    downloadRSSFeed.execute(getIntent().getData().toString());
+                                }
+                            }
+                        }
                     }
                 }
             }
