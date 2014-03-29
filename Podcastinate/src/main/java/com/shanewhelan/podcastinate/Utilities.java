@@ -41,6 +41,8 @@ public class Utilities {
     public static final String SEARCH_RESULT = "result";
     public static final String PODCAST_LINK = "link";
     public static final String ACTION_DOWNLOAD = "com.shanewhelan.podcastinate.DOWNLOAD";
+    public static final String ACTION_CANCEL = "com.shanewhelan.podcastinate.CANCEL";
+    public static final String ACTION_CANCEL_COMPLETE = "com.shanewhelan.podcastinate.CANCEL_FIN";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";

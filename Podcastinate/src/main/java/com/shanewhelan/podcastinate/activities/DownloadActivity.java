@@ -1,17 +1,40 @@
 package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.util.LongSparseArray;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.TextView;
 
+import com.shanewhelan.podcastinate.DownloadListItem;
+import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.services.DownloadService;
 
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+
 public class DownloadActivity extends Activity {
+    private DownloadService downloadService;
+    private DownloadAdapter downloadAdapter;
+    private ListView downloadList;
+    private ServiceConnection serviceConnection;
     private String mostRecentPodcastTitle;
     private int mostRecentPodcastID;
 
@@ -28,6 +51,56 @@ public class DownloadActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                DownloadService.DownloadBinder binder = (DownloadService.DownloadBinder) service;
+                downloadService = binder.getService();
+                // TODO updateListOfPodcasts();
+                initialiseAdapter();
+                // TODO syncControlPanel();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                downloadService = null;
+            }
+        };
+
+        Intent intent = new Intent(this, DownloadService.class);
+        // 3 parameter is 0 because this means "bind if exists"
+        bindService(intent, serviceConnection, 0);
+
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_CANCEL_COMPLETE));
+
+        // TODO syncControlPanel();
+
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unbindService(serviceConnection);
+        unregisterReceiver(broadcastReceiver);
+    }
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
+                updateDownloadList();
+            } else if(Utilities.ACTION_CANCEL_COMPLETE.equals(intent.getAction())) {
+                updateDownloadList();
+            }
+        }
+    };
+
     private void addToDownloadQueue() {
         String episodeID = getIntent().getStringExtra(Utilities.EPISODE_ID);
         mostRecentPodcastID = getIntent().getIntExtra(Utilities.PODCAST_ID, -1);
@@ -39,6 +112,25 @@ public class DownloadActivity extends Activity {
         intent.putExtra(Utilities.PODCAST_TITLE, mostRecentPodcastTitle);
         intent.setAction(Utilities.ACTION_DOWNLOAD);
         startService(intent);
+    }
+
+    public void initialiseAdapter() {
+        downloadList = (ListView) findViewById(R.id.listOfDownloads);
+        downloadAdapter = new DownloadAdapter(getApplicationContext(),
+                R.layout.download_list_item, R.id.downloadEpisodeTitle, downloadService.getDownloadList());
+        downloadList.setAdapter(downloadAdapter);
+    }
+
+    public void updateDownloadList() {
+        //downloadAdapter.clear();
+        // TODO Potentially null INVESTIGATE MULTIPLE DOWNLOADS
+        //downloadAdapter.addAll(downloadService.getDownloadList());
+        //downloadList.setAdapter(downloadAdapter);
+
+        downloadAdapter = new DownloadAdapter(getApplicationContext(),
+                R.layout.download_list_item, R.id.downloadEpisodeTitle, downloadService.getDownloadList());
+        downloadList.setAdapter(downloadAdapter);
+        downloadAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -69,6 +161,68 @@ public class DownloadActivity extends Activity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public class DownloadAdapter extends ArrayAdapter<DownloadListItem> implements View.OnClickListener{
+
+        public DownloadAdapter(Context context, int resource, int textViewResourceId, ArrayList<DownloadListItem> objects) {
+            super(context, resource, textViewResourceId, objects);
+        }
+
+        private void bindView(int position, View view) {
+            DownloadListItem downloadListItem = super.getItem(position);
+            if (downloadListItem != null) {
+                /*
+                // Load image into thumbnail slot asynchronously
+                ImageView thumbNail = (ImageView) view.findViewById(R.id.recommendationImage);
+                thumbNail.setContentDescription("" + position);
+                thumbNail.setOnClickListener(this);
+                */
+                // Update text view for this result
+                TextView episodeTitle = (TextView) view.findViewById(R.id.downloadEpisodeTitle);
+                episodeTitle.setText(downloadListItem.getEpisode().getTitle());
+
+                TextView podcastTitle = (TextView) view.findViewById(R.id.downloadPodcastTitle);
+//              podcastTitle.setOnClickListener(this);
+                podcastTitle.setText(downloadListItem.getPodcastTitle());
+                podcastTitle.setContentDescription("" + position);
+
+                ImageButton cancelButton = (ImageButton) view.findViewById(R.id.cancelButton);
+                cancelButton.setContentDescription(Integer.toString(position));
+                cancelButton.setOnClickListener(this);
+            }
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            // convertView = layoutInflater.inflate(R.layout.activity_search_results, parent, false);
+            // Adapter handles setting up rows
+            View view = super.getView(position, convertView, parent);
+            bindView(position, view);
+            if (view != null) {
+                view.setBackgroundColor(getResources().getColor(android.R.color.background_light));
+            }
+            return view;
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(v.getContentDescription() != null) {
+                if(getApplicationContext() != null) {
+                    int position = Integer.parseInt(v.getContentDescription().toString());
+                    // Start New Subscribe Activity
+                    Intent cancelIntent = new Intent(Utilities.ACTION_CANCEL);
+                    cancelIntent.putExtra(Utilities.EPISODE_ID,
+                            downloadService.getDownloadList().get(position).getEpisode().
+                                    getEpisodeID());
+                    getApplicationContext().sendBroadcast(cancelIntent);
+                    //Intent subscribe = new Intent(getApplicationContext(), MainActivity.class);
+                    //subscribe.setAction(Utilities.ACTION_SUBSCRIBE);
+                    //subscribe.putExtra(Utilities.PODCAST_LINK, episode[position].getLink());
+                    //startActivity(subscribe);
+                }
+            }
         }
     }
 }

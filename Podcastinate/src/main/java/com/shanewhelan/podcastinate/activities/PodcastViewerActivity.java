@@ -56,7 +56,7 @@ public class PodcastViewerActivity extends Activity {
     private ListView listView;
     private String podcastTitle;
 
-    BroadcastReceiver audioReceiver = new BroadcastReceiver() {
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Utilities.ACTION_PLAY.equals(intent.getAction())) {
@@ -365,7 +365,7 @@ public class PodcastViewerActivity extends Activity {
     public void onPause() {
         super.onPause();
         unbindService(serviceConnection);
-        unregisterReceiver(audioReceiver);
+        unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -375,8 +375,8 @@ public class PodcastViewerActivity extends Activity {
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                AudioPlayerService.AudioPlayerBinder b = (AudioPlayerService.AudioPlayerBinder) service;
-                audioService = b.getService();
+                AudioPlayerService.AudioPlayerBinder binder = (AudioPlayerService.AudioPlayerBinder) service;
+                audioService = binder.getService();
                 syncControlPanel();
             }
 
@@ -387,13 +387,15 @@ public class PodcastViewerActivity extends Activity {
         };
 
         Intent intent = new Intent(this, AudioPlayerService.class);
+        //TODO is this a bug I wonder?
         intent.setAction(Utilities.ACTION_NEW_EPISODE);
+        // 3 parameter is 0 because this means "bind if exists"
         bindService(intent, serviceConnection, 0);
 
-        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PLAY));
-        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
-        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
-        registerReceiver(audioReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_PLAY));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
 
         syncControlPanel();
         updateListOfPodcasts();

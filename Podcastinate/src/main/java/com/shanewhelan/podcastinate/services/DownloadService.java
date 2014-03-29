@@ -1,5 +1,6 @@
 package com.shanewhelan.podcastinate.services;
 
+import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -11,20 +12,21 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.content.Intent;
 import android.util.Log;
-import android.support.v4.util.LongSparseArray;
 
+import com.shanewhelan.podcastinate.DownloadListItem;
 import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class DownloadService extends Service {
-    private static LongSparseArray<Episode> downloadList;
+    private static ArrayList<DownloadListItem> downloadList;
     private IBinder binder = new DownloadBinder();
-    private long queueID;
     private DownloadManager downloadManager;
 
     @Override
@@ -32,6 +34,7 @@ public class DownloadService extends Service {
         if(intent.getAction() != null) {
             if (intent.getAction().equals(Utilities.ACTION_DOWNLOAD)) {
                 registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                registerReceiver(receiver, new IntentFilter(Utilities.ACTION_CANCEL));
                 downloadFile(intent);
             }
         }
@@ -54,6 +57,7 @@ public class DownloadService extends Service {
         }
     }
 
+    @SuppressLint("UseSparseArrays")
     private void downloadFile(Intent intent) {
         String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
@@ -86,14 +90,15 @@ public class DownloadService extends Service {
             request.setDestinationUri(Uri.fromFile(podcastFile));
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
             request.setVisibleInDownloadsUi(false);
-            queueID = downloadManager.enqueue(request);
+            long queueID = downloadManager.enqueue(request);
 
             episode.setDirectory(podcastFile.getAbsolutePath());
 
             if(downloadList == null) {
-                downloadList = new LongSparseArray<Episode>();
+                downloadList = new ArrayList<DownloadListItem>();
             }
-            downloadList.put(queueID, episode);
+
+            downloadList.add(new DownloadListItem(episode, queueID, podcastTitle));
 
         } catch (IOException e) {
             Utilities.logException(e);
@@ -141,47 +146,78 @@ public class DownloadService extends Service {
                 // Get downloadId from extras of intent
                 long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
                 // Get the episode object that is associated with the downloadId
-                Episode episode = downloadList.get(downloadId);
+                Episode episode = null;
+
+                int listIndexItemRemove = -1;
+                for (int i = 0; i < downloadList.size(); i++ ) {
+                    if (downloadList.get(i).getQueueID() == downloadId) {
+                        episode = downloadList.get(i).getEpisode();
+                        listIndexItemRemove = i;
+                        break;
+                    }
+                }
 
                 DownloadManager.Query query = new DownloadManager.Query();
-                query.setFilterById(queueID);
+                query.setFilterById(downloadId);
                 Cursor cursor = downloadManager.query(query);
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
                         if (DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(
                                 cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
 
-                            //String directoryStored = cursor.getString(
-                              //      cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                            if(episode != null) {
+                                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                                // Set Episode directory
+                                pds.openDbForWriting();
+                                pds.updateEpisodeDirectory(episode.getEpisodeID(), episode.getDirectory());
 
-                            PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                            // Set Episode directory
-                            pds.openDbForWriting();
-                            pds.updateEpisodeDirectory(episode.getEpisodeID(), episode.getDirectory());
-
-                            // Recheck if episode new status changed
-                            episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
-                            // Update count new while we are at it
-                            if(!episode.isNew()) {
-                                // While we are at it update the isNew fields in DB, DB instance is only opened once this way
-                                pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
-                                int countNew = pds.getCountNew(episode.getPodcastID());
-                                if (countNew > 0) {
-                                    pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
+                                // Recheck if episode new status changed
+                                episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
+                                // Update count new while we are at it
+                                if (!episode.isNew()) {
+                                    // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                                    pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
+                                    int countNew = pds.getCountNew(episode.getPodcastID());
+                                    if (countNew > 0) {
+                                        pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
+                                    }
                                 }
-                            }
-                            pds.closeDb();
+                                pds.closeDb();
 
-                            Intent iComplete = new Intent();
-                            iComplete.setAction(Utilities.ACTION_DOWNLOADED);
-                            sendBroadcast(iComplete);
+                                downloadList.remove(listIndexItemRemove);
+
+                                Intent iComplete = new Intent(Utilities.ACTION_DOWNLOADED);
+                                sendBroadcast(iComplete);
+                            }
                         }
                     }
                 }
+            } else if(Utilities.ACTION_CANCEL.equals(intent.getAction())) {
+                int indexItemRemoved = -1;
+                int numRemoved = -1;
+                for(int i = 0; i < downloadList.size(); i++) {
+                    if(downloadList.get(i).getEpisode().getEpisodeID() == intent.getIntExtra(Utilities.EPISODE_ID, -1)) {
+                        long idCancelEpisode = downloadList.get(i).getQueueID();
+                        indexItemRemoved = i;
+                        numRemoved = downloadManager.remove(idCancelEpisode);
+                        break;
+                    }
+                }
+
+                if(numRemoved > 0) {
+                    downloadList.remove(indexItemRemoved);
+                }
+
+                downloadManager.notify();
+                Intent iCanceled = new Intent(Utilities.ACTION_CANCEL_COMPLETE);
+                sendBroadcast(iCanceled);
             }
         }
     };
 
+    public ArrayList<DownloadListItem> getDownloadList() {
+        return downloadList;
+    }
 
     @SuppressWarnings("UnusedDeclaration")
     public void oldMethodOfDownload(Intent intent) {
