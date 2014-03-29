@@ -2,6 +2,8 @@ package com.shanewhelan.podcastinate.services;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,23 +13,26 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-
 import com.shanewhelan.podcastinate.DownloadListItem;
 import com.shanewhelan.podcastinate.Episode;
+import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 public class DownloadService extends Service {
     private static ArrayList<DownloadListItem> downloadList;
     private IBinder binder = new DownloadBinder();
     private DownloadManager downloadManager;
+    private NotificationCompat.Builder builder;
+    private static boolean notificationRunning = false;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -35,7 +40,9 @@ public class DownloadService extends Service {
             if (intent.getAction().equals(Utilities.ACTION_DOWNLOAD)) {
                 registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
                 registerReceiver(receiver, new IntentFilter(Utilities.ACTION_CANCEL));
+                registerReceiver(receiver, new IntentFilter(Utilities.ACTION_QUEUED));
                 downloadFile(intent);
+                Log.d("sw9", "Started OK");
             }
         }
         return START_STICKY;
@@ -58,14 +65,14 @@ public class DownloadService extends Service {
     }
 
     @SuppressLint("UseSparseArrays")
-    private void downloadFile(Intent intent) {
+    public void downloadFile(Intent intent) {
         String episodeID = intent.getStringExtra(Utilities.EPISODE_ID);
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
-        String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
+        final String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
 
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDbForReading();
-        Episode episode = pds.getEpisodeMetaDataForDownload(episodeID);
+        final Episode episode = pds.getEpisodeMetaDataForDownload(episodeID);
         String podcastDirectory = pds.getPodcastDirectory(podcastID);
         pds.closeDb();
         // Format the file name so it looks and works ok
@@ -85,12 +92,10 @@ public class DownloadService extends Service {
             downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
             DownloadManager.Request request = new DownloadManager.Request(
                     Uri.parse(episode.getEnclosure()));
-            request.setTitle(episode.getTitle());
-            request.setDescription(podcastTitle);
             request.setDestinationUri(Uri.fromFile(podcastFile));
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
             request.setVisibleInDownloadsUi(false);
-            long queueID = downloadManager.enqueue(request);
+            final long queueID = downloadManager.enqueue(request);
 
             episode.setDirectory(podcastFile.getAbsolutePath());
 
@@ -99,6 +104,7 @@ public class DownloadService extends Service {
             }
 
             downloadList.add(new DownloadListItem(episode, queueID, podcastTitle));
+            sendBroadcast(new Intent(Utilities.ACTION_QUEUED));
 
         } catch (IOException e) {
             Utilities.logException(e);
@@ -143,77 +149,200 @@ public class DownloadService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) {
-                // Get downloadId from extras of intent
-                long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-                // Get the episode object that is associated with the downloadId
-                Episode episode = null;
-
-                int listIndexItemRemove = -1;
-                for (int i = 0; i < downloadList.size(); i++ ) {
-                    if (downloadList.get(i).getQueueID() == downloadId) {
-                        episode = downloadList.get(i).getEpisode();
-                        listIndexItemRemove = i;
-                        break;
-                    }
-                }
-
-                DownloadManager.Query query = new DownloadManager.Query();
-                query.setFilterById(downloadId);
-                Cursor cursor = downloadManager.query(query);
-                if (cursor != null) {
-                    if (cursor.moveToFirst()) {
-                        if (DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(
-                                cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
-
-                            if(episode != null) {
-                                PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-                                // Set Episode directory
-                                pds.openDbForWriting();
-                                pds.updateEpisodeDirectory(episode.getEpisodeID(), episode.getDirectory());
-
-                                // Recheck if episode new status changed
-                                episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
-                                // Update count new while we are at it
-                                if (!episode.isNew()) {
-                                    // While we are at it update the isNew fields in DB, DB instance is only opened once this way
-                                    pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
-                                    int countNew = pds.getCountNew(episode.getPodcastID());
-                                    if (countNew > 0) {
-                                        pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
-                                    }
-                                }
-                                pds.closeDb();
-
-                                downloadList.remove(listIndexItemRemove);
-
-                                Intent iComplete = new Intent(Utilities.ACTION_DOWNLOADED);
-                                sendBroadcast(iComplete);
-                            }
-                        }
-                    }
-                }
-            } else if(Utilities.ACTION_CANCEL.equals(intent.getAction())) {
-                int indexItemRemoved = -1;
-                int numRemoved = -1;
-                for(int i = 0; i < downloadList.size(); i++) {
-                    if(downloadList.get(i).getEpisode().getEpisodeID() == intent.getIntExtra(Utilities.EPISODE_ID, -1)) {
-                        long idCancelEpisode = downloadList.get(i).getQueueID();
-                        indexItemRemoved = i;
-                        numRemoved = downloadManager.remove(idCancelEpisode);
-                        break;
-                    }
-                }
-
-                if(numRemoved > 0) {
-                    downloadList.remove(indexItemRemoved);
-                }
-
-                downloadManager.notify();
-                Intent iCanceled = new Intent(Utilities.ACTION_CANCEL_COMPLETE);
-                sendBroadcast(iCanceled);
+                downloadComplete(intent);
+            } else if (Utilities.ACTION_CANCEL.equals(intent.getAction())) {
+                downloadCancelled(intent);
+            } else if (Utilities.ACTION_QUEUED.equals(intent.getAction())) {
+                pollDMForNotification(intent);
             }
         }
     };
+
+    private void downloadComplete(Intent intent) {
+        // Get downloadId from extras of intent
+        long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+        // Get the episode object that is associated with the downloadId
+        Episode episode = null;
+
+        int listIndexItemRemove = -1;
+        for (int i = 0; i < downloadList.size(); i++ ) {
+            if (downloadList.get(i).getQueueID() == downloadId) {
+                episode = downloadList.get(i).getEpisode();
+                listIndexItemRemove = i;
+                break;
+            }
+        }
+
+        DownloadManager.Query query = new DownloadManager.Query();
+        query.setFilterById(downloadId);
+        Cursor cursor = downloadManager.query(query);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                if (DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(
+                        cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+
+                    if(episode != null) {
+                        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                        // Set Episode directory
+                        pds.openDbForWriting();
+                        pds.updateEpisodeDirectory(episode.getEpisodeID(), episode.getDirectory());
+
+                        // Recheck if episode new status changed
+                        episode.setNew(pds.getEpisodeIsNew(episode.getEpisodeID()));
+                        // Update count new while we are at it
+                        if (!episode.isNew()) {
+                            // While we are at it update the isNew fields in DB, DB instance is only opened once this way
+                            pds.updateEpisodeIsNew(episode.getEpisodeID(), 1);
+                            int countNew = pds.getCountNew(episode.getPodcastID());
+                            if (countNew > 0) {
+                                pds.updatePodcastCountNew(episode.getPodcastID(), countNew + 1);
+                            }
+                        }
+                        pds.closeDb();
+
+                        NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        notifyManager.cancel(episode.getEpisodeID());
+
+                        downloadList.remove(listIndexItemRemove);
+
+                        Intent iComplete = new Intent(Utilities.ACTION_DOWNLOADED);
+                        sendBroadcast(iComplete);
+                    }
+                }
+            }
+        }
+    }
+
+    private void downloadCancelled(Intent intent) {
+        int indexItemRemoved = -1;
+        int numRemoved = -1;
+        long idCancelEpisode = -1;
+        for(int i = 0; i < downloadList.size(); i++) {
+            if(downloadList.get(i).getEpisode().getEpisodeID() == intent.getIntExtra(Utilities.EPISODE_ID, -1)) {
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(downloadList.get(i).getEpisode().getEpisodeID());
+                idCancelEpisode = downloadList.get(i).getQueueID();
+                indexItemRemoved = i;
+                break;
+            }
+        }
+
+        DownloadManager.Query query = new DownloadManager.Query();
+        query.setFilterById(idCancelEpisode);
+        Cursor cursor = downloadManager.query(query);
+        if (cursor != null) {
+            if(cursor.getCount() > 0) {
+                if (cursor.moveToFirst()) {
+                    // TODO cancel in any status
+                    if (DownloadManager.STATUS_RUNNING == cursor.getInt(
+                            cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+
+                        Log.d("sw9", "RUNNING AHGHHHHHHH");
+                        int bytes = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                        if (bytes > 2097152) {
+                            Log.d("sw9", "Cancel time AHGHHHHHHH");
+
+                            numRemoved = downloadManager.remove(idCancelEpisode);
+
+                            if (numRemoved > 0) {
+                                downloadList.remove(indexItemRemoved);
+
+                                NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                notifyManager.cancel(1);
+                                Intent iCanceled = new Intent(Utilities.ACTION_CANCEL_COMPLETE);
+                                sendBroadcast(iCanceled);
+                            }
+                        }
+                    } else if (DownloadManager.STATUS_PENDING == cursor.getInt(
+                            cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+                        Log.d("sw9", "PENDING AHGHHHHHHH");
+                    }
+                }
+            }
+            cursor.close();
+        }
+    }
+
+    private void pollDMForNotification(Intent intent) {
+        if(!notificationRunning) {
+            // Start a new thread that runs until the download queue is empty
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // Set a boolean that the thread is running, set to false at the end
+                    notificationRunning = true;
+                    // PendingIntent to fire on notification click
+                    PendingIntent pendIntent = PendingIntent.getActivity(getApplicationContext(), 1,
+                            new Intent(getApplicationContext(), DownloadActivity.class), 0);
+
+                    // Initialise NotificationManager
+                    NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    // Keep looping while list is populated with anything
+                    while (downloadList.size() > 0) {
+                        // Get the download queryID of each item in the list and query the running
+                        // downloads
+                        long[] arrayOfIds = new long[downloadList.size()];
+                        for (int i = 0; i < downloadList.size(); i++) {
+                            arrayOfIds[i] = downloadList.get(i).getQueueID();
+                        }
+                        DownloadManager.Query query = new DownloadManager.Query();
+                        query.setFilterById(arrayOfIds);
+                        Cursor cursor = downloadManager.query(query);
+
+                        if (cursor != null) {
+                            if (cursor.getCount() > 0) {
+                                long currentProgress;
+                                long totalDownloadSize;
+                                while (cursor.moveToNext()) {
+                                    if (DownloadManager.STATUS_RUNNING == cursor.getInt(
+                                            cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+                                        totalDownloadSize = cursor.getLong(
+                                                cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+
+                                        currentProgress = cursor.getLong(
+                                                cursor.getColumnIndex(DownloadManager.
+                                                        COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                                        );
+
+                                        long queueID = cursor.getLong(cursor.
+                                                getColumnIndex(DownloadManager.COLUMN_ID));
+
+                                        for (int i = 0; i < downloadList.size(); i++) {
+                                            if (downloadList.get(i).getQueueID() == queueID) {
+                                                builder = new NotificationCompat.Builder(getApplicationContext());
+                                                builder.setContentTitle(downloadList.get(i).getEpisode().getTitle()); // First row
+                                                builder.setSmallIcon(R.drawable.ic_action_download_notification);
+
+                                                int totalDownloadInt = Utilities.safeLongToInt(totalDownloadSize);
+                                                int progressInt = Utilities.safeLongToInt(currentProgress);
+                                                if(progressInt > 0 && totalDownloadInt > 0) {
+                                                    Log.d("sw9", totalDownloadInt + " " + progressInt);
+
+                                                    double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
+                                                    builder.setContentText((int) percent + "% Complete");
+                                                    builder.setProgress(totalDownloadInt, progressInt, false);
+                                                }
+
+                                                builder.setContentIntent(pendIntent);
+                                                notifyManager.notify(downloadList.get(i).getEpisode().getEpisodeID(), builder.build());
+                                            }
+                                        }
+                                    }
+                                }
+                                cursor.close();
+                            }
+                        }
+                        try {
+                            Thread.sleep(1500, 0);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        notificationRunning = false;
+                    }
+
+                }
+            }).start();
+        }
+    }
 
     public ArrayList<DownloadListItem> getDownloadList() {
         return downloadList;

@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.shanewhelan.podcastinate.activities.DownloadActivity;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
@@ -43,6 +44,7 @@ public class Utilities {
     public static final String ACTION_DOWNLOAD = "com.shanewhelan.podcastinate.DOWNLOAD";
     public static final String ACTION_CANCEL = "com.shanewhelan.podcastinate.CANCEL";
     public static final String ACTION_CANCEL_COMPLETE = "com.shanewhelan.podcastinate.CANCEL_FIN";
+    public static final String ACTION_QUEUED = "com.shanewhelan.podcastinate.QUEUED";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";
@@ -133,6 +135,19 @@ public class Utilities {
         }
     }
 
+    public static class NotificationClicked extends BroadcastReceiver {
+        public NotificationClicked() {
+            super();
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Intent notificationIntent = new Intent(context, DownloadActivity.class);
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(notificationIntent);
+        }
+    }
+
     public static void logException(Exception e) {
         Log.e(e.getClass().getName(), e.getMessage(), e);
     }
@@ -150,5 +165,12 @@ public class Utilities {
             logException(e);
         }
         return "";
+    }
+
+    public static int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
     }
 }

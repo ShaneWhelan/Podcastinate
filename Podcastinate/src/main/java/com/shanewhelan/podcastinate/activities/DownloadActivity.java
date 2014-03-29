@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
-import android.support.v4.util.LongSparseArray;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,19 +20,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.shanewhelan.podcastinate.DownloadListItem;
-import com.shanewhelan.podcastinate.Episode;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.services.DownloadService;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
 public class DownloadActivity extends Activity {
     private DownloadService downloadService;
     private DownloadAdapter downloadAdapter;
-    private ListView downloadList;
     private ServiceConnection serviceConnection;
     private String mostRecentPodcastTitle;
     private int mostRecentPodcastID;
@@ -60,9 +55,7 @@ public class DownloadActivity extends Activity {
             public void onServiceConnected(ComponentName name, IBinder service) {
                 DownloadService.DownloadBinder binder = (DownloadService.DownloadBinder) service;
                 downloadService = binder.getService();
-                // TODO updateListOfPodcasts();
                 initialiseAdapter();
-                // TODO syncControlPanel();
             }
 
             @Override
@@ -71,16 +64,16 @@ public class DownloadActivity extends Activity {
             }
         };
 
-        Intent intent = new Intent(this, DownloadService.class);
+        Intent intent = new Intent(getApplicationContext(), DownloadService.class);
         // 3 parameter is 0 because this means "bind if exists"
         bindService(intent, serviceConnection, 0);
 
         registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
         registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_CANCEL_COMPLETE));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_QUEUED));
+
 
         // TODO syncControlPanel();
-
-
     }
 
     @Override
@@ -94,9 +87,17 @@ public class DownloadActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Utilities.ACTION_DOWNLOADED.equals(intent.getAction())) {
-                updateDownloadList();
+                downloadAdapter.notifyDataSetChanged();
             } else if(Utilities.ACTION_CANCEL_COMPLETE.equals(intent.getAction())) {
-                updateDownloadList();
+                downloadAdapter.notifyDataSetChanged();
+            } else if(Utilities.ACTION_QUEUED.equals(intent.getAction())) {
+                /*
+                if(downloadAdapter != null) {
+                    downloadAdapter.notifyDataSetChanged();
+                } else {
+                    initialiseAdapter();
+                }*/
+
             }
         }
     };
@@ -115,22 +116,10 @@ public class DownloadActivity extends Activity {
     }
 
     public void initialiseAdapter() {
-        downloadList = (ListView) findViewById(R.id.listOfDownloads);
+        ListView downloadList = (ListView) findViewById(R.id.listOfDownloads);
         downloadAdapter = new DownloadAdapter(getApplicationContext(),
                 R.layout.download_list_item, R.id.downloadEpisodeTitle, downloadService.getDownloadList());
         downloadList.setAdapter(downloadAdapter);
-    }
-
-    public void updateDownloadList() {
-        //downloadAdapter.clear();
-        // TODO Potentially null INVESTIGATE MULTIPLE DOWNLOADS
-        //downloadAdapter.addAll(downloadService.getDownloadList());
-        //downloadList.setAdapter(downloadAdapter);
-
-        downloadAdapter = new DownloadAdapter(getApplicationContext(),
-                R.layout.download_list_item, R.id.downloadEpisodeTitle, downloadService.getDownloadList());
-        downloadList.setAdapter(downloadAdapter);
-        downloadAdapter.notifyDataSetChanged();
     }
 
     @Override

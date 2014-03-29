@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 
     <application
         android:allowBackup="true"
@@ -86,7 +87,8 @@
             android:name="com.shanewhelan.podcastinate.activities.DownloadActivity"
             android:label="@string/title_activity_download"
             android:parentActivityName="com.shanewhelan.podcastinate.activities.PodcastViewerActivity"
-            android:launchMode="singleInstance" >
+            android:launchMode="singleInstance"
+            android:exported="true">
 
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
@@ -141,6 +143,14 @@
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name="com.shanewhelan.podcastinate.Utilities$NotificationClicked" >
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
