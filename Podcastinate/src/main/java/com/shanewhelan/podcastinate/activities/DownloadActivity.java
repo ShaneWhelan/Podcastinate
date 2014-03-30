@@ -70,8 +70,6 @@ public class DownloadActivity extends Activity {
 
         registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_DOWNLOADED));
         registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_CANCEL_COMPLETE));
-        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_QUEUED));
-
 
         // TODO syncControlPanel();
     }
@@ -90,14 +88,6 @@ public class DownloadActivity extends Activity {
                 downloadAdapter.notifyDataSetChanged();
             } else if(Utilities.ACTION_CANCEL_COMPLETE.equals(intent.getAction())) {
                 downloadAdapter.notifyDataSetChanged();
-            } else if(Utilities.ACTION_QUEUED.equals(intent.getAction())) {
-                /*
-                if(downloadAdapter != null) {
-                    downloadAdapter.notifyDataSetChanged();
-                } else {
-                    initialiseAdapter();
-                }*/
-
             }
         }
     };

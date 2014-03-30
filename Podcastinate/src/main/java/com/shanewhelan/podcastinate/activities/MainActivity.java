@@ -53,7 +53,6 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: Create Download Queue (Cancel, pause and start downloads)
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 TODO: Set back button to go to right activities
 
@@ -68,18 +67,18 @@ TODO: Statistics of user playback
 Low Priority FEATURES:
 TODO: Check Rotation on all feeds
 TODO: Finalise Control Panel Design and put on every page (Podcast beside epsisode name)
-TODO: Confirmation dialog box on subscribe
 TODO: Lock screen widget
+
+TODO: Confirmation dialog box on subscribe
 TODO: Sleep Timer
 TODO: Mark new on resume podcast if manually made new
 
 BUGS:
-TODO: Download service: Sometimes fails to download and jumps straight to download complete notification
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
 TODO: Restrict access to the player from the drawer
 TODO: Fix for one feed a week/removing old feeds
-TODO: On subscribe pictures dont load
+TODO: On subscribe pictures don't load
 
 TODO: Delete a subscription while player is playing
 TODO: Demo refresh with player activity
