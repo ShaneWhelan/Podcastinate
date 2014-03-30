@@ -70,6 +70,14 @@ public class DownloadService extends Service {
         int podcastID = intent.getIntExtra(Utilities.PODCAST_ID, -1);
         final String podcastTitle = intent.getStringExtra(Utilities.PODCAST_TITLE);
 
+        if(downloadList != null) {
+            for (DownloadListItem aDownloadList : downloadList) {
+                if (aDownloadList.getEpisode().getEpisodeID() == Integer.parseInt(episodeID)) {
+                    // Already in download list, do nothing
+                    return;
+                }
+            }
+        }
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDbForReading();
         final Episode episode = pds.getEpisodeMetaDataForDownload(episodeID);
@@ -201,7 +209,7 @@ public class DownloadService extends Service {
                         pds.closeDb();
 
                         NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        notifyManager.cancel(episode.getEpisodeID());
+                        notifyManager.cancel(1);
 
                         downloadList.remove(listIndexItemRemove);
 
@@ -219,7 +227,7 @@ public class DownloadService extends Service {
         long idCancelEpisode = -1;
         for(int i = 0; i < downloadList.size(); i++) {
             if(downloadList.get(i).getEpisode().getEpisodeID() == intent.getIntExtra(Utilities.EPISODE_ID, -1)) {
-                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(downloadList.get(i).getEpisode().getEpisodeID());
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(1);
                 idCancelEpisode = downloadList.get(i).getQueueID();
                 indexItemRemoved = i;
                 break;
@@ -276,29 +284,79 @@ public class DownloadService extends Service {
 
                     // Initialise NotificationManager
                     NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                    // Initialise variable out of loop for memory management
+                    long currentProgress;
+                    long totalDownloadSize;
+
+                    long startTime;
+                    long endTime;
+
                     // Keep looping while list is populated with anything
                     while (downloadList.size() > 0) {
+                        startTime = System.nanoTime();
+                        // Get the download queryID of each item in the list and query the running
+                        // downloads
                         // Get the download queryID of each item in the list and query the running
                         // downloads
                         long[] arrayOfIds = new long[downloadList.size()];
                         for (int i = 0; i < downloadList.size(); i++) {
                             arrayOfIds[i] = downloadList.get(i).getQueueID();
                         }
+
                         DownloadManager.Query query = new DownloadManager.Query();
                         query.setFilterById(arrayOfIds);
                         Cursor cursor = downloadManager.query(query);
 
                         if (cursor != null) {
-                            if (cursor.getCount() > 0) {
-                                long currentProgress;
-                                long totalDownloadSize;
-                                while (cursor.moveToNext()) {
+                            if (cursor.getCount() == 1) {
+                                if (cursor.moveToFirst()) {
                                     if (DownloadManager.STATUS_RUNNING == cursor.getInt(
                                             cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
                                         totalDownloadSize = cursor.getLong(
                                                 cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
 
                                         currentProgress = cursor.getLong(
+                                                cursor.getColumnIndex(DownloadManager.
+                                                        COLUMN_BYTES_DOWNLOADED_SO_FAR));
+
+                                        long queueID = cursor.getLong(cursor.
+                                                getColumnIndex(DownloadManager.COLUMN_ID));
+
+                                        for (DownloadListItem aDownloadList : downloadList) {
+                                            if (aDownloadList.getQueueID() == queueID) {
+                                                builder = new NotificationCompat.Builder(getApplicationContext());
+                                                builder.setContentTitle(aDownloadList.getEpisode().getTitle()); // First row
+                                                builder.setSmallIcon(R.drawable.ic_action_download_notification);
+
+                                                int totalDownloadInt = Utilities.safeLongToInt(totalDownloadSize);
+                                                int progressInt = Utilities.safeLongToInt(currentProgress);
+
+                                                if (progressInt > 0 && totalDownloadInt > 0) {
+                                                    Log.d("sw9", totalDownloadInt + " " + progressInt);
+                                                    double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
+                                                    builder.setContentText((int) percent + "% Complete");
+                                                    builder.setProgress(totalDownloadInt, progressInt, false);
+                                                }
+                                                builder.setContentIntent(pendIntent);
+                                                notifyManager.notify(1, builder.build());
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if(cursor.getCount() > 1) {
+                                long mTotalDownloadSize = 0;
+                                long mCurrentProgress = 0;
+                                int totalDownloadInt = 0;
+                                int progressInt = 0;
+                                while (cursor.moveToNext()) {
+                                    if (DownloadManager.STATUS_RUNNING == cursor.getInt(
+                                            cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+                                        mTotalDownloadSize += cursor.getLong(
+                                                cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+
+                                        mCurrentProgress += cursor.getLong(
                                                 cursor.getColumnIndex(DownloadManager.
                                                         COLUMN_BYTES_DOWNLOADED_SO_FAR)
                                         );
@@ -308,37 +366,43 @@ public class DownloadService extends Service {
 
                                         for (int i = 0; i < downloadList.size(); i++) {
                                             if (downloadList.get(i).getQueueID() == queueID) {
-                                                builder = new NotificationCompat.Builder(getApplicationContext());
-                                                builder.setContentTitle(downloadList.get(i).getEpisode().getTitle()); // First row
-                                                builder.setSmallIcon(R.drawable.ic_action_download_notification);
-
-                                                int totalDownloadInt = Utilities.safeLongToInt(totalDownloadSize);
-                                                int progressInt = Utilities.safeLongToInt(currentProgress);
-                                                if(progressInt > 0 && totalDownloadInt > 0) {
-                                                    Log.d("sw9", totalDownloadInt + " " + progressInt);
-
-                                                    double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
-                                                    builder.setContentText((int) percent + "% Complete");
-                                                    builder.setProgress(totalDownloadInt, progressInt, false);
-                                                }
-
-                                                builder.setContentIntent(pendIntent);
-                                                notifyManager.notify(downloadList.get(i).getEpisode().getEpisodeID(), builder.build());
+                                                totalDownloadInt += Utilities.safeLongToInt(mTotalDownloadSize);
+                                                progressInt += Utilities.safeLongToInt(mCurrentProgress);
                                             }
                                         }
                                     }
                                 }
-                                cursor.close();
+
+                                builder = new NotificationCompat.Builder(getApplicationContext());
+                                builder.setContentTitle("Multiple Downloads"); // First row
+                                builder.setSmallIcon(R.drawable.ic_action_download_notification);
+
+                                if (progressInt > 0 && totalDownloadInt > 0) {
+                                    Log.d("sw9", totalDownloadInt + " " + progressInt);
+
+                                    double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
+                                    builder.setContentText((int) percent + "% Complete");
+                                    builder.setProgress(totalDownloadInt, progressInt, false);
+                                }
+
+                                builder.setContentIntent(pendIntent);
+                                notifyManager.notify(1, builder.build());
+
+                                builder.setContentIntent(pendIntent);
+                                notifyManager.notify(1, builder.build());
                             }
+                            cursor.close();
                         }
+                        endTime = System.nanoTime();
+                        Log.d("sw9", "Test " + (endTime - startTime));
                         try {
-                            Thread.sleep(1500, 0);
+                            Thread.sleep(1000, 0);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        notificationRunning = false;
                     }
-
+                    // If while loop finishes then no notification running
+                    notificationRunning = false;
                 }
             }).start();
         }

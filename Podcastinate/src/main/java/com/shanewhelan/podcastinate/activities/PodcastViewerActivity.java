@@ -315,6 +315,7 @@ public class PodcastViewerActivity extends Activity {
                         } catch(Exception e) {
                             Utilities.logException(e);
                         }
+                        cursor.close();
                     }
                 }
             }
@@ -354,6 +355,7 @@ public class PodcastViewerActivity extends Activity {
                         } catch(Exception e) {
                             Utilities.logException(e);
                         }
+                        cursor.close();
                     }
                 }
             }
