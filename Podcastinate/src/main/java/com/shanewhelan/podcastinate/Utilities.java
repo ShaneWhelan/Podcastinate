@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.activities.DownloadActivity;
+import com.shanewhelan.podcastinate.async.RefreshRSSFeed;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
@@ -47,6 +48,7 @@ public class Utilities {
     public static final String ACTION_QUEUED = "com.shanewhelan.podcastinate.QUEUED";
     public static final String ACTION_CAR_MODE_ON = "com.shanewhelan.podcastinate.CM_ON";
     public static final String ACTION_CAR_MODE_OFF = "com.shanewhelan.podcastinate.CM_OFF";
+    private static final String ACTION_REFRESH = "com.shanewhelan.podcastinate.REFRESH_FEEDS";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";
@@ -127,11 +129,27 @@ public class Utilities {
                     Intent pauseIntent = new Intent(context, AudioPlayerService.class);
                     pauseIntent.setAction(AudioPlayerService.ACTION_DISCONNECT);
                     context.startService(pauseIntent);
-                } else if(intent.getAction().equals(Utilities.ACTION_PAUSE)) {
+                } else if(intent.getAction().equals(ACTION_PAUSE)) {
                     Intent pauseIntent = new Intent(context, AudioPlayerService.class);
-                    pauseIntent.setAction(Utilities.ACTION_PAUSE);
+                    pauseIntent.setAction(ACTION_PAUSE);
                     context.startService(pauseIntent);
+                }
+            }
+        }
+    }
 
+    public static class RefreshFeeds extends BroadcastReceiver {
+
+        public RefreshFeeds() {
+            super();
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() != null) {
+                if(intent.getAction().equals(ACTION_REFRESH)) {
+                    RefreshRSSFeed refreshRSSFeed = new RefreshRSSFeed(context, null, null);
+                    refreshRSSFeed.execute();
                 }
             }
         }

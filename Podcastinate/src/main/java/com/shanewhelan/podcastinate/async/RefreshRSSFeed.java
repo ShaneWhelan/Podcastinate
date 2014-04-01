@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, String> {
+public class RefreshRSSFeed extends AsyncTask<Void, Void, String> {
     public Context context;
     private MenuItem refreshAction;
     private ProgressBar progressBar;
@@ -46,12 +46,18 @@ public class RefreshRSSFeed extends AsyncTask<HashMap<String, String>, Void, Str
         refreshAction.expandActionView();
 
         progressBar.setVisibility(View.VISIBLE);
+
+
     }
 
     @Override
-    protected String doInBackground(HashMap<String, String>... urlList) {
+    protected String doInBackground(Void... voids) {
+        PodcastDataSource dataSource = new PodcastDataSource(context);
+        dataSource.openDbForReading();
+        HashMap<String, String> podcastInfo = dataSource.getAllPodcastIDsLinks();
+        dataSource.closeDb();
         try {
-            Set entrySet = urlList[0].entrySet();
+            Set entrySet = podcastInfo.entrySet();
             for (Object anEntrySet : entrySet) {
                 Map.Entry mapEntry = (Map.Entry) anEntrySet;
                 refreshRSSFeed(mapEntry.getValue().toString(),

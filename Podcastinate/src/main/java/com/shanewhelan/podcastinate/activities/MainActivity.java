@@ -52,7 +52,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.HashMap;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
@@ -60,25 +59,21 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: Set back button to go to right activities
 TODO: User Settings - refresh interval
 TODO: Cloud backup
 TODO: Lock screen widget
-
 TODO: Statistics of user playback
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 
-Low Priority FEATURES:
-TODO: Confirmation dialog box on subscribe
-TODO: Sleep Timer
-TODO: Mark new on resume podcast if manually made new
-
 Checks:
+TODO: Set back button to go to right activities
 TODO: Check Rotation on all feeds
 TODO: Tablet/Phone comparison
 TODO: Delete other app - firefox
 
 BUGS:
+TODO: EPISODE COUNTER SCREWS UP WITH DEMO REFRESH
+
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
 TODO: Restrict access to the player from the drawer
@@ -99,6 +94,11 @@ TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
 TODO: Add Paging to podcast viewing activity
 TODO: Add break keyword where necessary
+
+Low Priority FEATURES:
+TODO: Confirmation dialog box on subscribe
+TODO: Sleep Timer
+TODO: Mark new on resume podcast if manually made new
 
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
@@ -225,15 +225,8 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.action_refresh:
                 if (Utilities.testNetwork(getApplicationContext())) {
-                    PodcastDataSource dataSource = new PodcastDataSource(getApplicationContext());
-                    dataSource.openDbForReading();
-                    HashMap<String, String> podcastInfo = dataSource.getAllPodcastIDsLinks();
-                    dataSource.closeDb();
                     RefreshRSSFeed refreshFeed = new RefreshRSSFeed(getApplicationContext(), item, progressBar);
-                    if (podcastInfo != null) {
-                        //noinspection unchecked
-                        refreshFeed.execute(podcastInfo);
-                    }
+                    refreshFeed.execute();
                     return true;
                 } else {
                     return false;

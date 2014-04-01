@@ -1,5 +1,6 @@
 package com.shanewhelan.podcastinate.database;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -369,42 +370,39 @@ public class PodcastDataSource {
         return false;
     }
 
+    @SuppressLint("UseSparseArrays")
     public void removeTwoEpisodesFromEach() {
         HashMap<String, String> listOfIds = getAllPodcastIDsLinks();
         Set entrySet = listOfIds.entrySet();
+         HashMap<Integer, Integer> countsOfDeletedEpisodes = new HashMap<Integer, Integer>(listOfIds.size());
+        // Iterate through the list of IDs and use key to delete last two episodes
         for (Object anEntrySet : entrySet) {
             Map.Entry mapEntry = (Map.Entry) anEntrySet;
-            Log.d("sw9", "" + database.delete(EpisodeEntry.TABLE_NAME, EpisodeEntry.EPISODE_ID + " IN (" + "SELECT " +
+            int podcast_id = Integer.parseInt(mapEntry.getKey().toString());
+            int result = database.delete(EpisodeEntry.TABLE_NAME, EpisodeEntry.EPISODE_ID + " IN (" + "SELECT " +
                     EpisodeEntry.EPISODE_ID + " FROM " + EpisodeEntry.TABLE_NAME + " WHERE "
-                    + PodcastEntry.PODCAST_ID + " = \"" + Integer.parseInt(mapEntry.getKey().toString()) + "\"" +
-                    " ORDER BY " + EpisodeEntry.PUB_DATE + " DESC LIMIT 2)", null));
+                    + PodcastEntry.PODCAST_ID + " = \"" + podcast_id + "\"" +
+                    " ORDER BY " + EpisodeEntry.PUB_DATE + " DESC LIMIT 2)", null);
+
+            countsOfDeletedEpisodes.put(podcast_id, result);
         }
-        synchroniseNewCount();
+        synchroniseNewCount(countsOfDeletedEpisodes);
     }
 
-    public void synchroniseNewCount() {
-        Cursor cursor = database.rawQuery("SELECT " + EpisodeEntry.PODCAST_ID + ", count(" +
-                EpisodeEntry.NEW_EPISODE + ") FROM " + EpisodeEntry.TABLE_NAME +
-                " WHERE " + EpisodeEntry.NEW_EPISODE + " = 1" +
-                " GROUP BY " + EpisodeEntry.PODCAST_ID, null);
-
-        if(cursor != null) {
-            if(cursor.getCount() > 0) {
-                while (cursor.moveToNext()) {
-                    int id = cursor.getInt(cursor.getColumnIndex(EpisodeEntry.PODCAST_ID));
-                    int count = cursor.getInt(cursor.getColumnIndex("count(" + EpisodeEntry.NEW_EPISODE + ")"));
-
-                    updatePodcastCountNew(id, count);
-                }
-            } else {
-                HashMap<String, String> listOfIds = getAllPodcastIDsLinks();
-                Set entrySet = listOfIds.entrySet();
-                for (Object anEntrySet : entrySet) {
-                    Map.Entry mapEntry = (Map.Entry) anEntrySet;
-                    updatePodcastCountNew(Integer.parseInt(mapEntry.getKey().toString()), 0);
+    public void synchroniseNewCount(HashMap<Integer, Integer> countsOfDeletedEpisodes) {
+        Set entrySet = countsOfDeletedEpisodes.entrySet();
+        for (Object anEntrySet : entrySet) {
+            Map.Entry mapEntry = (Map.Entry) anEntrySet;
+            int podcast_id = Integer.parseInt(mapEntry.getKey().toString());
+            int amountRemoved = Integer.parseInt(mapEntry.getValue().toString());
+            int currentCountNew = getCountNew(podcast_id);
+            if (currentCountNew != 0) {
+                if((currentCountNew - amountRemoved) < 0) {
+                    updatePodcastCountNew(podcast_id, 0);
+                } else {
+                    updatePodcastCountNew(podcast_id, currentCountNew - amountRemoved);
                 }
             }
-            cursor.close();
         }
      }
 }

@@ -290,12 +290,9 @@ public class DownloadService extends Service {
                         long currentProgress;
                         long totalDownloadSize;
 
-                        long startTime;
-                        long endTime;
 
                         // Keep looping while list is populated with anything
                         while (downloadList.size() > 0) {
-                            startTime = System.nanoTime();
                             // Get the download queryID of each item in the list and query the running
                             // downloads
                             // Get the download queryID of each item in the list and query the running
@@ -335,7 +332,6 @@ public class DownloadService extends Service {
                                                     int progressInt = Utilities.safeLongToInt(currentProgress);
 
                                                     if (progressInt > 0 && totalDownloadInt > 0) {
-                                                        Log.d("sw9", totalDownloadInt + " " + progressInt);
                                                         double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
                                                         builder.setContentText((int) percent + "% Complete");
                                                         builder.setProgress(totalDownloadInt, progressInt, false);
@@ -380,8 +376,6 @@ public class DownloadService extends Service {
                                     builder.setSmallIcon(R.drawable.ic_action_download_notification);
 
                                     if (progressInt > 0 && totalDownloadInt > 0) {
-                                        Log.d("sw9", totalDownloadInt + " " + progressInt);
-
                                         double percent = ((double) progressInt / (double) totalDownloadInt) * 100;
                                         builder.setContentText((int) percent + "% Complete");
                                         builder.setProgress(totalDownloadInt, progressInt, false);
@@ -395,8 +389,6 @@ public class DownloadService extends Service {
                                 }
                                 cursor.close();
                             }
-                            endTime = System.nanoTime();
-                            Log.d("sw9", "Test " + (endTime - startTime));
                             try {
                                 Thread.sleep(1000, 0);
                             } catch (InterruptedException e) {

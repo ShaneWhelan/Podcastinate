@@ -212,7 +212,7 @@ public class PodcastViewerActivity extends Activity {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     default:
-                        return false;
+                        return true;
                 }
             }
 
@@ -314,7 +314,6 @@ public class PodcastViewerActivity extends Activity {
                         } catch(Exception e) {
                             Utilities.logException(e);
                         }
-                        cursor.close();
                     }
                 }
             }
@@ -332,6 +331,7 @@ public class PodcastViewerActivity extends Activity {
             // Loop through the SparseBooleanArray and delete directory from db and file from disk
             for (int i = 0; i < booleanArray.size(); i++) {
                 if (booleanArray.valueAt(i)) {
+
                     cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
                     if (cursor != null) {
                         int episode_id = cursor.getInt(cursor.getColumnIndex("_id"));
@@ -354,7 +354,7 @@ public class PodcastViewerActivity extends Activity {
                         } catch(Exception e) {
                             Utilities.logException(e);
                         }
-                        cursor.close();
+
                     }
                 }
             }
