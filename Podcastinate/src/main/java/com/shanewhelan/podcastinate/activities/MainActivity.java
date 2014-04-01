@@ -14,6 +14,7 @@ import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -59,35 +60,36 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 TODO: Set back button to go to right activities
 TODO: User Settings - refresh interval
-
-MAJOR FEATURES:
 TODO: Cloud backup
-TODO: Statistics of user playback
-TODO: Car Mode
-
-Low Priority FEATURES:
-TODO: Check Rotation on all feeds
-TODO: Finalise Control Panel Design and put on every page (Podcast beside epsisode name)
 TODO: Lock screen widget
 
+TODO: Statistics of user playback
+TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
+
+Low Priority FEATURES:
 TODO: Confirmation dialog box on subscribe
 TODO: Sleep Timer
 TODO: Mark new on resume podcast if manually made new
+
+Checks:
+TODO: Check Rotation on all feeds
+TODO: Tablet/Phone comparison
+TODO: Delete other app - firefox
 
 BUGS:
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
 TODO: Restrict access to the player from the drawer
+
 TODO: Fix for one feed a week/removing old feeds
 TODO: On subscribe pictures don't load
-
 TODO: Delete a subscription while player is playing
+TODO: Handle no recommendations on client
+
 TODO: Demo refresh with player activity
 TODO: DELETE while ANYTHING, or downloading
-TODO: Handle no recommendations on client
 
 Server Bugs:
 TODO: The server side gives back the same podcasts already subscribed to - limit searches and results
@@ -97,6 +99,7 @@ TODO: Streaming: Must keep WIFI from sleeping
 TODO: Help Section
 TODO: Add Paging to podcast viewing activity
 TODO: Add break keyword where necessary
+
 Test Case:
 TODO: If you have no subscriptions and you look for recommendations
 */
@@ -127,6 +130,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setTitle("Podcasts");
         setContentView(R.layout.activity_main);
+        // Sets the defaults up without overriding user settings
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
 /*
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
@@ -208,6 +213,8 @@ public class MainActivity extends Activity {
                 startActivity(intent);
                 return true;
             case R.id.action_settings:
+                Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
             case R.id.action_remove_2_podcasts:
                 PodcastDataSource pds = new PodcastDataSource(getApplicationContext());

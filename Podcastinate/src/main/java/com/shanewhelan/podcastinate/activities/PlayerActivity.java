@@ -11,9 +11,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
@@ -74,7 +76,13 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
         @Override
         public void onReceive(Context context, Intent intent) {
             if(Utilities.ACTION_CAR_MODE_ON.equals(intent.getAction())) {
-                activateCarMode();
+                if(getApplicationContext() != null) {
+                    SharedPreferences sharedPreferences = PreferenceManager.
+                            getDefaultSharedPreferences(getApplicationContext());
+                    if (sharedPreferences.getBoolean("car_mode_enabled", true)) {
+                        activateCarMode();
+                    }
+                }
             }
         }
     };
@@ -475,6 +483,8 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
                 }
                 return true;
             case R.id.action_settings:
+                Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -17,7 +17,7 @@
         android:layout_weight="0.3"
         android:scaleType="fitCenter"
         android:background="@drawable/transparent_button_selector"
-        android:src="@drawable/rewind_icon_selector"
+        android:src="@drawable/skip_back_icon_selector"
         android:contentDescription="@string/rewindButton"/>
 
     <ImageButton
@@ -51,6 +51,6 @@
         android:scaleType="fitCenter"
         android:layout_weight="0.3"
         android:background="@drawable/transparent_button_selector"
-        android:src="@drawable/fast_forward_icon_selector"
+        android:src="@drawable/skip_forward_icon_selector"
         android:contentDescription="@string/fastForward"/>
 </LinearLayout>

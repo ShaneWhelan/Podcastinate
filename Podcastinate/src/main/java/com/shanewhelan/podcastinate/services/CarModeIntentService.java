@@ -2,6 +2,8 @@ package com.shanewhelan.podcastinate.services;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.util.Log;
+
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import com.shanewhelan.podcastinate.Utilities;
@@ -46,7 +48,8 @@ public class CarModeIntentService extends IntentService {
             int activityType = mostProbableActivity.getType();
 
             String activityName = getNameFromType(activityType);
-            if(activityName.equals("in_vehicle")) {
+            Log.d("sw9", activityName);
+            if(activityName.equals("tilting")) {
                 sendBroadcast(new Intent(Utilities.ACTION_CAR_MODE_ON));
             }
 

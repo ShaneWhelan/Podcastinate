@@ -72,35 +72,43 @@
 
         <ImageButton
             android:id="@+id/skipBack"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/rewind_icon_selector"
+            android:scaleType="fitCenter"
+            android:src="@drawable/skip_back_icon_selector"
+            android:background="@drawable/transparent_button_selector"
+            android:layout_weight="0.3"
             android:contentDescription="@string/rewindButton"/>
 
         <ImageButton
             android:id="@+id/playerPlayButton"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/play_icon_selector"
+            android:scaleType="fitCenter"
+            android:src="@drawable/play_icon_selector"
+            android:background="@drawable/transparent_button_selector"
+            android:layout_weight="0.3"
             android:contentDescription="@string/mainPlayButton"/>
 
         <ImageButton
             android:id="@+id/playerPauseButton"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/pause_icon_selector"
+            android:scaleType="fitCenter"
+            android:src="@drawable/pause_icon_selector"
+            android:background="@drawable/transparent_button_selector"
             android:visibility="gone"
+            android:layout_weight="0.3"
             android:contentDescription="@string/ic_pause" />
 
         <ImageButton
             android:id="@+id/skipForward"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
             android:scaleType="fitCenter"
-            android:background="@drawable/fast_forward_icon_selector"
+            android:layout_weight="0.3"
+            android:src="@drawable/skip_forward_icon_selector"
+            android:background="@drawable/transparent_button_selector"
             android:contentDescription="@string/fastForward"/>
     </LinearLayout>
 </RelativeLayout>

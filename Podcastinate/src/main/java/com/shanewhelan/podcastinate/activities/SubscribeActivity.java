@@ -132,6 +132,8 @@ public class SubscribeActivity extends Activity {
                 }
                 return true;
             case R.id.action_settings:
+                Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

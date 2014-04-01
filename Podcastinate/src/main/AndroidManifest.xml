@@ -133,6 +133,17 @@
                 android:value="com.shanewhelan.podcastinate.activities.MainActivity" />
         </activity>
 
+        <activity
+            android:name="com.shanewhelan.podcastinate.activities.SettingsActivity"
+            android:label="@string/title_activity_settings_activity"
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity" >
+
+            <!-- The meta-data element is needed for versions lower than 4.1 -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.shanewhelan.podcastinate.activities.MainActivity" />
+        </activity>
+
         <service
             android:name="com.shanewhelan.podcastinate.services.DownloadService"
             android:enabled="true"
