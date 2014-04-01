@@ -6,27 +6,94 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="vertical"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent">
 
-    <ProgressBar
-        android:id="@+id/smoothProgressBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
-        android:visibility="gone"
-        android:layout_marginTop="-6dp"
-        android:layout_marginBottom="-6dp" />
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:orientation="vertical"
+                      android:layout_width="match_parent"
+                      android:layout_height="0dp"
+                      android:layout_weight="1">
 
-    <ListView
-        android:id="@+id/listOfPodcasts"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#edf2ed"/>
-</LinearLayout>
+            <ProgressBar
+                android:id="@+id/smoothProgressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
+                android:visibility="gone"
+                android:layout_marginTop="-6dp"
+                android:layout_marginBottom="-6dp" />
+
+            <ListView
+                android:id="@+id/listOfPodcasts"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#edf2ed"/>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:gravity="center"
+            android:background="@drawable/control_panel_selector"
+            android:id="@+id/controlPanel">
+
+            <ImageView
+                android:id="@+id/cpPodcastArt"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:scaleType="fitCenter"
+                android:layout_alignParentLeft="true"
+                android:padding="5dp"
+                android:contentDescription="@string/podcastArtImage"/>
+
+            <TextView
+                android:id="@+id/cpEpisodeTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="10dp"
+                android:textSize="15sp"
+                android:layout_toLeftOf="@+id/cpPauseButton"
+                android:layout_toRightOf="@id/cpPodcastArt"/>
+
+            <TextView
+                android:id="@+id/cpPodcastTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:layout_below="@id/cpEpisodeTitle"
+                android:layout_toLeftOf="@+id/cpPauseButton"
+                android:layout_toRightOf="@id/cpPodcastArt"/>
+
+            <ImageButton
+                android:id="@+id/cpPlayButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_alignParentRight="true"
+                android:src="@drawable/cp_play_icon_selector"
+                android:background="@drawable/control_panel_selector"
+                android:contentDescription="@string/mainPlayButton"/>
+
+            <ImageButton
+                android:id="@id/cpPauseButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_alignParentRight="true"
+                android:layout_toLeftOf="@id/cpPlayButton"
+                android:visibility="gone"
+                android:src="@drawable/cp_pause_icon_selector"
+                android:background="@drawable/control_panel_selector"
+                android:contentDescription="@string/ic_pause"/>
+        </RelativeLayout>
+
+    </LinearLayout>
 
     <!-- The navigation drawer -->
     <ListView android:id="@+id/left_drawer"

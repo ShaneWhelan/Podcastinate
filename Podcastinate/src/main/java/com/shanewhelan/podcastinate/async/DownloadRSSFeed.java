@@ -118,6 +118,8 @@ public class DownloadRSSFeed extends AsyncTask<String, Void, String> {
 
                 if (podcast != null) {
                     Utilities.savePodcastToDb(context.getApplicationContext(), podcast, "", true);
+                    AddPodcastToAPIAsync addPodcast = new AddPodcastToAPIAsync();
+                    addPodcast.doInBackground(podcast);
                     return Utilities.SUCCESS;
                 } else {
                     // Won't be false unless parser threw exception, causing podcast to be null

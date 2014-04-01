@@ -14,7 +14,7 @@
             android:id="@+id/playerEpisodeTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="15dp"
             android:layout_marginTop="10dp" />
 
         <ImageView
@@ -68,39 +68,48 @@
         android:dividerPadding="5dip"
         android:showDividers="middle"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:weightSum="0.9" >
 
         <ImageButton
             android:id="@+id/skipBack"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/rewind_icon_selector"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            android:src="@drawable/rewind_icon_selector"
+            android:layout_weight="0.3"
             android:contentDescription="@string/rewindButton"/>
 
         <ImageButton
             android:id="@+id/playerPlayButton"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/play_icon_selector"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            android:src="@drawable/play_icon_selector"
+            android:layout_weight="0.3"
             android:contentDescription="@string/mainPlayButton"/>
 
         <ImageButton
             android:id="@+id/playerPauseButton"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
-            android:scaleType="center"
-            android:background="@drawable/pause_icon_selector"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            android:src="@drawable/pause_icon_selector"
             android:visibility="gone"
+            android:layout_weight="0.3"
             android:contentDescription="@string/ic_pause" />
 
         <ImageButton
             android:id="@+id/skipForward"
-            android:layout_width="80dp"
+            android:layout_width="0dp"
             android:layout_height="80dp"
             android:scaleType="fitCenter"
-            android:background="@drawable/fast_forward_icon_selector"
+            android:layout_weight="0.3"
+            android:background="@android:color/transparent"
+            android:src="@drawable/fast_forward_icon_selector"
             android:contentDescription="@string/fastForward"/>
     </LinearLayout>
 </RelativeLayout>

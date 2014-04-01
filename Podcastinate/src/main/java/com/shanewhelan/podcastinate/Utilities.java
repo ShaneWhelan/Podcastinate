@@ -45,6 +45,8 @@ public class Utilities {
     public static final String ACTION_CANCEL = "com.shanewhelan.podcastinate.CANCEL";
     public static final String ACTION_CANCEL_COMPLETE = "com.shanewhelan.podcastinate.CANCEL_FIN";
     public static final String ACTION_QUEUED = "com.shanewhelan.podcastinate.QUEUED";
+    public static final String ACTION_CAR_MODE_ON = "com.shanewhelan.podcastinate.CM_ON";
+    public static final String ACTION_CAR_MODE_OFF = "com.shanewhelan.podcastinate.CM_OFF";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";

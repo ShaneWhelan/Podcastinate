@@ -1,0 +1,56 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/playerControls"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:divider="?android:listDivider"
+    android:dividerPadding="5dip"
+    android:orientation="horizontal"
+    android:weightSum="0.9"
+    android:showDividers="middle">
+
+    <ImageButton
+        android:id="@+id/skipBack_car_mode"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:layout_weight="0.3"
+        android:scaleType="fitCenter"
+        android:background="@drawable/transparent_button_selector"
+        android:src="@drawable/rewind_icon_selector"
+        android:contentDescription="@string/rewindButton"/>
+
+    <ImageButton
+        android:id="@+id/playerPlayButton_car_mode"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:layout_weight="0.3"
+        android:src="@drawable/play_icon_selector"
+        android:background="@drawable/transparent_button_selector"
+        android:contentDescription="@string/mainPlayButton"/>
+
+    <ImageButton
+        android:id="@+id/playerPauseButton_car_mode"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:layout_weight="0.3"
+        android:src="@drawable/pause_icon_selector"
+        android:background="@drawable/transparent_button_selector"
+        android:visibility="gone"
+        android:contentDescription="@string/ic_pause" />
+
+    <ImageButton
+        android:id="@+id/skipForward_car_mode"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:layout_weight="0.3"
+        android:background="@drawable/transparent_button_selector"
+        android:src="@drawable/fast_forward_icon_selector"
+        android:contentDescription="@string/fastForward"/>
+</LinearLayout>

@@ -2,15 +2,18 @@ package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -29,8 +32,10 @@ import android.widget.AdapterView.*;
 import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.async.DownloadRSSFeed;
@@ -39,6 +44,7 @@ import com.shanewhelan.podcastinate.async.RefreshRSSFeed;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
 import com.shanewhelan.podcastinate.database.PodcastDataSource;
+import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,14 +61,12 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 High Priority FEATURES:
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 TODO: Set back button to go to right activities
+TODO: User Settings - refresh interval
 
 MAJOR FEATURES:
-TODO: Integrate other APIs - EMAIL FEEDLY
 TODO: Cloud backup
-TODO: Car Mode
-TODO: User Suggested Podcasts
-TODO: User Settings - refresh interval
 TODO: Statistics of user playback
+TODO: Car Mode
 
 Low Priority FEATURES:
 TODO: Check Rotation on all feeds
@@ -83,6 +87,7 @@ TODO: On subscribe pictures don't load
 TODO: Delete a subscription while player is playing
 TODO: Demo refresh with player activity
 TODO: DELETE while ANYTHING, or downloading
+TODO: Handle no recommendations on client
 
 Server Bugs:
 TODO: The server side gives back the same podcasts already subscribed to - limit searches and results
@@ -107,11 +112,22 @@ public class MainActivity extends Activity {
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
 
+    // Variables for the audio service
+    private AudioPlayerService audioService;
+    private ServiceConnection serviceConnection;
+    private ImageButton cpPlayButton;
+    private ImageButton cpPauseButton;
+    private ImageView cpPodcastArt;
+    private TextView cpPodcastTitle;
+    private TextView cpEpisodeTitle;
+    private RelativeLayout controlPanel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
         super.onCreate(savedInstanceState);
         setTitle("Podcasts");
         setContentView(R.layout.activity_main);
+
 /*
         PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
         pds.openDbForWriting();
@@ -130,6 +146,7 @@ public class MainActivity extends Activity {
         listView = (ListView) findViewById(R.id.listOfPodcasts);
         initialiseAdapter();
         initialiseSelectionListeners();
+        initialiseControlPanel();
 
         progressBar = (ProgressBar) findViewById(R.id.smoothProgressBar);
         progressBar.setIndeterminateDrawable(new SmoothProgressDrawable.Builder(getApplicationContext()).interpolator(new AccelerateInterpolator()).build());
@@ -233,14 +250,40 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                AudioPlayerService.AudioPlayerBinder binder = (AudioPlayerService.AudioPlayerBinder) service;
+                audioService = binder.getService();
+                syncControlPanel();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                audioService = null;
+            }
+        };
+
+        Intent intent = new Intent(this, AudioPlayerService.class);
+        // 3 parameter is 0 because this means "bind if exists"
+        bindService(intent, serviceConnection, 0);
+
         registerReceiver(mainActivityReceiver, new IntentFilter(Utilities.ACTION_UPDATE_LIST));
+
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_PLAY));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_PAUSE));
+        registerReceiver(broadcastReceiver, new IntentFilter(Utilities.ACTION_FINISHED));
+        syncControlPanel();
         updateListOfPodcasts();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        unbindService(serviceConnection);
         unregisterReceiver(mainActivityReceiver);
+        unregisterReceiver(broadcastReceiver);
     }
 
     public void initialiseAdapter() {
@@ -372,6 +415,25 @@ public class MainActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             if (Utilities.ACTION_UPDATE_LIST.equals(intent.getAction())) {
                 updateListOfPodcasts();
+            }
+        }
+    };
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Utilities.ACTION_PLAY.equals(intent.getAction())) {
+                cpPlayButton.setVisibility(View.GONE);
+                cpPauseButton.setVisibility(View.VISIBLE);
+                // This call fixes an issue where we are overriding the audio from third party app
+                // and the control panel doesn't appear because the service is already up.
+                syncControlPanel();
+            } else if (Utilities.ACTION_PAUSE.equals(intent.getAction())) {
+                cpPauseButton.setVisibility(View.GONE);
+                cpPlayButton.setVisibility(View.VISIBLE);
+                syncControlPanel();
+            } else if (Utilities.ACTION_FINISHED.equals(intent.getAction())) {
+                syncControlPanel();
             }
         }
     };
@@ -551,6 +613,66 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
             drawerLayout.closeDrawer(drawerListView);
+        }
+    }
+
+    private void initialiseControlPanel() {
+        controlPanel = (RelativeLayout) findViewById(R.id.controlPanel);
+        cpPlayButton = (ImageButton) findViewById(R.id.cpPlayButton);
+        cpPauseButton = (ImageButton) findViewById(R.id.cpPauseButton);
+        cpPodcastTitle = (TextView) findViewById(R.id.cpPodcastTitle);
+        cpEpisodeTitle = (TextView) findViewById(R.id.cpEpisodeTitle);
+        cpPodcastArt = (ImageView) findViewById(R.id.cpPodcastArt);
+
+        cpPlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check if audio service has been initialised and is playing
+                if (audioService != null) {
+                    audioService.resumeMedia();
+                }
+            }
+        });
+
+        cpPauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check if audio service has been initialised and is playing
+                // Pause podcast in background service
+                if (audioService.getPlayer().isPlaying()) {
+                    audioService.pauseMedia(false);
+                }
+            }
+        });
+
+        controlPanel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent playerIntent = new Intent(getApplicationContext(), PlayerActivity.class);
+                startActivity(playerIntent);
+            }
+        });
+    }
+
+    public void syncControlPanel() {
+        if (audioService != null) {
+            if (audioService.getPlayer() != null) {
+                controlPanel.setVisibility(View.VISIBLE);
+                cpEpisodeTitle.setText(audioService.getEpisode().getTitle());
+                cpPodcastTitle.setText(audioService.getPodcastTitle());
+                cpPodcastArt.setImageBitmap(audioService.getPodcastBitmapLarge());
+                if (audioService.getPlayer().isPlaying()) {
+                    cpPlayButton.setVisibility(View.GONE);
+                    cpPauseButton.setVisibility(View.VISIBLE);
+                } else {
+                    cpPauseButton.setVisibility(View.GONE);
+                    cpPlayButton.setVisibility(View.VISIBLE);
+                }
+            } else {
+                controlPanel.setVisibility(View.GONE);
+            }
+        } else {
+            controlPanel.setVisibility(View.GONE);
         }
     }
 }

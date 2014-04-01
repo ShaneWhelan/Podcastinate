@@ -210,8 +210,18 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         // So that we don't keep listening for audio changes
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.abandonAudioFocus(this);
-        unregisterReceiver(disconnectJackR);
-        unregisterReceiver(notificationBrodRec);
+        try {
+            unregisterReceiver(notificationBrodRec);
+        } catch (Exception e) {
+            Utilities.logException(e);
+        }
+
+        try {
+            unregisterReceiver(disconnectJackR);
+            disconnectJackR = null;
+        } catch (Exception e) {
+            Utilities.logException(e);
+        }
 
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
         finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
@@ -240,12 +250,23 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
         if(disconnectJackR != null && player != null) {
             if(player.isPlaying()) {
-                unregisterReceiver(disconnectJackR);
-                disconnectJackR = null;
+                try {
+                    unregisterReceiver(disconnectJackR);
+                    disconnectJackR = null;
+                } catch (Exception e) {
+                    Utilities.logException(e);
+                }
             }
         }
 
-        unregisterReceiver(notificationBrodRec);
+        if(notificationBrodRec != null) {
+            try {
+                unregisterReceiver(notificationBrodRec);
+                notificationBrodRec = null;
+            } catch (Exception e) {
+                Utilities.logException(e);
+            }
+        }
         if (player != null) {
             player.release();
             player = null;

@@ -21,14 +21,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -48,13 +47,19 @@ public class PodcastViewerActivity extends Activity {
     private static PodcastDataSource dataSource;
     private Cursor episodeCursor;
     private int podcastID;
-    private ImageButton cpPlayButton;
-    private ImageButton cpPauseButton;
-    private Button cpStartPlayer;
-    private AudioPlayerService audioService;
-    private ServiceConnection serviceConnection;
     private ListView listView;
     private String podcastTitle;
+
+
+    // Variables for audio service
+    private AudioPlayerService audioService;
+    private ServiceConnection serviceConnection;
+    private ImageButton cpPlayButton;
+    private ImageButton cpPauseButton;
+    private ImageView cpPodcastArt;
+    private TextView cpPodcastTitle;
+    private TextView cpEpisodeTitle;
+    private RelativeLayout controlPanel;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -97,7 +102,7 @@ public class PodcastViewerActivity extends Activity {
         listView = (ListView) findViewById(R.id.listOfEpisodes);
         initialiseAdapter();
         initialiseMultiSelect();
-        initialiseButtons();
+        initialiseControlPanel();
 
         OnItemClickListener itemCLickHandler = new OnItemClickListener() {
             @Override
@@ -236,33 +241,25 @@ public class PodcastViewerActivity extends Activity {
         });
     }
 
-    private void initialiseButtons() {
+    private void initialiseControlPanel() {
+        controlPanel = (RelativeLayout) findViewById(R.id.controlPanel);
         cpPlayButton = (ImageButton) findViewById(R.id.cpPlayButton);
         cpPauseButton = (ImageButton) findViewById(R.id.cpPauseButton);
-        cpStartPlayer = (Button) findViewById(R.id.startPlayer);
+        cpPodcastTitle = (TextView) findViewById(R.id.cpPodcastTitle);
+        cpEpisodeTitle = (TextView) findViewById(R.id.cpEpisodeTitle);
+        cpPodcastArt = (ImageView) findViewById(R.id.cpPodcastArt);
 
-        cpPlayButton.setOnClickListener(new OnClickListener() {
+        cpPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
-                if (audioService == null) {
-                    // Play podcast in a background service
-                    Intent intent = new Intent(getApplicationContext(), AudioPlayerService.class);
-                    intent.putExtra(Utilities.EPISODE_ID, v.getContentDescription());
-                    intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
-                    intent.setAction(Utilities.ACTION_NEW_EPISODE);
-                    // Investigate Correct flag and compatibility
-                    if (getApplicationContext() != null) {
-                        getApplicationContext().startService(intent);
-                        getApplicationContext().bindService(intent, serviceConnection, Context.BIND_ABOVE_CLIENT);
-                    }
-                } else {
+                if (audioService != null) {
                     audioService.resumeMedia();
                 }
             }
         });
 
-        cpPauseButton.setOnClickListener(new OnClickListener() {
+        cpPauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check if audio service has been initialised and is playing
@@ -273,7 +270,7 @@ public class PodcastViewerActivity extends Activity {
             }
         });
 
-        cpStartPlayer.setOnClickListener(new View.OnClickListener() {
+        controlPanel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent playerIntent = new Intent(getApplicationContext(), PlayerActivity.class);
@@ -404,12 +401,12 @@ public class PodcastViewerActivity extends Activity {
     }
 
     public void syncControlPanel() {
-        RelativeLayout controlPanel = (RelativeLayout) findViewById(R.id.controlPanel);
-
         if (audioService != null) {
             if (audioService.getPlayer() != null) {
                 controlPanel.setVisibility(View.VISIBLE);
-                cpStartPlayer.setText(audioService.getEpisode().getTitle());
+                cpEpisodeTitle.setText(audioService.getEpisode().getTitle());
+                cpPodcastTitle.setText(audioService.getPodcastTitle());
+                cpPodcastArt.setImageBitmap(audioService.getPodcastBitmapLarge());
                 if (audioService.getPlayer().isPlaying()) {
                     cpPlayButton.setVisibility(View.GONE);
                     cpPauseButton.setVisibility(View.VISIBLE);
