@@ -10,6 +10,7 @@ import com.shanewhelan.podcastinate.Utilities;
  */
 public class CarModeIntentService extends IntentService {
 
+    @SuppressWarnings("UnusedDeclaration")
     public CarModeIntentService() {
         super("");
     }
@@ -19,6 +20,7 @@ public class CarModeIntentService extends IntentService {
      *
      * @param name Used to name the worker thread, important only for debugging.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public CarModeIntentService(String name) {
         super(name);
     }
@@ -26,6 +28,7 @@ public class CarModeIntentService extends IntentService {
     /**
      * Called when a new activity detection update is available.
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     protected void onHandleIntent(Intent intent) {
         // If the incoming intent contains an update
@@ -36,18 +39,14 @@ public class CarModeIntentService extends IntentService {
             // Get the most probable activity
             DetectedActivity mostProbableActivity =
                     result.getMostProbableActivity();
-            /*
-             * Get the probability that this activity is the
-             * the user's actual activity
-             */
-            int confidence = mostProbableActivity.getConfidence();
+
             /*
              * Get an integer describing the type of activity
              */
             int activityType = mostProbableActivity.getType();
 
             String activityName = getNameFromType(activityType);
-            if(activityName.equals("tilting")) {
+            if(activityName.equals("in_vehicle")) {
                 sendBroadcast(new Intent(Utilities.ACTION_CAR_MODE_ON));
             }
 
@@ -59,6 +58,7 @@ public class CarModeIntentService extends IntentService {
              * Intent.
              */
         } else {
+
             /*
              * This implementation ignores intents that don't contain
              * an activity update. If you wish, you can report them as

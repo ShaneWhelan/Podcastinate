@@ -317,6 +317,8 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
         }
         stopUpdates();
         isInCarMode = false;
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancel(10);
     }
 
     public void syncUserInterface() {
@@ -708,6 +710,7 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
      * detection interval.
      *
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public void startUpdates() {
         // Set the request type to START
         mRequestType = REQUEST_TYPE.START;
@@ -742,6 +745,7 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
      * Turn off activity recognition updates
      *
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public void stopUpdates() {
         // Set the request type to STOP
         mRequestType = REQUEST_TYPE.STOP;
