@@ -6,10 +6,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.util.Log;
 
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
+
+import java.io.File;
+import java.io.IOException;
 
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -18,6 +25,16 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
+
+        Preference preference = findPreference("wipe_db");
+        if (preference != null) {
+            preference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                public boolean onPreferenceClick(Preference preference) {
+                    wipeDb();
+                    return true;
+                }
+            });
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -74,6 +91,28 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
                 alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
                         System.currentTimeMillis() + lengthOfTime, lengthOfTime, recurringRefresh);
+            }
+        }
+    }
+
+    // Following two methods are debug only methods
+    public void wipeDb() {
+        // Only to be left in developer version - wipes db and external storage directory
+        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+        pds.openDbForWriting();
+        pds.upgradeDB();
+        pds.closeDb();
+        Log.d("sw9", Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
+        File externalDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
+
+        if (externalDir.exists()) {
+            String deleteCmd = "rm -r " + externalDir.getAbsolutePath();
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                runtime.exec(deleteCmd);
+                Log.d("sw9", "Directory deleted");
+            } catch (IOException e) {
+                Utilities.logException(e);
             }
         }
     }

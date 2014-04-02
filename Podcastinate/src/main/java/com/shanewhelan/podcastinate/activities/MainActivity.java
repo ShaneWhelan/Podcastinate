@@ -18,7 +18,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -59,22 +58,18 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: Lock screen widget
 TODO: Statistics of user playback
 TODO: Touch image button to get description
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
-
 TODO CONTROL PANEL TEXT FUCKED
 
+TODO: Lock screen widget
 TODO: Cloud backup
 Checks:
 TODO: Set back button to go to right activities
 TODO: Check Rotation on all feeds
 TODO: Tablet/Phone comparison
 TODO: Delete other app - firefox
-
-Test Case:
-TODO: If you have no subscriptions and you look for recommendations
 
 BUGS:
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
@@ -231,9 +226,6 @@ public class MainActivity extends Activity {
                 } else {
                     return false;
                 }
-            case R.id.action_wipe_db:
-                wipeDb();
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -444,28 +436,6 @@ public class MainActivity extends Activity {
         intent.putExtra(Utilities.PODCAST_ID, podcastID);
         intent.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         startActivity(intent);
-    }
-
-    // Following two methods are debug only methods
-    public void wipeDb() {
-        // Only to be left in developer version - wipes db and external storage directory
-        PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
-        pds.openDbForWriting();
-        pds.upgradeDB();
-        pds.closeDb();
-        Log.d("sw9", Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
-        File externalDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Podcastinate");
-
-        if (externalDir.exists()) {
-            String deleteCmd = "rm -r " + externalDir.getAbsolutePath();
-            Runtime runtime = Runtime.getRuntime();
-            try {
-                runtime.exec(deleteCmd);
-                Log.d("sw9", "Directory deleted");
-            } catch (IOException e) {
-                Utilities.logException(e);
-            }
-        }
     }
 
     @SuppressWarnings("UnusedDeclaration")

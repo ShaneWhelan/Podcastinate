@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.shanewhelan.podcastinate.async.DownloadImagesAsyncTask;
 import com.shanewhelan.podcastinate.R;
@@ -189,7 +190,11 @@ public class RecommendationActivity extends Activity {
                 } else {
                     setTitle(resultsArray.length + " Podcast Found");
                 }
-
+            } else {
+                if (getApplicationContext() != null) {
+                    setTitle("No Subscriptions");
+                    Toast.makeText(getApplicationContext(), "No subscriptions to base recommendations on. Subscribe to a few podcasts and try again.", Toast.LENGTH_LONG).show();
+                }
             }
         }
     }

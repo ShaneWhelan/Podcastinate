@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -14,6 +15,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -412,54 +414,62 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public void buildNotification() {
-        Intent viewPodcastIntent = new Intent(this, PlayerActivity.class);
-        // Start PlayerActivity in the future
-        PendingIntent viewPodcastPendIntent = PendingIntent.getActivity(this, 0, viewPodcastIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        if(getApplicationContext() != null) {
+            SharedPreferences sharedPreferences = PreferenceManager.
+                    getDefaultSharedPreferences(getApplicationContext());
+            if (sharedPreferences.getBoolean("audio_notification_enabled", true)) {
 
-        PendingIntent skipBackPendIntent = PendingIntent.getBroadcast(this, 1,
-                new Intent(Utilities.ACTION_SKIP_BACK_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent viewPodcastIntent = new Intent(this, PlayerActivity.class);
+                // Start PlayerActivity in the future
+                PendingIntent viewPodcastPendIntent = PendingIntent.getActivity(this, 0, viewPodcastIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent skipForwardPendIntent = PendingIntent.getBroadcast(this, 3,
-                new Intent(Utilities.ACTION_SKIP_FORWARD_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent skipBackPendIntent = PendingIntent.getBroadcast(this, 1,
+                        new Intent(Utilities.ACTION_SKIP_BACK_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder;
+                PendingIntent skipForwardPendIntent = PendingIntent.getBroadcast(this, 3,
+                        new Intent(Utilities.ACTION_SKIP_FORWARD_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        if(player.isPlaying()) {
-            PendingIntent pausePendIntent = PendingIntent.getBroadcast(this, 2,
-                    new Intent(Utilities.ACTION_PAUSE_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Builder builder;
 
-            // Create Notification using Notification Compatibility
-            builder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification_running)
-                    .setLargeIcon(podcastBitmap)
-                    .setContentTitle(episode.getTitle())
-                    .setContentText(podcastTitle)
-                    .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
-                    .addAction(R.drawable.ic_notification_pause, "Pause", pausePendIntent)
-                    .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
-                    .setContentIntent(viewPodcastPendIntent)
-                    .setAutoCancel(false)
-                    .setOngoing(true);
-        } else {
-            PendingIntent playPendIntent = PendingIntent.getBroadcast(this, 2,
-                    new Intent(Utilities.ACTION_PLAY_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+                if (player.isPlaying()) {
+                    PendingIntent pausePendIntent = PendingIntent.getBroadcast(this, 2,
+                            new Intent(Utilities.ACTION_PAUSE_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
 
-            // Create Notification using Notification Compatibility
-            builder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification_running)
-                    .setLargeIcon(podcastBitmap)
-                    .setContentTitle(episode.getTitle())
-                    .setContentText(podcastTitle)
-                    .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
-                    .addAction(R.drawable.ic_notification_play, "Play", playPendIntent)
-                    .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
-                    .setContentIntent(viewPodcastPendIntent)
-                    .setAutoCancel(false);
+                    // Create Notification using Notification Compatibility
+                    builder = new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_notification_running)
+                            .setLargeIcon(podcastBitmap)
+                            .setContentTitle(episode.getTitle())
+                            .setContentText(podcastTitle)
+                            .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
+                            .addAction(R.drawable.ic_notification_pause, "Pause", pausePendIntent)
+                            .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
+                            .setContentIntent(viewPodcastPendIntent)
+                            .setAutoCancel(false)
+                            .setOngoing(true);
+                } else {
+                    PendingIntent playPendIntent = PendingIntent.getBroadcast(this, 2,
+                            new Intent(Utilities.ACTION_PLAY_NOTIFY), PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    // Create Notification using Notification Compatibility
+                    builder = new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_notification_running)
+                            .setLargeIcon(podcastBitmap)
+                            .setContentTitle(episode.getTitle())
+                            .setContentText(podcastTitle)
+                            .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
+                            .addAction(R.drawable.ic_notification_play, "Play", playPendIntent)
+                            .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
+                            .setContentIntent(viewPodcastPendIntent)
+                            .setAutoCancel(false);
+                }
+                // Create Notification Manager
+                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                // Build Notification with Notification Manager
+                notificationManager.notify("sw9", 0, builder.build());
+            }
         }
-        // Create Notification Manager
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        // Build Notification with Notification Manager
-        notificationManager.notify("sw9", 0, builder.build());
     }
+
 }

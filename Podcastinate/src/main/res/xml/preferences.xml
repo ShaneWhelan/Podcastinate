@@ -15,4 +15,19 @@
         android:entryValues="@array/pref_refresh_interval_values"
         android:defaultValue="@string/default_refresh" />
 
+    <CheckBoxPreference
+        android:key="audio_notification_enabled"
+        android:title="@string/audio_notification_enabled"
+        android:defaultValue="true" />
+
+    <Preference
+        android:key="wipe_db"
+        android:summary="@string/wipe_database_summary"
+        android:title="@string/wipe_database" >
+        <intent
+            android:targetPackage="com.shanewhelan.podcastinate.activities"
+            android:targetClass="com.shanewhelan.podcastinate.activities.SettingsActivity"
+            android:action="wipe_db_action" />
+    </Preference>
+
 </PreferenceScreen>

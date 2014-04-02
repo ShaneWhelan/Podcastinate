@@ -13,12 +13,6 @@
         android:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/action_wipe_db"
-        android:title="@string/action_wipe_db"
-        android:orderInCategory="100"
-        android:showAsAction="never"/>
-
-    <item
         android:id="@+id/action_remove_2_podcasts"
         android:title="@string/demo_refresh"
         android:orderInCategory="100"

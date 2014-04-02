@@ -43,6 +43,9 @@
     <string name="how_often">How Often?</string>
     <string name="default_refresh">30 mins</string>
     <string name="refresh_interval_summary">How often subscriptions should refresh?</string>
+    <string name="audio_notification_enabled">Persistent Audio Notification</string>
+    <string name="wipe_database">Wipe local database</string>
+    <string name="wipe_database_summary">Delete everything in local database and restore app default state</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>
