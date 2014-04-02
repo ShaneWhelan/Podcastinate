@@ -388,8 +388,6 @@ public class PodcastViewerActivity extends Activity {
         };
 
         Intent intent = new Intent(this, AudioPlayerService.class);
-        //TODO is this a bug I wonder?
-        intent.setAction(Utilities.ACTION_NEW_EPISODE);
         // 3 parameter is 0 because this means "bind if exists"
         bindService(intent, serviceConnection, 0);
 

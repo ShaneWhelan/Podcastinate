@@ -3,6 +3,8 @@ package com.shanewhelan.podcastinate;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -15,6 +17,9 @@ import com.shanewhelan.podcastinate.database.PodcastDataSource;
 import com.shanewhelan.podcastinate.services.AudioPlayerService;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,7 +53,7 @@ public class Utilities {
     public static final String ACTION_QUEUED = "com.shanewhelan.podcastinate.QUEUED";
     public static final String ACTION_CAR_MODE_ON = "com.shanewhelan.podcastinate.CM_ON";
     public static final String ACTION_CAR_MODE_OFF = "com.shanewhelan.podcastinate.CM_OFF";
-    private static final String ACTION_REFRESH = "com.shanewhelan.podcastinate.REFRESH_FEEDS";
+    public static final String ACTION_REFRESH = "com.shanewhelan.podcastinate.REFRESH_FEEDS";
     public static String PODCAST_ID = "id";
     public static String VIEW_PODCAST = "view";
     public static String EPISODE_ID = "episode_id";
@@ -146,6 +151,7 @@ public class Utilities {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d("sw9", "Refreshing feeds");
             if (intent.getAction() != null) {
                 if(intent.getAction().equals(ACTION_REFRESH)) {
                     RefreshRSSFeed refreshRSSFeed = new RefreshRSSFeed(context, null, null);
@@ -192,5 +198,39 @@ public class Utilities {
             throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
         }
         return (int) l;
+    }
+
+    public static Bitmap decodeFile(File f){
+        int IMAGE_MAX_SIZE = 100;
+        Bitmap b = null;
+
+        //Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(f);
+            BitmapFactory.decodeStream(fis, null, o);
+            fis.close();
+
+            int scale = 1;
+            if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
+                scale = (int)Math.pow(2, (int) Math.ceil(Math.log(IMAGE_MAX_SIZE /
+                        (double) Math.max(o.outHeight, o.outWidth)) / Math.log(0.5)));
+            }
+
+            //Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            fis = new FileInputStream(f);
+            b = BitmapFactory.decodeStream(fis, null, o2);
+            fis.close();
+        } catch (FileNotFoundException e) {
+            Utilities.logException(e);
+        } catch (IOException e) {
+            Utilities.logException(e);
+        }
+        return b;
     }
 }

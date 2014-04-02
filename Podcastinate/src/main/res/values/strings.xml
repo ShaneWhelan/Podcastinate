@@ -39,6 +39,10 @@
     <string name="enable_car_mode">Enable Car Mode</string>
     <string name="enable_car_mode_summary">Car mode makes the player contols large and easy to use while it detects the user is driving</string>
     <string name="title_activity_settings_activity">Settings</string>
+    <string name="refresh_interval">Refresh Interval</string>
+    <string name="how_often">How Often?</string>
+    <string name="default_refresh">30 mins</string>
+    <string name="refresh_interval_summary">How often subscriptions should refresh?</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

@@ -59,21 +59,24 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: User Settings - refresh interval
-TODO: Cloud backup
 TODO: Lock screen widget
 TODO: Statistics of user playback
+TODO: Touch image button to get description
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
 
+TODO CONTROL PANEL TEXT FUCKED
+
+TODO: Cloud backup
 Checks:
 TODO: Set back button to go to right activities
 TODO: Check Rotation on all feeds
 TODO: Tablet/Phone comparison
 TODO: Delete other app - firefox
 
-BUGS:
-TODO: EPISODE COUNTER SCREWS UP WITH DEMO REFRESH
+Test Case:
+TODO: If you have no subscriptions and you look for recommendations
 
+BUGS:
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
 TODO: Restrict access to the player from the drawer
@@ -82,6 +85,7 @@ TODO: Fix for one feed a week/removing old feeds
 TODO: On subscribe pictures don't load
 TODO: Delete a subscription while player is playing
 TODO: Handle no recommendations on client
+TODO: DOWNLOADS NOT CANCELING - it cancelled eventually after a certain point
 
 TODO: Demo refresh with player activity
 TODO: DELETE while ANYTHING, or downloading
@@ -100,8 +104,6 @@ TODO: Confirmation dialog box on subscribe
 TODO: Sleep Timer
 TODO: Mark new on resume podcast if manually made new
 
-Test Case:
-TODO: If you have no subscriptions and you look for recommendations
 */
 
 public class MainActivity extends Activity {
@@ -139,12 +141,13 @@ public class MainActivity extends Activity {
         pds.upgradeDB();
         pds.closeDb();
 */
-        // TODO: Dev only, take out for release
+        /*
         try {
             copyAppDbToDownloadFolder();
         } catch (IOException e) {
             Utilities.logException(e);
         }
+        */
 
         initialiseDrawer();
 
@@ -165,15 +168,12 @@ public class MainActivity extends Activity {
                         DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
                         downloadRSSFeed.execute(incomingIntent.getStringExtra(Utilities.PODCAST_LINK));
                     }
-                } else {
-                    if (getIntent().getAction() != null) {
+                } else if (incomingIntent.getAction().equals(Intent.ACTION_VIEW)) {
+                    if(getIntent().getData() != null) {
+                        // Received URL to subscribe to now process it
                         if(Utilities.testNetwork(getApplicationContext())) {
-                            if (getIntent().getAction().equals(Intent.ACTION_VIEW)) {
-                                if(getIntent().getData() != null) {
-                                    DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
-                                    downloadRSSFeed.execute(getIntent().getData().toString());
-                                }
-                            }
+                            DownloadRSSFeed downloadRSSFeed = new DownloadRSSFeed(getApplicationContext(), progressBar);
+                            downloadRSSFeed.execute(getIntent().getData().toString());
                         }
                     }
                 }
@@ -468,6 +468,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void copyAppDbToDownloadFolder() throws IOException {
         File backupDB = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "backup.db"); // for example "my_data_backup.db"
         File currentDB = this.getDatabasePath("Podcastinate.db"); //databaseName=your current application database name, for example "my_data.db"

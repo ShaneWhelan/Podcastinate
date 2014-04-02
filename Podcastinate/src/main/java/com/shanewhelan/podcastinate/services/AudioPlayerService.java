@@ -431,12 +431,12 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
             // Create Notification using Notification Compatibility
             builder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification)
+                    .setSmallIcon(R.drawable.ic_notification_running)
                     .setLargeIcon(podcastBitmap)
                     .setContentTitle(episode.getTitle())
                     .setContentText(podcastTitle)
                     .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
-                    .addAction(R.drawable.ic_notification_pause, "", pausePendIntent)
+                    .addAction(R.drawable.ic_notification_pause, "Pause", pausePendIntent)
                     .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
                     .setContentIntent(viewPodcastPendIntent)
                     .setAutoCancel(false)
@@ -447,12 +447,12 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
 
             // Create Notification using Notification Compatibility
             builder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_notification)
+                    .setSmallIcon(R.drawable.ic_notification_running)
                     .setLargeIcon(podcastBitmap)
                     .setContentTitle(episode.getTitle())
                     .setContentText(podcastTitle)
                     .addAction(R.drawable.ic_notification_skip_back, "-30s", skipBackPendIntent)
-                    .addAction(R.drawable.ic_notification_play, "", playPendIntent)
+                    .addAction(R.drawable.ic_notification_play, "Play", playPendIntent)
                     .addAction(R.drawable.ic_notification_skip_forward, "+30s", skipForwardPendIntent)
                     .setContentIntent(viewPodcastPendIntent)
                     .setAutoCancel(false);

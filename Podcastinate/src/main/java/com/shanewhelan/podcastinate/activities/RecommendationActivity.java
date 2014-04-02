@@ -51,8 +51,23 @@ public class RecommendationActivity extends Activity {
         setTitle("Loading...");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recommendation);
-        QueryRecommendationAPI queryAPI = new QueryRecommendationAPI();
-        queryAPI.execute();
+        if(bitmapList == null) {
+            QueryRecommendationAPI queryAPI = new QueryRecommendationAPI();
+            queryAPI.execute();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(bitmapList != null) {
+            for (Bitmap aBitmapList : bitmapList) {
+                if(aBitmapList != null) {
+                    aBitmapList.recycle();
+                }
+            }
+        }
+        System.gc();
     }
 
     @Override

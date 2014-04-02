@@ -42,7 +42,6 @@ public class DownloadService extends Service {
                 registerReceiver(receiver, new IntentFilter(Utilities.ACTION_CANCEL));
                 registerReceiver(receiver, new IntentFilter(Utilities.ACTION_QUEUED));
                 downloadFile(intent);
-                Log.d("sw9", "Started OK");
             }
         }
         return START_STICKY;
@@ -244,11 +243,8 @@ public class DownloadService extends Service {
                     if (DownloadManager.STATUS_RUNNING == cursor.getInt(
                             cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
 
-                        Log.d("sw9", "RUNNING AHGHHHHHHH");
                         int bytes = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
                         if (bytes > 2097152) {
-                            Log.d("sw9", "Cancel time AHGHHHHHHH");
-
                             numRemoved = downloadManager.remove(idCancelEpisode);
 
                             if (numRemoved > 0) {
@@ -260,9 +256,6 @@ public class DownloadService extends Service {
                                 sendBroadcast(iCanceled);
                             }
                         }
-                    } else if (DownloadManager.STATUS_PENDING == cursor.getInt(
-                            cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
-                        Log.d("sw9", "PENDING AHGHHHHHHH");
                     }
                 }
             }

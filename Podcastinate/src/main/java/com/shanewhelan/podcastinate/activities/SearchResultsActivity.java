@@ -23,6 +23,7 @@ import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.SearchResult;
 import com.shanewhelan.podcastinate.Utilities;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -54,7 +55,19 @@ public class SearchResultsActivity extends Activity {
                 setTitle(resultArray.length + " Podcast Found");
             }
         }
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(bitmapList != null) {
+            for (Bitmap aBitmapList : bitmapList) {
+                if(aBitmapList != null) {
+                    aBitmapList.recycle();
+                }
+            }
+        }
+        System.gc();
     }
 
     @Override
@@ -167,11 +180,20 @@ public class SearchResultsActivity extends Activity {
 
         protected Bitmap doInBackground(String... urls) {
             Bitmap podcastBitmap = null;
+            InputStream inStream = null;
             try {
-                InputStream inStream = new java.net.URL(urls[0]).openStream();
+                inStream = new java.net.URL(urls[0]).openStream();
                 podcastBitmap = BitmapFactory.decodeStream(inStream);
             } catch (Exception e) {
                 Utilities.logException(e);
+            } finally {
+                if(inStream != null) {
+                    try {
+                        inStream.close();
+                    } catch (IOException e) {
+                        Utilities.logException(e);
+                    }
+                }
             }
             return podcastBitmap;
         }

@@ -30,7 +30,6 @@
         android:src="@drawable/play_icon_selector"
         android:background="@drawable/transparent_button_selector"
         android:contentDescription="@string/mainPlayButton"/>
-
     <ImageButton
         android:id="@+id/playerPauseButton_car_mode"
         android:layout_width="0dp"

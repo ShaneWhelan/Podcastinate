@@ -49,7 +49,7 @@ public class CarModeIntentService extends IntentService {
 
             String activityName = getNameFromType(activityType);
             Log.d("sw9", activityName);
-            if(activityName.equals("tilting")) {
+            if(activityName.equals("in_vehicle")) {
                 sendBroadcast(new Intent(Utilities.ACTION_CAR_MODE_ON));
             }
 

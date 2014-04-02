@@ -6,4 +6,13 @@
         android:summary="@string/enable_car_mode_summary"
         android:defaultValue="true" />
 
+    <ListPreference
+        android:key="refresh_interval"
+        android:title="@string/refresh_interval"
+        android:summary="@string/refresh_interval_summary"
+        android:dialogTitle="@string/how_often"
+        android:entries="@array/pref_refresh_interval_entries"
+        android:entryValues="@array/pref_refresh_interval_values"
+        android:defaultValue="@string/default_refresh" />
+
 </PreferenceScreen>

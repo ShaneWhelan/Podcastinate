@@ -307,10 +307,10 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
 
 
         if(intent.getAction() != null) {
-            if (!Utilities.ACTION_CAR_MODE_OFF.equals(intent.getAction())) {
-                registerReceiver(carModeReceiver, new IntentFilter(Utilities.ACTION_CAR_MODE_ON));
-            } else {
+            if (Utilities.ACTION_CAR_MODE_OFF.equals(intent.getAction())) {
                 carModeReceiver = null;
+            } else {
+                registerReceiver(carModeReceiver, new IntentFilter(Utilities.ACTION_CAR_MODE_ON));
             }
         }
     }
@@ -392,7 +392,7 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         // Create Notification using Notification Compatibility
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(R.drawable.ic_notification_running)
                 .setContentTitle("Car Mode Activated")
                 .setContentText("Touch to Go to Normal Player")
                 .setContentIntent(pendingIntent)

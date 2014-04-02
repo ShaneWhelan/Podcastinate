@@ -1,9 +1,12 @@
 package com.shanewhelan.podcastinate.async;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.widget.ImageButton;
+
+import com.shanewhelan.podcastinate.Utilities;
+
+import java.io.File;
 
 public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
     private ImageButton imageButton;
@@ -13,7 +16,7 @@ public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
     }
 
     protected Bitmap doInBackground(String... directory) {
-        return BitmapFactory.decodeFile(directory[0]);
+        return Utilities.decodeFile(new File(directory[0]));
     }
 
     protected void onPostExecute(Bitmap result) {

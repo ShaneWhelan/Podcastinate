@@ -42,10 +42,13 @@ public class RefreshRSSFeed extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPreExecute() {
         // Set Refresh icon to progress bar
-        refreshAction.setActionView(R.layout.actionbar_indeterminate_progress);
-        refreshAction.expandActionView();
-
-        progressBar.setVisibility(View.VISIBLE);
+        if(refreshAction != null) {
+            refreshAction.setActionView(R.layout.actionbar_indeterminate_progress);
+            refreshAction.expandActionView();
+        }
+        if(progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
 
     }
@@ -78,21 +81,25 @@ public class RefreshRSSFeed extends AsyncTask<Void, Void, String> {
 
     @Override
     protected void onPostExecute(String result) {
-        progressBar.setVisibility(View.GONE);
+        if(progressBar != null) {
+            progressBar.setVisibility(View.GONE);
+        }
 
-        // Replace the progress bar with the refresh button again
-        refreshAction.collapseActionView();
-        refreshAction.setActionView(null);
+        if(refreshAction != null) {
+            // Replace the progress bar with the refresh button again
+            refreshAction.collapseActionView();
+            refreshAction.setActionView(null);
 
-        if (context.getApplicationContext() != null) {
-            if (newEpisodeCount > 1) {
-                Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episodes", Toast.LENGTH_LONG).show();
-            } else if (newEpisodeCount == 1) {
-                Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episode", Toast.LENGTH_LONG).show();
-            } else if (newEpisodeCount == 0) {
-                Toast.makeText(context.getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
-            } else if (result != null) {
-                Toast.makeText(context.getApplicationContext(), result, Toast.LENGTH_LONG).show();
+            if (context.getApplicationContext() != null) {
+                if (newEpisodeCount > 1) {
+                    Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episodes", Toast.LENGTH_LONG).show();
+                } else if (newEpisodeCount == 1) {
+                    Toast.makeText(context.getApplicationContext(), newEpisodeCount + " new episode", Toast.LENGTH_LONG).show();
+                } else if (newEpisodeCount == 0) {
+                    Toast.makeText(context.getApplicationContext(), "No new episodes", Toast.LENGTH_LONG).show();
+                } else if (result != null) {
+                    Toast.makeText(context.getApplicationContext(), result, Toast.LENGTH_LONG).show();
+                }
             }
         }
 
