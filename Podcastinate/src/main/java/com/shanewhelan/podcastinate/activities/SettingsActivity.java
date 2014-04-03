@@ -66,6 +66,12 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if(key.equals("refresh_interval")) {
             setRecurringRefreshTask(
                     sharedPreferences.getString("refresh_interval", "14400000"));
+        } else if (key.equals("grid_view_enabled")) {
+            // Restart the main activity to reload change in layout
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setAction(Intent.ACTION_MAIN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
     }
 

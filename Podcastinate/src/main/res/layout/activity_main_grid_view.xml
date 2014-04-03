@@ -27,11 +27,20 @@
                 android:layout_marginTop="-6dp"
                 android:layout_marginBottom="-6dp" />
 
-            <ListView
-                android:id="@+id/listOfPodcasts"
+            <FrameLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#edf2ed"/>
+                android:layout_height="match_parent">
+                <GridView
+                    android:id="@+id/listOfPodcasts"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:verticalSpacing="3dp"
+                    android:horizontalSpacing="3dp"
+                    android:stretchMode="columnWidth"
+                    android:numColumns="2" />
+            </FrameLayout>
+
         </LinearLayout>
 
         <RelativeLayout

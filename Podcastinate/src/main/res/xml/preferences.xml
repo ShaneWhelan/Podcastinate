@@ -20,6 +20,13 @@
         android:title="@string/audio_notification_enabled"
         android:defaultValue="true" />
 
+    <CheckBoxPreference
+        android:key="grid_view_enabled"
+        android:title="@string/grid_view_enabled"
+        android:summary="@string/grid_view_enabled_summary"
+        android:defaultValue="false" />
+
+
     <Preference
         android:key="wipe_db"
         android:summary="@string/wipe_database_summary"

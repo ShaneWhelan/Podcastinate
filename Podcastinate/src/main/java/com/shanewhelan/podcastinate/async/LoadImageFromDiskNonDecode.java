@@ -8,15 +8,15 @@ import com.shanewhelan.podcastinate.Utilities;
 
 import java.io.File;
 
-public class LoadImageFromDisk extends AsyncTask<String, Void, Bitmap> {
+public class LoadImageFromDiskNonDecode extends AsyncTask<String, Void, Bitmap> {
     private ImageButton imageButton;
 
-    public LoadImageFromDisk(ImageButton imageButton) {
+    public LoadImageFromDiskNonDecode(ImageButton imageButton) {
         this.imageButton = imageButton;
     }
 
     protected Bitmap doInBackground(String... directory) {
-        return Utilities.decodeFile(new File(directory[0]), 100);
+        return Utilities.decodeFile(new File(directory[0]), 400);
     }
 
     protected void onPostExecute(Bitmap result) {

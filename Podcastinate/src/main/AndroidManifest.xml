@@ -28,13 +28,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
 
-        <activity
-            android:name="com.shanewhelan.podcastinate.activities.SubscribeActivity"
-            android:label="@string/title_subscribe"
-            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity"
-            android:noHistory="true" >
             <intent-filter android:label="Subscribe?">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -73,6 +67,13 @@
                 <data android:mimeType="application/xml" />
             </intent-filter>
 
+        </activity>
+
+        <activity
+            android:name="com.shanewhelan.podcastinate.activities.SubscribeActivity"
+            android:label="@string/title_subscribe"
+            android:parentActivityName="com.shanewhelan.podcastinate.activities.MainActivity"
+            android:noHistory="true" >
             <!-- The meta-data element is needed for versions lower than 4.1 -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

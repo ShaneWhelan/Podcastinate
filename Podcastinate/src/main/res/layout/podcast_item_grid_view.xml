@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <com.shanewhelan.podcastinate.SquareImageButton
+        android:id="@+id/podcastArtImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/on_click_selector"/>
+
+    <TextView
+        android:id="@+id/podcastName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:layout_margin="10dp"
+        android:layout_gravity="bottom"
+        android:textColor="@android:color/white"
+        android:background="#99000000"
+        android:lines="1"
+        android:ellipsize="end"/>
+
+    <TextView
+        android:id="@+id/numberOfNewEpisodesTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:layout_margin="10dp"
+        android:layout_gravity="bottom|right"
+        android:textColor="@android:color/white"/>
+</FrameLayout>

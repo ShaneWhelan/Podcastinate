@@ -200,8 +200,7 @@ public class Utilities {
         return (int) l;
     }
 
-    public static Bitmap decodeFile(File f){
-        int IMAGE_MAX_SIZE = 100;
+    public static Bitmap decodeFile(File f, int IMAGE_MAX_SIZE){
         Bitmap b = null;
 
         //Decode image size

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
@@ -31,6 +32,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.*;
 import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -40,6 +42,7 @@ import android.widget.TextView;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.async.DownloadRSSFeed;
 import com.shanewhelan.podcastinate.async.LoadImageFromDisk;
+import com.shanewhelan.podcastinate.async.LoadImageFromDiskNonDecode;
 import com.shanewhelan.podcastinate.async.RefreshRSSFeed;
 import com.shanewhelan.podcastinate.Utilities;
 import com.shanewhelan.podcastinate.database.PodcastContract.PodcastEntry;
@@ -58,16 +61,13 @@ import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
 /*
 High Priority FEATURES:
-TODO: Statistics of user playback
-TODO: Touch image button to get description
 TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
-TODO CONTROL PANEL TEXT FUCKED
-
+TODO: Statistics of user playback
 TODO: Lock screen widget
 TODO: Cloud backup
 Checks:
 TODO: Set back button to go to right activities
-TODO: Check Rotation on all feeds
+TODO: Check Rotation on all pages
 TODO: Tablet/Phone comparison
 TODO: Delete other app - firefox
 
@@ -78,11 +78,7 @@ TODO: Restrict access to the player from the drawer
 
 TODO: Fix for one feed a week/removing old feeds
 TODO: On subscribe pictures don't load
-TODO: Delete a subscription while player is playing
-TODO: Handle no recommendations on client
 TODO: DOWNLOADS NOT CANCELING - it cancelled eventually after a certain point
-
-TODO: Demo refresh with player activity
 TODO: DELETE while ANYTHING, or downloading
 
 Server Bugs:
@@ -98,7 +94,6 @@ Low Priority FEATURES:
 TODO: Confirmation dialog box on subscribe
 TODO: Sleep Timer
 TODO: Mark new on resume podcast if manually made new
-
 */
 
 public class MainActivity extends Activity {
@@ -107,6 +102,7 @@ public class MainActivity extends Activity {
     private Cursor podcastCursor;
     private static PodcastAdapter podcastAdapter;
     private static ListView listView;
+    private static GridView gridView;
     private ListView drawerListView;
 
     private DrawerLayout drawerLayout;
@@ -121,12 +117,19 @@ public class MainActivity extends Activity {
     private TextView cpPodcastTitle;
     private TextView cpEpisodeTitle;
     private RelativeLayout controlPanel;
+    boolean isGridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) throws NullPointerException {
         super.onCreate(savedInstanceState);
         setTitle("Podcasts");
-        setContentView(R.layout.activity_main);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isGridView = sharedPreferences.getBoolean("grid_view_enabled", false);
+        if(isGridView) {
+            setContentView(R.layout.activity_main_grid_view);
+        } else {
+            setContentView(R.layout.activity_main);
+        }
         // Sets the defaults up without overriding user settings
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
@@ -146,8 +149,14 @@ public class MainActivity extends Activity {
 
         initialiseDrawer();
 
-        listView = (ListView) findViewById(R.id.listOfPodcasts);
-        initialiseAdapter();
+
+        if(isGridView) {
+            gridView = (GridView) findViewById(R.id.listOfPodcasts);
+            initialiseAdapter();
+        } else {
+            listView = (ListView) findViewById(R.id.listOfPodcasts);
+            initialiseAdapter();
+        }
         initialiseSelectionListeners();
         initialiseControlPanel();
 
@@ -285,11 +294,74 @@ public class MainActivity extends Activity {
         podcastCursor = dataSource.getPodcastInfoForAdapter();
         podcastAdapter = new PodcastAdapter(getApplicationContext(), podcastCursor,
                 FLAG_REGISTER_CONTENT_OBSERVER);
-        listView.setAdapter(podcastAdapter);
+        if(isGridView) {
+            gridView.setAdapter(podcastAdapter);
+        } else {
+            listView.setAdapter(podcastAdapter);
+        }
         dataSource.closeDb();
     }
 
     public class MultiChoiceModeListener implements ListView.MultiChoiceModeListener {
+        private int nr = 0;
+
+        @Override
+        public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+            // Here you can do something when items are selected/de-selected,
+            // such as update the title in the CAB
+            if (checked) {
+                nr++;
+                podcastAdapter.setNewSelection(position, true);
+            } else {
+                nr--;
+                podcastAdapter.removeSelection(position);
+            }
+            mode.setTitle(nr + " Selected");
+        }
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // Inflate the menu for the CAB
+            MenuInflater inflater = mode.getMenuInflater();
+            if (inflater != null) {
+                inflater.inflate(R.menu.multi_select, menu);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            // Here you can perform updates to the CAB due to
+            // an invalidate() request
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            // Respond to clicks on the actions in the CAB
+            switch (item.getItemId()) {
+                case R.id.delete_selection_action:
+                    deleteSelectedItems();
+                    updateListOfPodcasts();
+                    nr = 0;
+                    podcastAdapter.clearSelection();
+                    mode.finish(); // Action picked, so close the CAB
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // Here you can make any necessary updates to the activity when
+            // the CAB is removed. By default, selected items are deselected/unchecked.
+            podcastAdapter.clearSelection();
+            nr = 0;
+        }
+    }
+
+    public class MultiChoiceModeListenerGrid implements GridView.MultiChoiceModeListener {
         private int nr = 0;
 
         @Override
@@ -389,9 +461,15 @@ public class MainActivity extends Activity {
                 }
             }
         };
-        listView.setOnItemClickListener(itemCLickHandler);
-        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        listView.setMultiChoiceModeListener(new MultiChoiceModeListener());
+        if(isGridView) {
+            gridView.setOnItemClickListener(itemCLickHandler);
+            gridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
+            gridView.setMultiChoiceModeListener(new MultiChoiceModeListenerGrid());
+        } else {
+            listView.setOnItemClickListener(itemCLickHandler);
+            listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+            listView.setMultiChoiceModeListener(new MultiChoiceModeListener());
+        }
     }
 
     public void updateListOfPodcasts() {
@@ -454,7 +532,12 @@ public class MainActivity extends Activity {
 
     private void deleteSelectedItems() {
         SQLiteCursor cursor;
-        SparseBooleanArray booleanArray = listView.getCheckedItemPositions();
+        SparseBooleanArray booleanArray;
+        if(isGridView) {
+            booleanArray = gridView.getCheckedItemPositions();
+        } else {
+            booleanArray = listView.getCheckedItemPositions();
+        }
         if (booleanArray != null) {
             // Open connection to DB
             PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
@@ -462,30 +545,36 @@ public class MainActivity extends Activity {
             // Loop through the SparseBooleanArray and delete directory from db and file from disk
             for (int i = 0; i < booleanArray.size(); i++) {
                 if (booleanArray.valueAt(i)) {
-                    cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
+
+                    if(isGridView) {
+                        cursor = (SQLiteCursor) gridView.getItemAtPosition(booleanArray.keyAt(i));
+                    } else {
+                        cursor = (SQLiteCursor) listView.getItemAtPosition(booleanArray.keyAt(i));
+                    }
+
                     if (cursor != null) {
                         String podcastDirectory = cursor.getString(cursor.getColumnIndex(PodcastEntry.DIRECTORY));
+                        int podcastID = cursor.getInt(cursor.getColumnIndex("_id"));
                         try {
                             File directoryToDelete = new File(podcastDirectory);
                             if(directoryToDelete.exists()) {
                                 String deleteCmd = "rm -r " + podcastDirectory;
                                 Runtime runtime = Runtime.getRuntime();
                                 runtime.exec(deleteCmd);
-                                pds.deletePodcast(cursor.getInt(cursor.getColumnIndex("_id")));
+                                pds.deletePodcast(podcastID);
                                 // TODO Control Panel integration
-                                /*
+
                                 if(audioService != null) {
                                     if(audioService.getEpisode() != null) {
-                                        if(audioService.getEpisode().getEnclosure().equals(enclosure)) {
+                                        if(audioService.getEpisode().getPodcastID() == podcastID) {
                                             // Stop Service as the deleted podcast is also currently playing
                                             audioService.stopService();
                                             syncControlPanel();
                                         }
                                     }
                                 }
-                                */
-                            }
 
+                            }
                         } catch(Exception e) {
                             Utilities.logException(e);
                         }
@@ -515,8 +604,14 @@ public class MainActivity extends Activity {
             ImageButton podcastImage = (ImageButton) view.findViewById(R.id.podcastArtImage);
             podcastImage.setContentDescription(podcastID);
 
-            LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
-            loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
+            if(isGridView) {
+                podcastImage.setOnClickListener(this);
+                LoadImageFromDiskNonDecode loadImage = new LoadImageFromDiskNonDecode(podcastImage);
+                loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
+            } else {
+                LoadImageFromDisk loadImage = new LoadImageFromDisk(podcastImage);
+                loadImage.execute(cursor.getString(cursor.getColumnIndex(PodcastEntry.IMAGE_DIRECTORY)));
+            }
 
             // Load in Podcast Titles
             TextView podcastTitleView = (TextView) view.findViewById(R.id.podcastName);
@@ -524,12 +619,18 @@ public class MainActivity extends Activity {
             podcastTitleView.setContentDescription(podcastID);
 
             TextView numNewEpisodesText = (TextView) view.findViewById(R.id.numberOfNewEpisodesTextView);
-            numNewEpisodesText.setText(Integer.toString(cursor.getInt(cursor.getColumnIndex(PodcastEntry.COUNT_NEW))));
+            if(numNewEpisodesText != null) {
+                numNewEpisodesText.setText(Integer.toString(cursor.getInt(cursor.getColumnIndex(PodcastEntry.COUNT_NEW))));
+            }
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return layoutInflater.inflate(R.layout.podcast_list_item, parent, false);
+            if(isGridView){
+                return layoutInflater.inflate(R.layout.podcast_item_grid_view, parent, false);
+            } else {
+                return layoutInflater.inflate(R.layout.podcast_list_item, parent, false);
+            }
         }
 
         public void setNewSelection(int position, boolean value) {
@@ -562,7 +663,17 @@ public class MainActivity extends Activity {
 
         @Override
         public void onClick(View view) {
-            // Leave empty because whole row is clickable
+            if(view.getId() == R.id.podcastArtImage) {
+                if(view.getContentDescription() != null) {
+                    // Check if audio service has been initialised and is playing
+                    int podcastId = Integer.parseInt(view.getContentDescription().toString());
+                    PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                    pds.openDbForReading();
+                    String podcastTitle = pds.getPodcastTitle(podcastId);
+                    pds.closeDb();
+                    viewPodcast(podcastTitle, podcastId);
+                }
+            }
         }
     }
 

@@ -46,6 +46,8 @@
     <string name="audio_notification_enabled">Persistent Audio Notification</string>
     <string name="wipe_database">Wipe local database</string>
     <string name="wipe_database_summary">Delete everything in local database and restore app default state</string>
+    <string name="grid_view_enabled">Enable Grid View</string>
+    <string name="grid_view_enabled_summary">Switches to List View if disabled</string>
 
     <string-array name="nav_drawer_titles">
         <item>Podcasts</item>

@@ -173,6 +173,26 @@ public class PlayerActivity extends FragmentActivity implements GooglePlayServic
     private void initialiseLayout() {
         isInCarMode = false;
         setContentView(R.layout.activity_player);
+        ImageView podcastImage = (ImageView) findViewById(R.id.podcastImage);
+        podcastImage.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TextView description = (TextView) findViewById(R.id.description_player);
+                if(description.getVisibility() == View.GONE) {
+                    // Remove HTML and CDATA tags
+                    try {
+                        description.setText(audioService.getEpisode().getDescription()
+                                .replace("<![CDATA[", "").replace("]]>", "").replaceAll("<[^>]*>", " ")
+                                .trim());
+                    } catch (Exception e) {
+                        Utilities.logException(e);
+                    }
+                    description.setVisibility(View.VISIBLE);
+                } else {
+                    description.setVisibility(View.GONE);
+                }
+            }
+        });
 
         playButton = (ImageButton) findViewById(R.id.playerPlayButton);
         pauseButton = (ImageButton) findViewById(R.id.playerPauseButton);
