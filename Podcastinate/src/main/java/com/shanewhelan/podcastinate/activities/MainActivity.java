@@ -59,41 +59,6 @@ import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 
-/*
-High Priority FEATURES:
-TODO: Add long press options (Maybe refresh individual feeds, add to playlist, sort options, force update of thumnail)
-TODO: Statistics of user playback
-TODO: Lock screen widget
-TODO: Cloud backup
-
-Checks:
-TODO: Set back button to go to right activities
-TODO: Check Rotation on all pages
-TODO: Tablet/Phone comparison
-
-BUGS:
-TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
-TODO: CNET ALL podcasts feed is broken
-TODO: Fix for one feed a week/removing old feeds
-TODO: On subscribe pictures don't load
-TODO: DOWNLOADS NOT CANCELING - it cancelled eventually after a certain point
-TODO: DELETE while ANYTHING, or downloading
-
-Server Bugs:
-TODO: The server side gives back the same podcasts already subscribed to - limit searches and results
-
-LOW PRIORITY:
-TODO: Streaming: Must keep WIFI from sleeping
-TODO: Help Section
-TODO: Add Paging to podcast viewing activity
-TODO: Add break keyword where necessary
-
-Low Priority FEATURES:
-TODO: Confirmation dialog box on subscribe
-TODO: Sleep Timer
-TODO: Mark new on resume podcast if manually made new
-*/
-
 public class MainActivity extends Activity {
     private PodcastDataSource dataSource;
     private ProgressBar progressBar;
