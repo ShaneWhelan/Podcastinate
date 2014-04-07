@@ -142,7 +142,6 @@ public class DownloadService extends Service {
         }
 
         // Get podcast file extension
-        // TODO handle all extension types
         if (enclosure != null) {
             int indexOfExtension = enclosure.lastIndexOf(".");
             filename = filename + enclosure.substring(indexOfExtension, indexOfExtension + 4);
@@ -239,7 +238,6 @@ public class DownloadService extends Service {
         if (cursor != null) {
             if(cursor.getCount() > 0) {
                 if (cursor.moveToFirst()) {
-                    // TODO cancel in any status
                     if (DownloadManager.STATUS_RUNNING == cursor.getInt(
                             cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
 
