@@ -560,7 +560,6 @@ public class MainActivity extends Activity {
                                 Runtime runtime = Runtime.getRuntime();
                                 runtime.exec(deleteCmd);
                                 pds.deletePodcast(podcastID);
-                                // TODO Control Panel integration
 
                                 if(audioService != null) {
                                     if(audioService.getEpisode() != null) {
@@ -571,7 +570,6 @@ public class MainActivity extends Activity {
                                         }
                                     }
                                 }
-
                             }
                         } catch(Exception e) {
                             Utilities.logException(e);
