@@ -3,7 +3,7 @@ package com.shanewhelan.podcastinate;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class SearchResult implements Parcelable{
+public class SearchResult implements Parcelable {
     private String title;
     private String imageLink;
     private String link;

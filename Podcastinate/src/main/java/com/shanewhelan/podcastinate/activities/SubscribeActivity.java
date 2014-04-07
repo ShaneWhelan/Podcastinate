@@ -2,6 +2,7 @@ package com.shanewhelan.podcastinate.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -20,6 +21,8 @@ import android.widget.Toast;
 import com.shanewhelan.podcastinate.R;
 import com.shanewhelan.podcastinate.SearchResult;
 import com.shanewhelan.podcastinate.Utilities;
+import com.shanewhelan.podcastinate.database.PodcastContract;
+import com.shanewhelan.podcastinate.database.PodcastDataSource;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -34,6 +37,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressDrawable;
 
@@ -157,7 +162,7 @@ public class SubscribeActivity extends Activity {
         }
     }
 
-    public class QueryPodcastAPI extends AsyncTask<String, Void, SearchResult[]> {
+    public class QueryPodcastAPI extends AsyncTask<String, Void, ArrayList<SearchResult>> {
         private ProgressBar progressBar;
 
         @Override
@@ -168,7 +173,7 @@ public class SubscribeActivity extends Activity {
         }
 
         @Override
-        protected SearchResult[] doInBackground(String... urls) {
+        protected ArrayList<SearchResult> doInBackground(String... urls) {
             String apiURL = "http://ec2-54-186-15-6.us-west-2.compute.amazonaws.com/API/search?podcastTitle=" + urls[0].replace(" ", "+");
             InputStream jsonInputStream = null;
             try {
@@ -182,9 +187,23 @@ public class SubscribeActivity extends Activity {
 
                 // Check for no results first before parsing
                 if(jsonResult.getInt("resultCount") > 0) {
+                    HashSet<String> setOfPodcastTitles = new HashSet<String>();
+                    PodcastDataSource pds = new PodcastDataSource(getApplicationContext());
+                    pds.openDbForReading();
+                    Cursor cursor = pds.getPodcastInfoForAdapter();
+
+                    if(cursor != null) {
+                        if (cursor.getCount() > 0) {
+                            while (cursor.moveToNext()) {
+                               setOfPodcastTitles.add(cursor.getString(cursor.getColumnIndex(PodcastContract.PodcastEntry.TITLE)));
+                            }
+                            cursor.close();
+                        }
+                    }
+                    pds.closeDb();
                     // We have at least one result so parse the JSON
                     JSONArray resultArray = jsonResult.getJSONArray("result");
-                    SearchResult[] searchResults = new SearchResult[resultArray.length()];
+                    ArrayList<SearchResult> searchResults = new ArrayList<SearchResult>();
                     for(int i = 0; i < resultArray.length(); i++) {
                         JSONObject currentJsonNode = resultArray.getJSONObject(i);
                         SearchResult currentSearchNode = new SearchResult();
@@ -192,7 +211,9 @@ public class SubscribeActivity extends Activity {
                         currentSearchNode.setImageLink(currentJsonNode.getString("imageLink"));
                         currentSearchNode.setLink(currentJsonNode.getString("link"));
                         currentSearchNode.setDescription(currentJsonNode.getString("description"));
-                        searchResults[i] = currentSearchNode;
+                        if(setOfPodcastTitles.add(currentJsonNode.getString("title"))) {
+                            searchResults.add(currentSearchNode);
+                        }
                     }
                     return searchResults;
                 }
@@ -219,13 +240,21 @@ public class SubscribeActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(SearchResult[] resultsArray) {
+        protected void onPostExecute(ArrayList<SearchResult> searchResults) {
             progressBar.setVisibility(View.GONE);
 
-            if(resultsArray != null) {
-                Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
-                searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, resultsArray);
-                startActivity(searchResultsIntent);
+            if(searchResults != null) {
+                if(searchResults.size() > 0) {
+                    SearchResult[] searchResultArray = new SearchResult[searchResults.size()];
+                    searchResultArray = searchResults.toArray(searchResultArray);
+                    Intent searchResultsIntent = new Intent(getApplicationContext(), SearchResultsActivity.class);
+                    searchResultsIntent.putExtra(Utilities.SEARCH_RESULT, searchResultArray);
+                    startActivity(searchResultsIntent);
+                } else {
+                    if (getApplicationContext() != null) {
+                        Toast.makeText(getApplicationContext(), "No Results", Toast.LENGTH_LONG).show();
+                    }
+                }
             } else {
                 if (getApplicationContext() != null) {
                     Toast.makeText(getApplicationContext(), "No Results", Toast.LENGTH_LONG).show();

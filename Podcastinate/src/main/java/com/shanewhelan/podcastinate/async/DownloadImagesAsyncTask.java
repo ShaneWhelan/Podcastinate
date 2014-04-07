@@ -6,8 +6,6 @@ import android.os.AsyncTask;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.shanewhelan.podcastinate.Utilities;
-
 import java.io.InputStream;
 
 public class DownloadImagesAsyncTask extends AsyncTask<String, Void, Bitmap> {
@@ -25,9 +23,12 @@ public class DownloadImagesAsyncTask extends AsyncTask<String, Void, Bitmap> {
         Bitmap podcastBitmap = null;
         try {
             InputStream inStream = new java.net.URL(urls[0]).openStream();
-            podcastBitmap = BitmapFactory.decodeStream(inStream);
+            //Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = 2;
+            podcastBitmap = BitmapFactory.decodeStream(inStream, null, o2);
         } catch (Exception e) {
-            Utilities.logException(e);
+            //Utilities.logException(e);
         }
         return podcastBitmap;
     }

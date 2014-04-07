@@ -27,6 +27,7 @@
             android:layout_centerHorizontal="true"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
+            android:src="@drawable/ic_launcher"
             android:contentDescription="@string/podcastImage"
             android:layout_above="@+id/seekBarPlayer"
             android:layout_below="@id/playerEpisodeTitle"/>

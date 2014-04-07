@@ -125,13 +125,17 @@ public class SearchResultsActivity extends Activity {
                 if(bitmapList.length > position) {
                     if(bitmapList[position] == null) {
                         DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail, position);
-                        downloadImage.execute(searchResult.getImageLink());
+                        if(searchResult.getLink() != null) {
+                            downloadImage.execute(searchResult.getImageLink());
+                        }
                     } else {
                         thumbNail.setImageBitmap(bitmapList[position]);
                     }
                 } else {
                     DownloadImageAsyncTask downloadImage = new DownloadImageAsyncTask(thumbNail, position);
-                    downloadImage.execute(searchResult.getImageLink());
+                    if(searchResult.getLink() != null) {
+                        downloadImage.execute(searchResult.getImageLink());
+                    }
                 }
 
                 // Update text view for this result
@@ -183,9 +187,12 @@ public class SearchResultsActivity extends Activity {
             InputStream inStream = null;
             try {
                 inStream = new java.net.URL(urls[0]).openStream();
-                podcastBitmap = BitmapFactory.decodeStream(inStream);
+                //Decode with inSampleSize
+                BitmapFactory.Options o2 = new BitmapFactory.Options();
+                o2.inSampleSize = 2;
+                podcastBitmap = BitmapFactory.decodeStream(inStream, null, o2);
             } catch (Exception e) {
-                Utilities.logException(e);
+                // Utilities.logException(e);
             } finally {
                 if(inStream != null) {
                     try {

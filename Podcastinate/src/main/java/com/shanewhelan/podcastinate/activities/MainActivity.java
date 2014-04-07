@@ -65,17 +65,15 @@ TODO: Add long press options (Maybe refresh individual feeds, add to playlist, s
 TODO: Statistics of user playback
 TODO: Lock screen widget
 TODO: Cloud backup
+
 Checks:
 TODO: Set back button to go to right activities
 TODO: Check Rotation on all pages
 TODO: Tablet/Phone comparison
-TODO: Delete other app - firefox
 
 BUGS:
 TODO: E/MediaPlayer﹕ Attempt to call getDuration without a valid mediaplayer when playing a new podcast overriding an old one
 TODO: CNET ALL podcasts feed is broken
-TODO: Restrict access to the player from the drawer
-
 TODO: Fix for one feed a week/removing old feeds
 TODO: On subscribe pictures don't load
 TODO: DOWNLOADS NOT CANCELING - it cancelled eventually after a certain point

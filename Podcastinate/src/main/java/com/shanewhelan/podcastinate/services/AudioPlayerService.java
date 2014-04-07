@@ -225,6 +225,10 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
             Utilities.logException(e);
         }
 
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Cancel the notification cause episode is finished
+        notificationManager.cancel(0);
+
         Intent finished = new Intent(Utilities.ACTION_FINISHED);
         finished.putExtra(Utilities.PODCAST_TITLE, podcastTitle);
         sendBroadcast(finished);
@@ -247,8 +251,8 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
         audioManager.abandonAudioFocus(this);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        // Build Notification with Notification Manager
-        notificationManager.cancel("sw9", 0);
+        // Cancel the notification cause episode is finished
+        notificationManager.cancel(0);
 
         if(disconnectJackR != null && player != null) {
             if(player.isPlaying()) {
@@ -467,7 +471,7 @@ public class AudioPlayerService extends Service implements MediaPlayer.OnPrepare
                 // Create Notification Manager
                 NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 // Build Notification with Notification Manager
-                notificationManager.notify("sw9", 0, builder.build());
+                notificationManager.notify(0, builder.build());
             }
         }
     }

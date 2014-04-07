@@ -49,8 +49,8 @@ public class RecommendationActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTitle("Loading...");
         super.onCreate(savedInstanceState);
+        setTitle("Loading...");
         setContentView(R.layout.activity_recommendation);
         if(bitmapList == null) {
             QueryRecommendationAPI queryAPI = new QueryRecommendationAPI();

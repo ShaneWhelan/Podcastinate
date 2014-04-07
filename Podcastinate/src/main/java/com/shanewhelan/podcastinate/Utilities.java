@@ -232,4 +232,30 @@ public class Utilities {
         }
         return b;
     }
+
+
+    @SuppressWarnings("UnusedDeclaration")
+    public static Bitmap decodeStream(InputStream inputStream, int IMAGE_MAX_SIZE){
+        Bitmap b;
+
+        //Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+
+
+        BitmapFactory.decodeStream(inputStream, null, o);
+
+        int scale = 1;
+        if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
+            scale = (int)Math.pow(2, (int) Math.ceil(Math.log(IMAGE_MAX_SIZE /
+                    (double) Math.max(o.outHeight, o.outWidth)) / Math.log(0.5)));
+        }
+
+        //Decode with inSampleSize
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        b = BitmapFactory.decodeStream(inputStream, null, o);
+
+        return b;
+    }
 }
